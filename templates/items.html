@@ -1,21 +1,74 @@
-<!doctype html>
-<title>Results</title>
+{% extends 'base.html' %}
 
-<h1>{{ items|count }} Results Found.</h1>
+{% block title %}{{ items|count }} Results Found{% endblock title %}
 
+{% block body %}
+<h2>{{ items|count }} Results Found.</h1>
+
+<ul class="list-group">
 {% for item in items %}
-    <h3>
-    {% if item.name%}
-        NAME: {{ item.name }}</br>
-    {% endif %}
-    TYPE: {{ item.typeLine }}
-    </h3>
-    <p>
-        {{ item.location }}: ({{item.x}}, {{item.y}})
-    </p>
-    {#
-        if self.socket_str:
-            out.append("Sockets: %s" % self.socket_str_color())
-    #}
-    <hr/>
+    <li class="list-group-item">
+        {% if item.rarity == "unique" %}
+            <h4 class="unique">
+        {% elif item.rarity == "rare" %}
+            <h4 class="rare">
+        {% elif item.rarity == "magic" %}
+            <h4 class="magic">
+        {% elif item.is_gem() %}
+            <h4 class="gem">
+        {% elif item.is_quest_item() %}
+            <h4 class="quest">
+        {% else %}
+            <h4>
+        {% endif %}
+        {# output the name #}
+        {% if item.name %}
+            {{ item.name }}</br>
+        {% endif %}
+
+        {# output item type #}
+        {{ item.type }}
+        {# output the sockets if any #}
+        {% if item.socket_str %}
+            &nbsp;&nbsp;{{ item.socket_str_html()|safe }}<br/>
+        {% endif %}
+
+        </h4>
+
+        {# item location #}
+        <h5>{{ item.location }}: ({{item.x}}, {{item.y}})</h5>
+
+        {% if item.requirements %}
+            <h5>Requirements:</h5>
+            <p>
+                {% for req_name, req_val in item.requirements.iteritems() %}
+                    <span class="magic">{{ req_name }}: {{ req_val }}</span></br>
+                {% endfor %}
+            </p>
+        {% endif %}
+
+        {% if item.properties %}
+            <h5>Properties:</h5>
+            <p>
+                {% for prop_name, prop_val in item.properties.iteritems() %}
+                    <span class="magic">
+                        {{ prop_name }}{% if prop_val %}: {{ prop_val }}{% endif %}
+                    </span></br>
+                {% endfor %}
+            </p>
+        {% endif %}
+
+        {% if item.mods %}
+            <h5>Mods:</h5>
+            <p>
+                {% for mod in item.mods %}
+                    <span class="magic">
+                        {{ mod }}
+                    </span></br>
+                {% endfor %}
+            </p>
+        {% endif %}
+    </li>
 {% endfor %}
+</ul>
+{% endblock body %}

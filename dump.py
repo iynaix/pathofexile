@@ -1,13 +1,22 @@
 import json
 import pprint
 import re
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 from clint.textui import colored
-from affixes import PREFIXES, SUFFIXES, UNIQUES
+from affixes import PREFIXES, SUFFIXES, UNIQUES, QUEST_ITEMS
 from utils import norm
 from path import path
 
+import q
+
 CHROMATIC_RE = re.compile(r"B+G+R+")
+MOD_NUM_RE = re.compile(r"[-+]?[0-9\.]+?[%]?")
+WHITESPACE_RE = re.compile('\s+')
+
+
+def norm_mod(mod):
+    #normalizes a mod by removing the numbers
+    return WHITESPACE_RE.sub(' ', MOD_NUM_RE.sub("", mod).strip()).lower()
 
 
 def iter_items():
@@ -136,10 +145,10 @@ class Item(object):
         # if self.is_rare():
         #     out.append(colored.yellow(self.data["name"]).color_str)
         #     out.append(colored.yellow(self.data["typeLine"]).color_str)
-        if self.data.get("name", ""):
-            out.append(self.data["name"])
+        if self.name:
+            out.append(self.name)
         else:
-            out.append(self.data["typeLine"])
+            out.append(self.type)
         out.append("({0}: {x}, {y})".format(self.location, **self.data))
         if self.socket_str:
             out.append("Sockets: %s" % self.socket_str_color())
@@ -171,6 +180,50 @@ class Item(object):
 
     def num_sockets(self):
         return len(self.data["sockets"])
+
+    @property
+    def name(self):
+        return self.data.get("name", "")
+
+    @property
+    def type(self):
+        return self.data["typeLine"]
+
+    def _process_prop(self, prop_dict):
+        """
+        utility function that returns the needed tuple given a property
+        dict
+        """
+        v = prop_dict["values"]
+        if not v:
+            v = ""
+        else:
+            v = v[0][0]
+        return prop_dict["name"], v.replace("/", " / ")
+
+    @property
+    def requirements(self):
+        """reformats the requirements into a simple dictionary"""
+        reqs = []
+        for r in self.data.get("requirements", []):
+            reqs.append(self._process_prop(r))
+        return OrderedDict(sorted(reqs))
+
+    @property
+    def properties(self):
+        """returns a list of properties"""
+        props = []
+        for p in self.data.get('properties', []):
+            props.append(self._process_prop(p))
+        for p in self.data.get('additionalProperties', []):
+            props.append(self._process_prop(p))
+        return OrderedDict(sorted(props))
+
+    @property
+    def mods(self):
+        """returns a list of mods"""
+        return self.data.get('implicitMods', []) + \
+            self.data.get('explicitMods', [])
 
     @property
     def socket_str(self):
@@ -205,6 +258,23 @@ class Item(object):
         s = s.replace("G", colored.green('G').color_str)
         return s.replace("R", colored.red('R').color_str)
 
+    def socket_str_html(self):
+        """
+        returns the socket_str with colors suitable for output to html
+        """
+        out = []
+        for c in self.socket_str:
+            if c == "B":
+                out.append('<span class="label label-primary">&nbsp;</span>')
+            elif c == "G":
+                out.append('<span class="label label-success">&nbsp;</span>')
+            elif c == "R":
+                out.append('<span class="label label-danger">&nbsp;</span>')
+            else:
+                out.append('&nbsp;')
+        #join with hair spaces
+        return "&#8202;".join(out)
+
     def is_chromatic(self):
         #must have at least 3 sockets
         if self.num_sockets() < 3:
@@ -214,8 +284,8 @@ class Item(object):
 
     def is_magic(self):
         #normalize to lower case
-        name = norm(self.data.get("name", ""))
-        t = norm(self.data["typeLine"])
+        name = norm(self.name)
+        t = norm(self.type)
         if name.endswith(SUFFIXES) or t.endswith(SUFFIXES):
             return True
         if name.startswith(PREFIXES) or t.startswith(PREFIXES):
@@ -225,15 +295,21 @@ class Item(object):
     def is_rare(self):
         if self.is_unique() or self.is_magic():
             return False
-        if not self.data.get("name", ""):
+        if not self.name:
             return False
         return True
 
     def is_unique(self):
-        name = norm(self.data.get("name", ""))
+        name = norm(self.name)
         if not name:
             return False
         return name in UNIQUES
+
+    def is_normal(self):
+        return not (self.is_magic() or self.is_rare() or self.is_unique())
+
+    def is_gem(self):
+        return "Experience" in self.properties.keys()
 
     @property
     def rarity(self):
@@ -249,16 +325,31 @@ class Item(object):
             return "magic"
         return "normal"
 
+    def title_contains(self, search_str):
+        """
+        utility function, does the given search string exist within the item
+        name or type?
+        """
+        search_str = norm(search_str)
+        return search_str in norm(self.name) or search_str in norm(self.type)
+
+    def is_quest_item(self):
+        return norm(self.type).startswith(QUEST_ITEMS)
+
 
 def search_items():
     """
-    Temporary function that just returns search results
+    Temporary function that just returns an iterator of search results
     """
-    res = []
+    all_mods = set()
     for item in iter_items():
-        if item.is_unique():
-            res.append(item)
-    return res
+        if item.mods:
+            all_mods.update(norm_mod(m) for m in item.mods)
+            yield item
+
+    for m in all_mods:
+        q(m)
+    q(len(all_mods))
 
     """
     u'name': 342,

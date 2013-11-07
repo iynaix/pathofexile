@@ -705,8 +705,40 @@ UNIQUES = [
     "Vaults of Atziri",
 ]
 
+QUEST_ITEMS = [
+    "Alira's Amulet",
+    "Allflame",
+    "Ammonite Glyph",
+    "Baleful Gem",
+    "Book of Regrets",
+    "Book of Skill",
+    "Bust of Gaius Sentari",
+    "Bust of Hector Titucius",
+    "Bust of Marceus Lioneye",
+    "Chitus' Plum",
+    "Decanter Spiritus",
+    "Golden Hand",
+    "Golden Page",
+    "Haliotis Glyph",
+    "Infernal Talc",
+    "Kraityn's Amulet",
+    "Maligaro's Spike",
+    "Medicine Chest",
+    "Oak's Amulet",
+    "Ribbon Spool",
+    "Roseus Glyph",
+    "Sewer Keys",
+    "Thaumetic Emblem",
+    "Thaumetic Sulphite",
+    "The Apex",
+    "Tolman's Bracelet",
+    "Tower Key",
+]
+
+
 #normalize to lower case
 #cast to tuple for easy application for startswith and endswith
 PREFIXES = tuple([norm(x) for x in PREFIXES])
 SUFFIXES = tuple([norm(x) for x in SUFFIXES])
 UNIQUES = tuple([norm(x) for x in UNIQUES])
+QUEST_ITEMS = tuple([norm(x) for x in QUEST_ITEMS])
