@@ -1,0 +1,21 @@
+<!doctype html>
+<title>Results</title>
+
+<h1>{{ items|count }} Results Found.</h1>
+
+{% for item in items %}
+    <h3>
+    {% if item.name%}
+        NAME: {{ item.name }}</br>
+    {% endif %}
+    TYPE: {{ item.typeLine }}
+    </h3>
+    <p>
+        {{ item.location }}: ({{item.x}}, {{item.y}})
+    </p>
+    {#
+        if self.socket_str:
+            out.append("Sockets: %s" % self.socket_str_color())
+    #}
+    <hr/>
+{% endfor %}
