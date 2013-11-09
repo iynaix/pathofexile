@@ -1,13 +1,14 @@
 import json
 import pprint
 import re
-from collections import defaultdict, OrderedDict
+from collections import defaultdict
 from clint.textui import colored
 from affixes import PREFIXES, SUFFIXES, UNIQUES, QUEST_ITEMS
-from utils import norm
 from path import path
+from utils import norm
 
-import q
+from app import db
+from models import Item, Requirement, Property, Location
 
 CHROMATIC_RE = re.compile(r"B+G+R+")
 MOD_NUM_RE = re.compile(r"[-+]?[0-9\.]+?[%]?")
@@ -19,140 +20,38 @@ def norm_mod(mod):
     return WHITESPACE_RE.sub(' ', MOD_NUM_RE.sub("", mod).strip()).lower()
 
 
-def iter_items():
-    """returns a generator that yields items across all stash page"""
-    #get the data from the stash pages
-    fp = open("data/stash_1.json")
-    tabs = json.load(fp)["tabs"]
-    for page_no, t in enumerate(tabs):
-        page = Tab(t).create_stash_page()
-        for item in page.items:
-            yield Item(item, "Stash_%s" % (page_no + 1))
+# def find_holes(self):
+#     """returns the coordinates that have not been used"""
+#     #a page is 12 * 12
+#     page = []
+#     for i in range(12):
+#         page.append([0] * 12)
 
-    #get the data from the characters
-    for f in path("data").listdir():
-        if f.name.startswith("items_"):
-            char_name = f.basename().split("_").pop().split(".")[0]
-            for item in json.load(open(f))["items"]:
-                yield Item(item,
-                           "%s_%s" % (char_name, item["inventoryId"].lower()))
+#     for item in self.items:
+#         for x in range(item["x"], item["x"] + item["w"]):
+#             for y in range(item["y"], item["y"] + item["h"]):
+#                 page[y][x] = 1
+
+#     holes = []
+#     for y in range(12):
+#         for x in range(12):
+#             if not page[y][x]:
+#                 holes.append((x, y))
+#     return holes
+
+# def is_filled(self):
+#     """is the page filled?"""
+#     return not bool(self.find_holes())
 
 
-class Tab(object):
-    """Object representing a stash tab"""
+class ItemData(object):
+    """Object representing an item"""
 
     def __init__(self, data):
         self.data = data
 
     def __repr__(self):
         return pprint.pformat(self.data)
-
-    def is_premium(self):
-        #see if the name is numeric
-        try:
-            int(self.data["n"])
-        except ValueError:
-            return True
-        if self.data['colour'] != {'b': 54, 'g': 84, 'r': 124}:
-            return True
-        return False
-
-    @property
-    def index(self):
-        return self.data["i"]
-
-    @property
-    def name(self):
-        return self.data["n"]
-
-    def create_stash_page(self):
-        """returns a StashPage object for the tab"""
-        fname = "data/stash_%s.json" % (self.index + 1)
-        return StashPage(json.load(open(fname))["items"], self)
-
-
-class StashPage(object):
-    """Object representing a stash page"""
-
-    def __init__(self, items, tab):
-        """takes the items and the associated tab object"""
-        self.tab = tab
-        self.items = [Item(item, "Stash_%s" % (self.index + 1)) for
-                      item in items]
-
-    def __repr__(self):
-        return pprint.pformat(self.items)
-
-    def __iter__(self):
-        return self.items.__iter__()
-
-    def __getitem__(self, idx):
-        return self.items.__getitem__(idx)
-
-    def __len__(self):
-        return len(self.items)
-
-    @property
-    def index(self):
-        return self.tab.index
-
-    @property
-    def name(self):
-        return self.tab.name
-
-    def find_holes(self):
-        """returns the coordinates that have not been used"""
-        #a page is 12 * 12
-        page = []
-        for i in range(12):
-            page.append([0] * 12)
-
-        for item in self.items:
-            for x in range(item["x"], item["x"] + item["w"]):
-                for y in range(item["y"], item["y"] + item["h"]):
-                    page[y][x] = 1
-
-        holes = []
-        for y in range(12):
-            for x in range(12):
-                if not page[y][x]:
-                    holes.append((x, y))
-        return holes
-
-    def is_filled(self):
-        """is the page filled?"""
-        return not bool(self.find_holes())
-
-
-class Item(object):
-    """Object representing an item"""
-
-    def __init__(self, data, location):
-        """
-        takes the items and the associated location, which might be a stash
-        page or a location on a character
-        """
-        self.data = data
-        self.location = location
-        #cached value for socket_str
-        self._socket_str = None
-
-    def __repr__(self):
-        return pprint.pformat(self.data)
-
-    def __str__(self):
-        out = []
-        # if self.is_rare():
-        #     out.append(colored.yellow(self.data["name"]).color_str)
-        #     out.append(colored.yellow(self.data["typeLine"]).color_str)
-        if self.name:
-            out.append(self.name)
-        else:
-            out.append(self.type)
-        out.append("({0}: {x}, {y})".format(self.location, **self.data))
-        if self.socket_str:
-            out.append("Sockets: %s" % self.socket_str_color())
-        return "\n".join(out)
 
     def __getitem__(self, key):
         return self.data.__getitem__(key)
@@ -189,35 +88,34 @@ class Item(object):
     def type(self):
         return self.data["typeLine"]
 
-    def _process_prop(self, prop_dict):
-        """
-        utility function that returns the needed tuple given a property
-        dict
-        """
-        v = prop_dict["values"]
-        if not v:
-            v = ""
-        else:
-            v = v[0][0]
-        return prop_dict["name"], v.replace("/", " / ")
-
     @property
     def requirements(self):
         """reformats the requirements into a simple dictionary"""
         reqs = []
         for r in self.data.get("requirements", []):
-            reqs.append(self._process_prop(r))
-        return OrderedDict(sorted(reqs))
+            v = r["values"][0][0]
+            if r["name"] == "Level":
+                v = int(v.split()[0])
+            else:
+                v = int(v)
+            reqs.append({"name": r["name"], "value": v})
+        return reqs
 
     @property
     def properties(self):
         """returns a list of properties"""
+        item_props = self.data.get('properties', []) + \
+                self.data.get('additionalProperties', [])
+
         props = []
-        for p in self.data.get('properties', []):
-            props.append(self._process_prop(p))
-        for p in self.data.get('additionalProperties', []):
-            props.append(self._process_prop(p))
-        return OrderedDict(sorted(props))
+        for p in item_props:
+            v = p["values"]
+            if not v:
+                v = ""
+            else:
+                v = v[0][0]
+            props.append({"name": p["name"], "value": v})
+        return props
 
     @property
     def mods(self):
@@ -231,9 +129,6 @@ class Item(object):
         shows the available sockets from longest link to shortest, separated
         by spaces, e.g. 'BGR GR'
         """
-        if self._socket_str is not None:
-            return self._socket_str
-
         if not self.has_sockets():
             return ""
 
@@ -247,33 +142,7 @@ class Item(object):
                 grps[s["group"]].append("R")
         #sort and join the groups
         grps = [''.join(sorted(x)) for x in grps.values()]
-        self._socket_str = ' '.join(sorted(grps, key=lambda g: (-len(g), g)))
-        return self._socket_str
-
-    def socket_str_color(self):
-        """
-        returns the socket_str with colors suitable for output to a console
-        """
-        s = self.socket_str.replace("B", colored.cyan('B').color_str)
-        s = s.replace("G", colored.green('G').color_str)
-        return s.replace("R", colored.red('R').color_str)
-
-    def socket_str_html(self):
-        """
-        returns the socket_str with colors suitable for output to html
-        """
-        out = []
-        for c in self.socket_str:
-            if c == "B":
-                out.append('<span class="label label-primary">&nbsp;</span>')
-            elif c == "G":
-                out.append('<span class="label label-success">&nbsp;</span>')
-            elif c == "R":
-                out.append('<span class="label label-danger">&nbsp;</span>')
-            else:
-                out.append('&nbsp;')
-        #join with hair spaces
-        return "&#8202;".join(out)
+        return ' '.join(sorted(grps, key=lambda g: (-len(g), g)))
 
     def is_chromatic(self):
         #must have at least 3 sockets
@@ -295,9 +164,7 @@ class Item(object):
     def is_rare(self):
         if self.is_unique() or self.is_magic():
             return False
-        if not self.name:
-            return False
-        return True
+        return bool(self.name)
 
     def is_unique(self):
         name = norm(self.name)
@@ -308,8 +175,6 @@ class Item(object):
     def is_normal(self):
         return not (self.is_magic() or self.is_rare() or self.is_unique())
 
-    def is_gem(self):
-        return "Experience" in self.properties.keys()
 
     @property
     def rarity(self):
@@ -319,10 +184,13 @@ class Item(object):
         """
         if self.is_unique():
             return "unique"
-        if self.is_rare():
-            return "rare"
         if self.is_magic():
             return "magic"
+        #check if item is rare
+        #we're not using the is_rare() method as that would compute the
+        #is_unique() and is_magic() methods again
+        if self.name:
+            return "rare"
         return "normal"
 
     def title_contains(self, search_str):
@@ -333,54 +201,145 @@ class Item(object):
         search_str = norm(search_str)
         return search_str in norm(self.name) or search_str in norm(self.type)
 
-    def is_quest_item(self):
-        return norm(self.type).startswith(QUEST_ITEMS)
+
+    def sql_dump(self, location, **kwargs):
+        """
+        returns an Item suitable for adding to the database
+        """
+        return Item(
+            name=self.name,
+            type=self.type,
+            x=self.data["x"],
+            y=self.data["y"],
+            w=self.data["w"],
+            h=self.data["h"],
+            rarity=self.rarity,
+            num_sockets=self.num_sockets(),
+            socket_str=self.socket_str,
+            mods=self.mods,
+            requirements=[Requirement(**r) for r in self.requirements],
+            properties=[Property(**p) for p in self.properties],
+            location=location,
+            **kwargs
+        )
 
 
-def search_items():
+"""
+u'inventoryId': 342,
+
+#no data yet
+u'socketedItems': 342,
+"""
+
+
+def destroy_database(engine):
     """
-    Temporary function that just returns an iterator of search results
+    completely destroys the database, copied from
+
+    http://www.sqlalchemy.org/trac/wiki/UsageRecipes/DropEverything
     """
-    all_mods = set()
-    for item in iter_items():
-        if item.mods:
-            all_mods.update(norm_mod(m) for m in item.mods)
-            yield item
+    from sqlalchemy.engine import reflection
+    from sqlalchemy.schema import (
+        MetaData,
+        Table,
+        DropTable,
+        ForeignKeyConstraint,
+        DropConstraint,
+    )
 
-    for m in all_mods:
-        q(m)
-    q(len(all_mods))
+    conn = engine.connect()
 
-    """
-    u'name': 342,
-    u'typeLine': 342,
+    # the transaction only applies if the DB supports
+    # transactional DDL, i.e. Postgresql, MS SQL Server
+    trans = conn.begin()
 
-    u'inventoryId': 342,
+    inspector = reflection.Inspector.from_engine(engine)
 
-    #store as postgres rectangle
-    u'x': 342,
-    u'y': 342
-    u'w': 342,
-    u'h': 342,
+    # gather all data first before dropping anything.
+    # some DBs lock after things have been dropped in
+    # a transaction.
+    metadata = MetaData()
 
-    #add these together
-    u'properties': 300,
-    u'additionalProperties': 44,
+    tbs = []
+    all_fks = []
 
-    u'requirements': 303,
+    for table_name in inspector.get_table_names():
+        fks = []
+        for fk in inspector.get_foreign_keys(table_name):
+            if not fk['name']:
+                continue
+            fks.append(ForeignKeyConstraint((), (), name=fk['name']))
+        t = Table(table_name, metadata, *fks)
+        tbs.append(t)
+        all_fks.extend(fks)
 
-    #add these together
-    u'implicitMods': 108,
-    u'explicitMods': 253,
+    for fkc in all_fks:
+        conn.execute(DropConstraint(fkc))
 
-    #socket links?
-    u'sockets': 342,
+    for table in tbs:
+        conn.execute(DropTable(table))
 
-    #no data yet
-    u'socketedItems': 342,
-    """
+    trans.commit()
+
 
 if __name__ == "__main__":
-    for item in search_items():
-        print item
-        print
+    import time
+    start_time = time.time()
+
+    #drop and recreate the database
+    destroy_database(db.engine)
+    db.create_all()
+
+    #dump the data from the stash pages
+    fp = open("data/stash_1.json")
+    tabs = json.load(fp)["tabs"]
+    for page_no, t in enumerate(tabs):
+        fname = "data/stash_%s.json" % (page_no + 1)
+
+        #see if the name is numeric to determine if premium
+        is_premium = False
+        try:
+            int(t["n"])
+        except ValueError:
+            is_premium = True
+        if t['colour'] != {'b': 54, 'g': 84, 'r': 124}:
+            is_premium = True
+
+        #create the location
+        loc = Location(
+            name=t["n"],
+            page_no=page_no + 1,
+            is_premium=is_premium,
+            is_character=False,
+        )
+
+        for item in json.load(open(fname))["items"]:
+            db.session.add(
+                ItemData(item).sql_dump(loc)
+            )
+
+    #get the data from the characters
+    for f in path("data").listdir():
+        if not f.name.startswith("items_"):
+            continue
+
+        #create the location
+        char_name = f.name.split("_").pop().split(".")[0].capitalize()
+        loc = Location(
+            name=char_name,
+            is_premium=False,
+            is_character=True,
+        )
+        for item in json.load(open(f))["items"]:
+            db.session.add(
+                ItemData(item).sql_dump(loc)
+            )
+
+    #final commit
+    db.session.commit()
+
+    print
+    print colored.green(len(Item.query.all())),
+    print "ITEMS PROCESSED."
+    print "DATA DUMP COMPLETED IN",
+    print colored.green("%.4f SECONDS" % (time.time() - start_time))

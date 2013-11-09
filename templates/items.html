@@ -41,8 +41,8 @@
         {% if item.requirements %}
             <h5>Requirements:</h5>
             <p>
-                {% for req_name, req_val in item.requirements.iteritems() %}
-                    <span class="magic">{{ req_name }}: {{ req_val }}</span></br>
+                {% for req in item.requirements %}
+                    <span class="magic">{{ req.name }}: {{ req.value }}</span></br>
                 {% endfor %}
             </p>
         {% endif %}
@@ -50,9 +50,9 @@
         {% if item.properties %}
             <h5>Properties:</h5>
             <p>
-                {% for prop_name, prop_val in item.properties.iteritems() %}
+                {% for prop in item.properties %}
                     <span class="magic">
-                        {{ prop_name }}{% if prop_val %}: {{ prop_val }}{% endif %}
+                        {{ prop.name }}{% if prop.value %}: {{ prop.value }}{% endif %}
                     </span></br>
                 {% endfor %}
             </p>
