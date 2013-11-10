@@ -142,13 +142,11 @@ class ItemData(object):
 
     def is_magic(self):
         #normalize to lower case
-        name = norm(self.name)
+        if self.name:
+            return False
+
         t = norm(self.type)
-        if name.endswith(SUFFIXES) or t.endswith(SUFFIXES):
-            return True
-        if name.startswith(PREFIXES) or t.startswith(PREFIXES):
-            return True
-        return False
+        return t.startswith(PREFIXES) or t.endswith(SUFFIXES)
 
     def is_rare(self):
         if self.is_unique() or self.is_magic():
@@ -211,12 +209,8 @@ class ItemData(object):
         )
 
 
-"""
-u'inventoryId': 342,
-
-#no data yet
-u'socketedItems': 342,
-"""
+# TODO
+# u'socketedItems': 342,
 
 
 def destroy_database(engine):
@@ -269,6 +263,49 @@ def destroy_database(engine):
     trans.commit()
 
 
+def dump_stash_page(page_no, tab_data):
+    fname = "data/stash_%s.json" % (page_no + 1)
+
+    #see if the name is numeric to determine if premium
+    is_premium = False
+    try:
+        int(tab_data["n"])
+    except ValueError:
+        is_premium = True
+    if tab_data['colour'] != {'b': 54, 'g': 84, 'r': 124}:
+        is_premium = True
+
+    #create the location
+    loc = Location(
+        name=tab_data["n"],
+        page_no=page_no + 1,
+        is_premium=is_premium,
+        is_character=False,
+    )
+
+    for item in json.load(open(fname))["items"]:
+        db.session.add(
+            ItemData(item).sql_dump(loc)
+        )
+
+
+def dump_char(fname):
+    if not isinstance(fname, path):
+        fname = path(fname)
+
+    #create the location
+    char_name = fname.split("_").pop().split(".")[0].capitalize()
+    loc = Location(
+        name=char_name,
+        is_premium=False,
+        is_character=True,
+    )
+    for item in json.load(open(fname))["items"]:
+        db.session.add(
+            ItemData(item).sql_dump(loc)
+        )
+
+
 if __name__ == "__main__":
     import time
     start_time = time.time()
@@ -280,47 +317,15 @@ if __name__ == "__main__":
     #dump the data from the stash pages
     fp = open("data/stash_1.json")
     tabs = json.load(fp)["tabs"]
-    for page_no, t in enumerate(tabs):
-        fname = "data/stash_%s.json" % (page_no + 1)
-
-        #see if the name is numeric to determine if premium
-        is_premium = False
-        try:
-            int(t["n"])
-        except ValueError:
-            is_premium = True
-        if t['colour'] != {'b': 54, 'g': 84, 'r': 124}:
-            is_premium = True
-
-        #create the location
-        loc = Location(
-            name=t["n"],
-            page_no=page_no + 1,
-            is_premium=is_premium,
-            is_character=False,
-        )
-
-        for item in json.load(open(fname))["items"]:
-            db.session.add(
-                ItemData(item).sql_dump(loc)
-            )
+    for page_no, tab_data in enumerate(tabs):
+        dump_stash_page(page_no, tab_data)
 
     #get the data from the characters
     for f in path("data").listdir():
         if not f.name.startswith("items_"):
             continue
 
-        #create the location
-        char_name = f.name.split("_").pop().split(".")[0].capitalize()
-        loc = Location(
-            name=char_name,
-            is_premium=False,
-            is_character=True,
-        )
-        for item in json.load(open(f))["items"]:
-            db.session.add(
-                ItemData(item).sql_dump(loc)
-            )
+        dump_char(f)
 
     #final commit
     db.session.commit()
