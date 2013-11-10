@@ -201,6 +201,7 @@ class ItemData(object):
             rarity=self.rarity,
             num_sockets=self.num_sockets(),
             socket_str=self.socket_str,
+            is_identified=self.data["identified"],
             mods=self.mods,
             requirements=[Requirement(**r) for r in self.requirements],
             properties=[Property(**p) for p in self.properties],
@@ -263,7 +264,7 @@ def destroy_database(engine):
     trans.commit()
 
 
-def dump_stash_page(page_no, tab_data):
+def dump_stash_page(page_no, tab_data, dump=True):
     fname = "data/stash_%s.json" % (page_no + 1)
 
     #see if the name is numeric to determine if premium
@@ -284,12 +285,18 @@ def dump_stash_page(page_no, tab_data):
     )
 
     for item in json.load(open(fname))["items"]:
-        db.session.add(
-            ItemData(item).sql_dump(loc)
-        )
+        if dump:
+            db.session.add(
+                ItemData(item).sql_dump(loc)
+            )
+        else:
+            item = ItemData(item)
+            if item.type == "Blinder":
+                from pprint import pprint
+                pprint(item.data)
 
 
-def dump_char(fname):
+def dump_char(fname, dump=True):
     if not isinstance(fname, path):
         fname = path(fname)
 
@@ -301,37 +308,42 @@ def dump_char(fname):
         is_character=True,
     )
     for item in json.load(open(fname))["items"]:
-        db.session.add(
-            ItemData(item).sql_dump(loc)
-        )
+        if dump:
+            db.session.add(
+                ItemData(item).sql_dump(loc)
+            )
 
 
 if __name__ == "__main__":
+    dump = True
     import time
     start_time = time.time()
 
     #drop and recreate the database
-    destroy_database(db.engine)
-    db.create_all()
+    if dump:
+        destroy_database(db.engine)
+        db.create_all()
 
     #dump the data from the stash pages
     fp = open("data/stash_1.json")
     tabs = json.load(fp)["tabs"]
     for page_no, tab_data in enumerate(tabs):
-        dump_stash_page(page_no, tab_data)
+        dump_stash_page(page_no, tab_data, dump=dump)
 
     #get the data from the characters
     for f in path("data").listdir():
         if not f.name.startswith("items_"):
             continue
 
-        dump_char(f)
+        dump_char(f, dump=dump)
 
     #final commit
-    db.session.commit()
+    if dump:
+        db.session.commit()
 
-    print
-    print colored.green(len(Item.query.all())),
-    print "ITEMS PROCESSED."
-    print "DATA DUMP COMPLETED IN",
-    print colored.green("%.4f SECONDS" % (time.time() - start_time))
+    if dump:
+        print
+        print colored.green(len(Item.query.all())),
+        print "ITEMS PROCESSED."
+        print "DATA DUMP COMPLETED IN",
+        print colored.green("%.4f SECONDS" % (time.time() - start_time))

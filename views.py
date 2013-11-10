@@ -12,7 +12,7 @@ CHROMATIC_RE = r"B+G+R+"
 
 
 def search_items():
-    query = Item.query.filter(
+    query = Item.identified.filter(
         Item.socket_str.op('~')(CHROMATIC_RE),
     )
     return query.all()
@@ -60,28 +60,53 @@ def search_results():
 def browse(slug):
     """renders all the details of a location"""
     loc = Location.query.filter(Location.name == slug.capitalize()).one()
-    items = Item.query.filter(Item.location == loc).all()
+    items = Item.query.filter(Item.location == loc).order_by(
+        Item.x, Item.y
+    ).all()
 
     return render_template('browse.html', items=items, title=str(loc))
 
 
-@app.route('/purge/')
-def purge():
-    """displays all the items that should be removed"""
+class PurgeView(View):
+    """
+    Displays all the items that should be removed
+    """
     #non-chromatic items in chromatic pages
-    chromatic_purge = Item.query.join(Location).filter(
-        Location.page_no.in_(get_chromatic_stash_pages()),
-        Item.socket_str.op('!~')(CHROMATIC_RE),
-    ).all()
+    def get_chromatic_purge(self):
+        return Item.query.join(Location).filter(
+            Location.page_no.in_(get_chromatic_stash_pages()),
+            Item.socket_str.op('!~')(CHROMATIC_RE),
+            Item.is_identified,
+        )
 
-    #non-rare items in rare pages
-    rare_purge = Item.query.join(Location).filter(
-        Location.page_no.in_(get_rare_stash_pages()),
-        Item.rarity != "rare"
-    ).all()
+    def get_rare_purge(self):
+        #non-rare items in rare pages
+        return Item.query.join(Location).filter(
+            Location.page_no.in_(get_rare_stash_pages()),
+            Item.rarity != "rare",
+            Item.is_identified,
+        )
 
-    return render_template('purge.html', chromatics=chromatic_purge,
-                           rares=rare_purge)
+    def get_unidentified(self):
+        #non-rare items in rare pages
+        return Item.query.join(Location).filter(
+            Item.is_identified == False,
+        )
+
+    def dispatch_request(self):
+        context = {
+            "chromatics": self.get_chromatic_purge(),
+            "rares": self.get_rare_purge(),
+            "unidentified": self.get_unidentified(),
+        }
+        #apply default ordering for the items
+        for k, v in context.iteritems():
+            context[k] = v.order_by(
+                Location.id, Item.x, Item.y
+            ).all()
+
+        return render_template('purge.html', **context)
+app.add_url_rule('/purge/', view_func=PurgeView.as_view('purge'))
 
 
 class StatsView(View):
@@ -91,7 +116,8 @@ class StatsView(View):
     def get_currency_stats(self):
         currency_stats = defaultdict(int)
         items = Item.query.join(Property).filter(
-            Property.name.startswith("Stack")
+            Property.name.startswith("Stack"),
+            Item.is_identified,
         ).all()
         for item in items:
             #look for the stack property
@@ -131,7 +157,7 @@ class StatsView(View):
         stats = db.session.query(
             db.func.count(Item.id),
             Item.rarity,
-        ).group_by(Item.rarity).all()
+        ).filter(Item.is_identified).group_by(Item.rarity).all()
         return {
             "rarities": reversed(sorted(stats)),
             "rarities_total": sum(s[0] for s in stats),
@@ -141,7 +167,7 @@ class StatsView(View):
         stats = db.session.query(
             Item.num_sockets,
             db.func.count(Item.id),
-        ).group_by(Item.num_sockets).all()
+        ).filter(Item.is_identified).group_by(Item.num_sockets).all()
         return {
             "item_sockets": reversed(sorted(stats)),
             "item_sockets_total": sum(s[1] for s in stats),
@@ -153,7 +179,7 @@ class StatsView(View):
             #of length
             db.func.strpos(Item.socket_str, " ").label("link_length"),
             db.func.count(Item.id),
-        ).group_by("link_length").all()
+        ).filter(Item.is_identified).group_by("link_length").all()
 
         return {
             "item_sockets_links": reversed(sorted(stats)),
@@ -167,7 +193,7 @@ class StatsView(View):
             db.cast(Item.socket_str.op('~')(CHROMATIC_RE), db.Integer).
             label("is_chromatic"),
             db.func.count(Item.id),
-        ).group_by("is_chromatic").all()
+        ).filter(Item.is_identified).group_by("is_chromatic").all()
 
         return {
             "chromatics": reversed(sorted(stats)),

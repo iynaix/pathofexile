@@ -35,6 +35,11 @@
     color: #BB0000
 }
 
+.unidentified {
+    color: #BB0000;
+    font-weight: bold;
+}
+
 .level {
 }
 
@@ -42,4 +47,9 @@
 .popover {
 	max-width: 500px;
 	width: auto;
+}
+
+/* extra spacing between name and type for list view */
+ul.item_listing li h4 span:nth-child(2) {
+    background-color:red
 }

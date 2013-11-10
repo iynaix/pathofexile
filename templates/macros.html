@@ -1,6 +1,7 @@
 {# outputs item html #}
 {% macro item_title(item, outer_tag="h4", popover=False, multiline=True, sockets=False) -%}
-<{{ outer_tag }}{% if popover %} class="item_popover" {{ item_popover(item) }} {% endif %}>
+<{{ outer_tag }} class="{% if popover %} item_popover{% endif%}{% if not item.is_identified %} unidentified{% endif %}"
+{% if popover %}{{ item_popover(item) }} {% endif %}>
     {% if item.is_gem() %}
         <span class="gem">
     {% elif item.rarity == "unique" %}
@@ -18,16 +19,16 @@
     {% if item.name %}
         {{ item.name }}
         {% if sockets and item.socket_str %}
-            &nbsp;&nbsp;<span style="float:right;">{{ item.socket_str|socket }}</span>
+            &nbsp;&nbsp;<span style="{% if popover %}float:right;{% endif %}">{{ item.socket_str|socket }}</span>
         {% endif %}
-        {% if multiline %}<br/>{% endif %}
     {% endif %}
     </span>
+    {% if multiline %}<br/>{% endif %}
 
     {# output item type #}
-    <span>{{ item.type }}</span>
+    <span style="{% if not popover %}line-height:2;{% else %}{% endif %}">{{ item.type }}</span>
     {% if sockets and item.socket_str and not item.name %}
-        &nbsp;&nbsp;<span style="float:right;">{{ item.socket_str|socket }}</span>
+        &nbsp;&nbsp;<span style="{% if popover %}float:right;{% else %}{% endif %}">{{ item.socket_str|socket }}</span>
     {% endif %}
     </{{ outer_tag }}>
 {%- endmacro %}
@@ -39,14 +40,7 @@ title, location, sockets
 {% macro item_html(item, outer_tag="h4", excludes=[]) -%}
     {% if "title" not in excludes %}
         {# output item name and type #}
-        {{ item_title(item, outer_tag="h4") }}
-    {% endif %}
-
-    {% if "sockets" not in excludes %}
-        {# output the sockets if any #}
-        {% if item.socket_str %}
-            <{{ outer_tag }}>&nbsp;&nbsp;{{ item.socket_str|socket }}</{{ outer_tag }}>
-        {% endif %}
+        {{ item_title(item, outer_tag="h4", sockets=True) }}
     {% endif %}
 
     {# item location #}
@@ -54,6 +48,10 @@ title, location, sockets
         <{{ outer_tag }}>
             <a href="/browse/{{ item.location.name|lower }}/">{{ item.location }}: ({{item.x}}, {{item.y}})</a>
         </{{ outer_tag }}>
+    {% endif %}
+
+    {% if not item.is_identified %}
+        <span class="unidentified">Unidentified</span>
     {% endif %}
 
     {% if item.requirements %}
@@ -90,7 +88,7 @@ title, location, sockets
 
 {# outputs a nice list of items #}
 {% macro item_list(items) -%}
-    <ul class="list-group">
+    <ul class="list-group item_listing">
     {% for item in items %}
         <li class="list-group-item">
             {{ item_html(item) }}

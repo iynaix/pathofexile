@@ -5,54 +5,31 @@ from constants import QUEST_ITEMS
 from utils import norm
 
 
-"""
-def is_gem(query):
-    return query.join(Item.requirements).filter(
-        Item.properties.any(name="Experience")
-    )
+# def is_gem(query):
+#     return query.join(Item.requirements).filter(
+#         Item.properties.any(name="Experience")
+#     )
 
-def is_quest_item(query):
-    return query.filter(func.lower(Item.type).in_(QUEST_ITEMS))
-
-def has_sockets(query):
-    return query.filter(Item.num_sockets > 0)
-
-def is_unique(query):
-    return query.filter(Item.rarity == "unique")
-
-def is_rare(query):
-    return query.filter(Item.rarity == "rare")
-
-def is_magic(query):
-    return query.filter(Item.rarity == "magic")
-
-def is_normal(query):
-    return query.filter(Item.rarity == "normal")
-
-def is_chromatic(query):
-    #must have at least 3 sockets
-    return query.filter(
-        Item.socket_str.op('~')(r"B+G+R+")
-    )
-"""
+# def is_quest_item(query):
+#     return query.filter(func.lower(Item.type).in_(QUEST_ITEMS))
 
 
 def get_chromatic_stash_pages():
     """returns all the stash pages that are chromatic"""
     premium_pages = Location.query.filter(
-        Location.is_premium == True,
+        Location.is_premium,
         Location.is_character == False,
     ).all()
     for i, p in enumerate(premium_pages):
         if p.name.lower().startswith("chromatic"):
             return range(premium_pages[i].page_no,
-                        premium_pages[i + 1].page_no)
+                         premium_pages[i + 1].page_no)
 
 
 def get_rare_stash_pages():
     """returns all the stash pages that are rare"""
     premium_pages = Location.query.filter(
-        Location.is_premium == True,
+        Location.is_premium,
         Location.is_character == False,
     ).all()
 
@@ -80,6 +57,7 @@ class Item(db.Model):
                                 name='rarities'))
     num_sockets = db.Column(db.SmallInteger(), nullable=False, default=0)
     socket_str = db.Column(db.String(20), nullable=False, default="")
+    is_identified = db.Column(db.Boolean, nullable=False, default=True)
 
     #funky stuff for item properties, mods etc
     # properties = db.Column(postgres.HSTORE())
@@ -128,6 +106,10 @@ class Item(db.Model):
     def is_quest_item(self):
         return norm(self.type).startswith(QUEST_ITEMS)
 
+    @property
+    def identified(self):
+        return self.query.filter(self.is_identified)
+
 
 class Property(db.Model):
     """
@@ -154,6 +136,13 @@ class Location(db.Model):
     Model representing the location of an item, which might be a stash page
     or a character
     """
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255), nullable=False)
+    page_no = db.Column(db.SmallInteger())
+    is_premium = db.Column(db.Boolean, nullable=False, default=False)
+    is_character = db.Column(db.Boolean, nullable=False, default=False)
+    items = db.relationship("Item", backref="location", lazy="dynamic")
+
     def __str__(self):
         if self.is_character:
             return self.name
@@ -161,10 +150,3 @@ class Location(db.Model):
 
     def __repr__(self):
         return self.__str__()
-
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(255), nullable=False)
-    page_no = db.Column(db.SmallInteger())
-    is_premium = db.Column(db.Boolean, nullable=False, default=False)
-    is_character = db.Column(db.Boolean, nullable=False, default=False)
-    items = db.relationship("Item", backref="location", lazy="dynamic")
