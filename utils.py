@@ -1,6 +1,5 @@
 def norm(s):
     """
-    returns a normalized version of the given string, specifically
-    lowercases and strips off punctuation within the string
+    returns a normalized version of the given string
     """
-    return s.lower().replace("'", "")
+    return s.lower()

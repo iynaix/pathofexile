@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+{% import 'macros.html' as macros %}
+
+{% block title %}Stats{% endblock title %}
+
+{% block body %}
+
+<h3>Wealth</h3>
+<table class="table table-striped table-hover">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Total</th>
+            <th>Effect</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for c in currencies %}
+        <tr>
+            <td>{{ c.name }}</td>
+            <td>{{ c.total }}</td>
+            <td class="magic">{{ c.effect }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<h3>Rarities</h3>
+<table class="table table-striped table-hover">
+    <thead>
+        <tr>
+            <th>Rarity</th>
+            <th>Count</th>
+            <th>Percentage</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for r in rarities %}
+        <tr>
+            <td class="{{ r[1] }}">{{ r[1]|capitalize }}</td>
+            <td>{{ r[0] }}</td>
+            <td>{{ macros.progressbar_percent(r[0], rarities_total) }}</td>
+        </tr>
+        {% endfor %}
+        <tr class="active">
+            <td><strong>Total</strong></td>
+            <td colspan="2"><strong>{{ rarities_total }}</strong></td>
+        </tr>
+    </tbody>
+</table>
+
+<h3>Sockets</h3>
+<table class="table table-striped table-hover">
+    <thead>
+        <tr>
+            <th>Sockets</th>
+            <th>Count</th>
+            <th>Percentage</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for s in item_sockets %}
+        <tr>
+            <td>{{ s[0]|capitalize }}</td>
+            <td>{{ s[1] }}</td>
+            <td>{{ macros.progressbar_percent(s[1], item_sockets_total) }}</td>
+        </tr>
+        {% endfor %}
+        <tr class="active">
+            <td><strong>Total</strong></td>
+            <td colspan="2"><strong>{{ item_sockets_total }}</strong></td>
+        </tr>
+    </tbody>
+</table>
+
+<h3>Socket Links</h3>
+<table class="table table-striped table-hover">
+    <thead>
+        <tr>
+            <th>Socket Links</th>
+            <th>Count</th>
+            <th>Percentage</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for s in item_sockets_links %}
+        <tr>
+            <td>{{ s[0]|capitalize }}</td>
+            <td>{{ s[1] }}</td>
+            <td>{{ macros.progressbar_percent(s[1], item_sockets_links_total) }}</td>
+        </tr>
+        {% endfor %}
+        <tr class="active">
+            <td><strong>Total</strong></td>
+            <td colspan="2"><strong>{{ item_sockets_links_total }}</strong></td>
+        </tr>
+    </tbody>
+</table>
+
+<h3>Chromatics</h3>
+<table class="table table-striped table-hover">
+    <thead>
+        <tr>
+            <th>Type</th>
+            <th>Count</th>
+            <th>Percentage</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for s in chromatics %}
+        <tr>
+            <td>{{ "Chromatic" if s[0] else "Not Chromatic" }}</td>
+            <td>{{ s[1] }}</td>
+            <td>{{ macros.progressbar_percent(s[1], chromatics_total) }}</td>
+        </tr>
+        {% endfor %}
+        <tr class="active">
+            <td><strong>Total</strong></td>
+            <td colspan="2"><strong>{{ chromatics_total }}</strong></td>
+        </tr>
+    </tbody>
+</table>
+{% endblock body %}

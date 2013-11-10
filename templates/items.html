@@ -1,74 +1,11 @@
 {% extends 'base.html' %}
+{% import 'macros.html' as macros %}
 
 {% block title %}{{ items|count }} Results Found{% endblock title %}
 
 {% block body %}
 <h2>{{ items|count }} Results Found.</h1>
 
-<ul class="list-group">
-{% for item in items %}
-    <li class="list-group-item">
-        {% if item.rarity == "unique" %}
-            <h4 class="unique">
-        {% elif item.rarity == "rare" %}
-            <h4 class="rare">
-        {% elif item.rarity == "magic" %}
-            <h4 class="magic">
-        {% elif item.is_gem() %}
-            <h4 class="gem">
-        {% elif item.is_quest_item() %}
-            <h4 class="quest">
-        {% else %}
-            <h4>
-        {% endif %}
-        {# output the name #}
-        {% if item.name %}
-            {{ item.name }}</br>
-        {% endif %}
+{{ macros.item_table(items) }}
 
-        {# output item type #}
-        {{ item.type }}
-        {# output the sockets if any #}
-        {% if item.socket_str %}
-            &nbsp;&nbsp;{{ item.socket_str_html()|safe }}<br/>
-        {% endif %}
-
-        </h4>
-
-        {# item location #}
-        <h5>{{ item.location }}: ({{item.x}}, {{item.y}})</h5>
-
-        {% if item.requirements %}
-            <h5>Requirements:</h5>
-            <p>
-                {% for req in item.requirements %}
-                    <span class="magic">{{ req.name }}: {{ req.value }}</span></br>
-                {% endfor %}
-            </p>
-        {% endif %}
-
-        {% if item.properties %}
-            <h5>Properties:</h5>
-            <p>
-                {% for prop in item.properties %}
-                    <span class="magic">
-                        {{ prop.name }}{% if prop.value %}: {{ prop.value }}{% endif %}
-                    </span></br>
-                {% endfor %}
-            </p>
-        {% endif %}
-
-        {% if item.mods %}
-            <h5>Mods:</h5>
-            <p>
-                {% for mod in item.mods %}
-                    <span class="magic">
-                        {{ mod }}
-                    </span></br>
-                {% endfor %}
-            </p>
-        {% endif %}
-    </li>
-{% endfor %}
-</ul>
 {% endblock body %}

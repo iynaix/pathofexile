@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% import 'macros.html' as macros %}
+
+{% block title %}Items to Purge{% endblock title %}
+
+{% block body %}
+<h3>Chromatics</h3>
+
+{{ macros.item_table(chromatics) }}
+
+<h3>Rares</h3>
+
+{{ macros.item_table(rares) }}
+
+{% endblock body %}

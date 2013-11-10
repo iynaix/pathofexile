@@ -1,7 +1,68 @@
 from sqlalchemy.dialects import postgres
+
 from app import db
-from affixes import QUEST_ITEMS
+from constants import QUEST_ITEMS
 from utils import norm
+
+
+"""
+def is_gem(query):
+    return query.join(Item.requirements).filter(
+        Item.properties.any(name="Experience")
+    )
+
+def is_quest_item(query):
+    return query.filter(func.lower(Item.type).in_(QUEST_ITEMS))
+
+def has_sockets(query):
+    return query.filter(Item.num_sockets > 0)
+
+def is_unique(query):
+    return query.filter(Item.rarity == "unique")
+
+def is_rare(query):
+    return query.filter(Item.rarity == "rare")
+
+def is_magic(query):
+    return query.filter(Item.rarity == "magic")
+
+def is_normal(query):
+    return query.filter(Item.rarity == "normal")
+
+def is_chromatic(query):
+    #must have at least 3 sockets
+    return query.filter(
+        Item.socket_str.op('~')(r"B+G+R+")
+    )
+"""
+
+
+def get_chromatic_stash_pages():
+    """returns all the stash pages that are chromatic"""
+    premium_pages = Location.query.filter(
+        Location.is_premium == True,
+        Location.is_character == False,
+    ).all()
+    for i, p in enumerate(premium_pages):
+        if p.name.lower().startswith("chromatic"):
+            return range(premium_pages[i].page_no,
+                        premium_pages[i + 1].page_no)
+
+
+def get_rare_stash_pages():
+    """returns all the stash pages that are rare"""
+    premium_pages = Location.query.filter(
+        Location.is_premium == True,
+        Location.is_character == False,
+    ).all()
+
+    #longest non premium range are the rares
+    diffs = []
+    for i, p in enumerate(premium_pages[:-1]):
+        curr = premium_pages[i].page_no
+        nxt = premium_pages[i + 1].page_no
+        diffs.append((nxt - (curr + 1), range(curr + 1, nxt)))
+    return max(diffs)[-1]
 
 
 class Item(db.Model):
@@ -24,9 +85,9 @@ class Item(db.Model):
     # properties = db.Column(postgres.HSTORE())
     mods = db.Column(postgres.ARRAY(db.String))
     requirements = db.relationship("Requirement", backref="item",
-                                   lazy="joined")
+                                   lazy="dynamic")
     properties = db.relationship("Property", backref="item",
-                                lazy="joined")
+                                lazy="dynamic")
     location_id = db.Column(db.Integer, db.ForeignKey('location.id'))
 
     def __repr__(self):
@@ -67,23 +128,6 @@ class Item(db.Model):
     def is_quest_item(self):
         return norm(self.type).startswith(QUEST_ITEMS)
 
-    def socket_str_html(self):
-        """
-        returns the socket_str with colors suitable for output to html
-        """
-        out = []
-        for c in self.socket_str:
-            if c == "B":
-                out.append('<span class="label label-primary">&nbsp;</span>')
-            elif c == "G":
-                out.append('<span class="label label-success">&nbsp;</span>')
-            elif c == "R":
-                out.append('<span class="label label-danger">&nbsp;</span>')
-            else:
-                out.append('&nbsp;')
-        #join with hair spaces
-        return "&#8202;".join(out)
-
 
 class Property(db.Model):
     """
@@ -113,14 +157,14 @@ class Location(db.Model):
     def __str__(self):
         if self.is_character:
             return self.name
-        out = "Stash %s" % self.page_no
-        if self.is_premium:
-            out += " (%s)" % self.name
-        return out
+        return "Stash: %s" % self.name
+
+    def __repr__(self):
+        return self.__str__()
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), nullable=False)
     page_no = db.Column(db.SmallInteger())
     is_premium = db.Column(db.Boolean, nullable=False, default=False)
     is_character = db.Column(db.Boolean, nullable=False, default=False)
-    items = db.relationship("Item", backref="location", lazy="joined")
+    items = db.relationship("Item", backref="location", lazy="dynamic")

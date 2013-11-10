@@ -1,0 +1,159 @@
+{# outputs item html #}
+{% macro item_title(item, outer_tag="h4", popover=False, multiline=True, sockets=False) -%}
+<{{ outer_tag }}{% if popover %} class="item_popover" {{ item_popover(item) }} {% endif %}>
+    {% if item.is_gem() %}
+        <span class="gem">
+    {% elif item.rarity == "unique" %}
+        <span class="unique">
+    {% elif item.rarity == "rare" %}
+        <span class="rare">
+    {% elif item.rarity == "magic" %}
+        <span class="magic">
+    {% elif item.is_quest_item() %}
+        <span class="quest">
+    {% else %}
+        <span>
+    {% endif %}
+    {# output the name #}
+    {% if item.name %}
+        {{ item.name }}
+        {% if sockets and item.socket_str %}
+            &nbsp;&nbsp;<span style="float:right;">{{ item.socket_str|socket }}</span>
+        {% endif %}
+        {% if multiline %}<br/>{% endif %}
+    {% endif %}
+    </span>
+
+    {# output item type #}
+    <span>{{ item.type }}</span>
+    {% if sockets and item.socket_str and not item.name %}
+        &nbsp;&nbsp;<span style="float:right;">{{ item.socket_str|socket }}</span>
+    {% endif %}
+    </{{ outer_tag }}>
+{%- endmacro %}
+
+{#
+excludes can be an array with any of the following elements:
+title, location, sockets
+#}
+{% macro item_html(item, outer_tag="h4", excludes=[]) -%}
+    {% if "title" not in excludes %}
+        {# output item name and type #}
+        {{ item_title(item, outer_tag="h4") }}
+    {% endif %}
+
+    {% if "sockets" not in excludes %}
+        {# output the sockets if any #}
+        {% if item.socket_str %}
+            <{{ outer_tag }}>&nbsp;&nbsp;{{ item.socket_str|socket }}</{{ outer_tag }}>
+        {% endif %}
+    {% endif %}
+
+    {# item location #}
+    {% if "location" not in excludes %}
+        <{{ outer_tag }}>
+            <a href="/browse/{{ item.location.name|lower }}/">{{ item.location }}: ({{item.x}}, {{item.y}})</a>
+        </{{ outer_tag }}>
+    {% endif %}
+
+    {% if item.requirements %}
+        <h5>Requirements:</h5>
+        <p>
+            {% for req in item.requirements %}
+                <span class="{{ req.name|lower }}">{{ req.name }}: {{ req.value }}</span></br>
+            {% endfor %}
+        </p>
+    {% endif %}
+
+    {% if item.properties %}
+        <h5>Properties:</h5>
+        <p>
+            {% for prop in item.properties %}
+                <span class="magic">
+                    {{ prop.name }}{% if prop.value %}: {{ prop.value }}{% endif %}
+                </span></br>
+            {% endfor %}
+        </p>
+    {% endif %}
+
+    {% if item.mods %}
+        <h5>Mods:</h5>
+        <p>
+            {% for mod in item.mods %}
+                <span class="magic">
+                    {{ mod }}
+                </span></br>
+            {% endfor %}
+        </p>
+    {% endif %}
+{%- endmacro %}
+
+{# outputs a nice list of items #}
+{% macro item_list(items) -%}
+    <ul class="list-group">
+    {% for item in items %}
+        <li class="list-group-item">
+            {{ item_html(item) }}
+        </li>
+    {% endfor %}
+</ul>
+{%- endmacro %}
+
+{# outputs a bootstrap themed progressbar #}
+{% macro progressbar(val, max_val=100) -%}
+<div class="progress">
+    <div class="progress-bar" role="progressbar" aria-valuenow="{{ val }}" aria-valuemin="0" aria-valuemax="{{ max_val }}" style="width:{{ (val / max_val)|percent }};">
+        <span class="sr-only">{{ (val / max_val)|percent }} Complete</span>
+    </div>
+</div>
+{%- endmacro %}
+
+{# outputs a bootstrap themed progressbar with percentage #}
+{% macro progressbar_percent(val, max_val) -%}
+    <div class="col-xs-4" style="padding-left:0px">{{ progressbar(val, max_val) }}</div>
+    {{ (val / max_val)|percent }}
+{%- endmacro %}
+
+{# outputs the data attributes for an item popover #}
+{% macro item_popover(item) -%}
+    data-toggle='popover' data-trigger='hover' data-html='true'
+    data-title='{{ item_title(item, sockets=True).replace("'", "\'") }}'
+    data-content='{{ item_html(item, excludes=["title", "location", "sockets"]).replace("'", "\'") }}'
+{%- endmacro %}
+
+{# outputs a table of results #}
+{% macro item_table(items) -%}
+<table class="table table-striped table-hover table-bordered table-condensed">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Num Sockets</th>
+            <th>Sockets</th>
+            <th>Requirements</th>
+            <th>Location</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in items %}
+        <tr>
+            <td>{{ item_title(item, outer_tag="p", popover=True, multiline=False) }}</td>
+            <td>{{ item.num_sockets }}</td>
+            <td>{{ item.socket_str|socket }}</td>
+            <td>
+                {% for req in item.requirements %}
+                    <span class="{{ req.name|lower }}">
+                        {{ req.name }}: {{ req.value }}
+                    </span>
+                    {% if not loop.last %},{% endif %}
+                {% endfor %}
+            </td>
+            <td>
+                <a href="/browse/{{ item.location.name|lower }}/">
+                    {{ item.location }}: ({{item.x}}, {{item.y}})
+                </a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{%- endmacro %}

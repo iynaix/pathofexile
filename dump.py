@@ -3,14 +3,13 @@ import pprint
 import re
 from collections import defaultdict
 from clint.textui import colored
-from affixes import PREFIXES, SUFFIXES, UNIQUES, QUEST_ITEMS
+from constants import PREFIXES, SUFFIXES, UNIQUES
 from path import path
 from utils import norm
 
 from app import db
 from models import Item, Requirement, Property, Location
 
-CHROMATIC_RE = re.compile(r"B+G+R+")
 MOD_NUM_RE = re.compile(r"[-+]?[0-9\.]+?[%]?")
 WHITESPACE_RE = re.compile('\s+')
 
@@ -74,9 +73,6 @@ class ItemData(object):
     def __contains__(self, val):
         return self.data.__contains__(val)
 
-    def has_sockets(self):
-        return bool(self.data["sockets"])
-
     def num_sockets(self):
         return len(self.data["sockets"])
 
@@ -129,7 +125,7 @@ class ItemData(object):
         shows the available sockets from longest link to shortest, separated
         by spaces, e.g. 'BGR GR'
         """
-        if not self.has_sockets():
+        if not self.num_sockets:
             return ""
 
         grps = defaultdict(list)
@@ -143,13 +139,6 @@ class ItemData(object):
         #sort and join the groups
         grps = [''.join(sorted(x)) for x in grps.values()]
         return ' '.join(sorted(grps, key=lambda g: (-len(g), g)))
-
-    def is_chromatic(self):
-        #must have at least 3 sockets
-        if self.num_sockets() < 3:
-            return False
-
-        return bool(CHROMATIC_RE.search(self.socket_str))
 
     def is_magic(self):
         #normalize to lower case
@@ -175,7 +164,6 @@ class ItemData(object):
     def is_normal(self):
         return not (self.is_magic() or self.is_rare() or self.is_unique())
 
-
     @property
     def rarity(self):
         """
@@ -200,7 +188,6 @@ class ItemData(object):
         """
         search_str = norm(search_str)
         return search_str in norm(self.name) or search_str in norm(self.type)
-
 
     def sql_dump(self, location, **kwargs):
         """

@@ -1,5 +1,6 @@
 /* item name colors */
 
+/* styles for item titles */
 .unique {
     color: #af6025
 }
@@ -18,4 +19,27 @@
 
 .quest {
     color: #4ae63a
+}
+
+/* styles for requirements */
+
+.int {
+    color: #88f
+}
+
+.dex {
+    color: green
+}
+
+.str {
+    color: #BB0000
+}
+
+.level {
+}
+
+/* resizing bootstrap popover */
+.popover {
+	max-width: 500px;
+	width: auto;
 }
