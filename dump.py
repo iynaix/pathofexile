@@ -141,9 +141,13 @@ class ItemData(object):
         return ' '.join(sorted(grps, key=lambda g: (-len(g), g)))
 
     def char_location(self):
+        if not "inventoryId" in self.data:
+            return None
+
         x = self.data["inventoryId"]
         if x.startswith("Stash"):
             return None
+
         if x.endswith("2"):
             x = x[:-1]
         if x == "BodyArmour":
@@ -206,8 +210,8 @@ class ItemData(object):
         return Item(
             name=self.name,
             type=self.type,
-            x=self.data["x"],
-            y=self.data["y"],
+            x=self.data.get("x", None),
+            y=self.data.get("y", None),
             w=self.data["w"],
             h=self.data["h"],
             rarity=self.rarity,
@@ -218,6 +222,8 @@ class ItemData(object):
             mods=self.mods,
             requirements=[Requirement(**r) for r in self.requirements],
             properties=[Property(**p) for p in self.properties],
+            socketed_items=[ItemData(x).sql_dump(location) for x in
+                            self.data.get("socketedItems", [])],
             location=location,
             **kwargs
         )

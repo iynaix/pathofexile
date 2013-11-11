@@ -51,6 +51,15 @@ title, location, sockets
     {% endif %}
 
     {% if item.is_identified %}
+        {% if item.socketed_items %}
+            <h5>Socketed Items:</h5>
+            <p>
+                {% for socketed_item in item.socketed_items %}
+                    <span class="gem">{{ socketed_item.type }}</span></br>
+                {% endfor %}
+            </p>
+        {% endif %}
+
         {% if item.requirements %}
             <h5>Requirements:</h5>
             <p>

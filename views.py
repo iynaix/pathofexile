@@ -12,6 +12,7 @@ CHROMATIC_RE = r"B+G+R+"
 
 
 def search_items():
+    # Item.socketed_items != None,
     query = Item.query.filter(
         Item.socket_str.op('~')(CHROMATIC_RE),
         Item.is_identified,

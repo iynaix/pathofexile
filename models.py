@@ -62,13 +62,15 @@ class Item(db.Model):
     char_location = db.Column(db.String(20))
 
     #funky stuff for item properties, mods etc
-    # properties = db.Column(postgres.HSTORE())
     mods = db.Column(postgres.ARRAY(db.String(255)))
-    requirements = db.relationship("Requirement", backref="item",
-                                   lazy="dynamic")
-    properties = db.relationship("Property", backref="item",
-                                lazy="dynamic")
+    requirements = db.relationship("Requirement", backref="item")
+    properties = db.relationship("Property", backref="item")
     location_id = db.Column(db.Integer, db.ForeignKey('location.id'))
+
+    #socketed items use these for the parent item
+    parent_id = db.Column(db.Integer, db.ForeignKey('item.id'))
+    parent_item = db.relationship('Item', remote_side=[id],
+                                  backref="socketed_items")
 
     def __repr__(self):
         return self.name + self.type
@@ -80,12 +82,12 @@ class Item(db.Model):
 
     @db.validates('x')
     def validate_x(self, key, x):
-        assert 0 <= x <= 11, x
+        assert (0 <= x <= 11) or x is None, x
         return x
 
     @db.validates('y')
     def validate_y(self, key, y):
-        assert 0 <= y <= 11, y
+        assert (0 <= y <= 11) or y is None, y
         return y
 
     @db.validates('w')
@@ -114,10 +116,14 @@ class Item(db.Model):
 
     def location_str(self):
         """Outputs a nicely formatted location string"""
-        out = "%s: " % str(self.location)
+        ret = "%s: " % str(self.location)
         if self.char_location:
-            return "%s%s" % (out, self.char_location)
-        return "%s(%s, %s)" % (out, self.x, self.y)
+            ret += self.char_location
+        elif self.x is not None:
+            ret += "(%s, %s)" % (self.x, self.y)
+        if self.parent_item:
+            ret += " [Socketed]"
+        return ret
 
 
 class Property(db.Model):
@@ -150,7 +156,7 @@ class Location(db.Model):
     page_no = db.Column(db.SmallInteger())
     is_premium = db.Column(db.Boolean, nullable=False, default=False)
     is_character = db.Column(db.Boolean, nullable=False, default=False)
-    items = db.relationship("Item", backref="location", lazy="dynamic")
+    items = db.relationship("Item", backref="location")
 
     def __str__(self):
         if self.is_character:
