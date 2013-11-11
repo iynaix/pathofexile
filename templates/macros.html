@@ -2,28 +2,28 @@
 {% macro item_title(item, outer_tag="h4", popover=False, multiline=True, sockets=False, in_popover=False) -%}
 <{{ outer_tag }} class="{% if popover %} item_popover{% endif%}{% if not item.is_identified %} unidentified{% endif %}"
 {% if popover %}{{ item_popover(item) }} {% endif %}>
-    {% if item.is_gem() %}
-        <span class="gem">
-    {% elif item.rarity == "unique" %}
-        <span class="unique">
-    {% elif item.rarity == "rare" %}
-        <span class="rare">
-    {% elif item.rarity == "magic" %}
-        <span class="magic">
-    {% elif item.is_quest_item() %}
-        <span class="quest">
-    {% else %}
-        <span>
-    {% endif %}
-    {# output the name #}
     {% if item.name %}
-        {{ item.name }}
-        {% if sockets and item.socket_str %}
-            &nbsp;&nbsp;<span style="{% if in_popover %}float:right;{% endif %}">{{ item.socket_str|socket }}</span>
+        {% if item.is_gem() %}
+            <span class="gem">
+        {% elif item.rarity == "unique" %}
+            <span class="unique">
+        {% elif item.rarity == "rare" %}
+            <span class="rare">
+        {% elif item.rarity == "magic" %}
+            <span class="magic">
+        {% elif item.is_quest_item() %}
+            <span class="quest">
+        {% else %}
+            <span>
         {% endif %}
+        {# output the name #}
+            {{ item.name }}
+            {% if sockets and item.socket_str %}
+                &nbsp;&nbsp;<span style="{% if in_popover %}float:right;{% endif %}">{{ item.socket_str|socket }}</span>
+            {% endif %}
+        </span>
+        {% if multiline %}<br/>{% endif %}
     {% endif %}
-    </span>
-    {% if multiline %}<br/>{% endif %}
 
     {# output item type #}
     <span style="{% if not in_popover and multiline %}line-height:2;{% endif %}">{{ item.type }}</span>

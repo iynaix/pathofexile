@@ -1,9 +1,26 @@
+from sqlalchemy import types
+from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.dialects import postgres
 
 from app import db
 from constants import QUEST_ITEMS
 from utils import norm
 
+
+"""
+using tsvectors for full text search in sqlalchemy, custom type definition
+
+http://stackoverflow.com/questions/13837111/
+"""
+
+
+class tsvector(types.TypeDecorator):
+    impl = types.UnicodeText
+
+
+@compiles(tsvector, 'postgresql')
+def compile_tsvector(element, compiler, **kw):
+    return 'tsvector'
 
 # def is_gem(query):
 #     return query.join(Item.requirements).filter(
@@ -60,6 +77,7 @@ class Item(db.Model):
     socket_str = db.Column(db.String(20), nullable=False, default="")
     is_identified = db.Column(db.Boolean, nullable=False, default=True)
     char_location = db.Column(db.String(20))
+    full_text = db.Column(tsvector, nullable=False)
 
     #funky stuff for item properties, mods etc
     mods = db.Column(postgres.ARRAY(db.String(255)))

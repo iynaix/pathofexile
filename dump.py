@@ -203,6 +203,27 @@ class ItemData(object):
         search_str = norm(search_str)
         return search_str in norm(self.name) or search_str in norm(self.type)
 
+    def full_text(self):
+        """
+        returns a textual representation of the item for full text search
+        """
+        out = []
+        #handle title, type and sockets
+        if self.name:
+            out.append(self.name)
+        out.append(self.type)
+        if self.socket_str:
+            out.append(self.socket_str)
+        if self.data["identified"]:
+            for prop in self.properties:
+                if prop["value"]:
+                    out.append("%s: %s" % (prop["name"], prop["value"]))
+                else:
+                    out.append(prop["name"])
+            for mod in self.mods:
+                out.append(mod)
+        return "\n".join(out)
+
     def sql_dump(self, location, **kwargs):
         """
         returns an Item suitable for adding to the database
@@ -219,6 +240,7 @@ class ItemData(object):
             socket_str=self.socket_str,
             is_identified=self.data["identified"],
             char_location=self.char_location(),
+            full_text=self.full_text(),
             mods=self.mods,
             requirements=[Requirement(**r) for r in self.requirements],
             properties=[Property(**p) for p in self.properties],
@@ -322,14 +344,6 @@ def dump_char(fname, dump=True):
             db.session.add(
                 ItemData(item).sql_dump(loc)
             )
-        else:
-            from pprint import pprint
-            item = ItemData(item)
-            # if item.data["socketedItems"]:
-            #     for socketed_item in item.data["socketedItems"]:
-            #         pprint(socketed_item)
-            if not item.data["x"]:
-                print(item.data["inventoryId"])
 
 
 if __name__ == "__main__":

@@ -53,7 +53,7 @@ def location_nav():
     return dict(locations=locations)
 
 
-@app.route('/')
+@app.route('/search/')
 def search_results():
     return render_template('items.html', items=search_items())
 
@@ -123,7 +123,7 @@ class StatsView(View):
         ).all()
         for item in items:
             #look for the stack property
-            for p in item.properties.all():
+            for p in item.properties:
                 if p.name.startswith("Stack"):
                     #get the size of the stack
                     currency_stats[item.type] += int(p.value.split("/")[0])
@@ -229,7 +229,7 @@ class StatsView(View):
         context.update(self.get_gem_stats())
 
         return render_template('stats.html', **context)
-app.add_url_rule('/stats/', view_func=StatsView.as_view('stats'))
+app.add_url_rule('/', view_func=StatsView.as_view('stats'))
 
 
 if __name__ == '__main__':
