@@ -1,5 +1,5 @@
 {# outputs item html #}
-{% macro item_title(item, outer_tag="h4", popover=False, multiline=True, sockets=False) -%}
+{% macro item_title(item, outer_tag="h4", popover=False, multiline=True, sockets=False, in_popover=False) -%}
 <{{ outer_tag }} class="{% if popover %} item_popover{% endif%}{% if not item.is_identified %} unidentified{% endif %}"
 {% if popover %}{{ item_popover(item) }} {% endif %}>
     {% if item.is_gem() %}
@@ -19,16 +19,16 @@
     {% if item.name %}
         {{ item.name }}
         {% if sockets and item.socket_str %}
-            &nbsp;&nbsp;<span style="{% if popover %}float:right;{% endif %}">{{ item.socket_str|socket }}</span>
+            &nbsp;&nbsp;<span style="{% if in_popover %}float:right;{% endif %}">{{ item.socket_str|socket }}</span>
         {% endif %}
     {% endif %}
     </span>
     {% if multiline %}<br/>{% endif %}
 
     {# output item type #}
-    <span style="{% if not popover %}line-height:2;{% else %}{% endif %}">{{ item.type }}</span>
+    <span style="{% if not in_popover and multiline %}line-height:2;{% endif %}">{{ item.type }}</span>
     {% if sockets and item.socket_str and not item.name %}
-        &nbsp;&nbsp;<span style="{% if popover %}float:right;{% else %}{% endif %}">{{ item.socket_str|socket }}</span>
+        &nbsp;&nbsp;<span style="{% if in_popover %}float:right;{% else %}{% endif %}">{{ item.socket_str|socket }}</span>
     {% endif %}
     </{{ outer_tag }}>
 {%- endmacro %}
@@ -46,43 +46,43 @@ title, location, sockets
     {# item location #}
     {% if "location" not in excludes %}
         <{{ outer_tag }}>
-            <a href="/browse/{{ item.location.name|lower }}/">{{ item.location }}: ({{item.x}}, {{item.y}})</a>
+            <a href="/browse/{{ item.location.name|lower }}/">{{ item.location_str() }}</a>
         </{{ outer_tag }}>
     {% endif %}
 
-    {% if not item.is_identified %}
+    {% if item.is_identified %}
+        {% if item.requirements %}
+            <h5>Requirements:</h5>
+            <p>
+                {% for req in item.requirements %}
+                    <span class="{{ req.name[:3]|lower }}">{{ req.name }}: {{ req.value }}</span></br>
+                {% endfor %}
+            </p>
+        {% endif %}
+
+        {% if item.properties %}
+            <h5>Properties:</h5>
+            <p>
+                {% for prop in item.properties %}
+                    <span class="magic">
+                        {{ prop.name }}{% if prop.value %}: {{ prop.value }}{% endif %}
+                    </span></br>
+                {% endfor %}
+            </p>
+        {% endif %}
+
+        {% if item.mods %}
+            <h5>Mods:</h5>
+            <p>
+                {% for mod in item.mods %}
+                    <span class="magic">
+                        {{ mod }}
+                    </span></br>
+                {% endfor %}
+            </p>
+        {% endif %}
+    {% else %}
         <span class="unidentified">Unidentified</span>
-    {% endif %}
-
-    {% if item.requirements %}
-        <h5>Requirements:</h5>
-        <p>
-            {% for req in item.requirements %}
-                <span class="{{ req.name|lower }}">{{ req.name }}: {{ req.value }}</span></br>
-            {% endfor %}
-        </p>
-    {% endif %}
-
-    {% if item.properties %}
-        <h5>Properties:</h5>
-        <p>
-            {% for prop in item.properties %}
-                <span class="magic">
-                    {{ prop.name }}{% if prop.value %}: {{ prop.value }}{% endif %}
-                </span></br>
-            {% endfor %}
-        </p>
-    {% endif %}
-
-    {% if item.mods %}
-        <h5>Mods:</h5>
-        <p>
-            {% for mod in item.mods %}
-                <span class="magic">
-                    {{ mod }}
-                </span></br>
-            {% endfor %}
-        </p>
     {% endif %}
 {%- endmacro %}
 
@@ -115,7 +115,7 @@ title, location, sockets
 {# outputs the data attributes for an item popover #}
 {% macro item_popover(item) -%}
     data-toggle='popover' data-trigger='hover' data-html='true'
-    data-title='{{ item_title(item, sockets=True).replace("'", "\'") }}'
+    data-title='{{ item_title(item, sockets=True, in_popover=True).replace("'", "\'") }}'
     data-content='{{ item_html(item, excludes=["title", "location", "sockets"]).replace("'", "\'") }}'
 {%- endmacro %}
 
@@ -138,12 +138,14 @@ title, location, sockets
             <td>{{ item.num_sockets }}</td>
             <td>{{ item.socket_str|socket }}</td>
             <td>
-                {% for req in item.requirements %}
-                    <span class="{{ req.name|lower }}">
-                        {{ req.name }}: {{ req.value }}
-                    </span>
-                    {% if not loop.last %},{% endif %}
-                {% endfor %}
+                {% if item.is_identified %}
+                    {% for req in item.requirements %}
+                        <span class="{{ req.name[:3]|lower }}">
+                            {{ req.name }}: {{ req.value }}
+                        </span>
+                        {% if not loop.last %},{% endif %}
+                    {% endfor %}
+                {% endif %}
             </td>
             <td>
                 <a href="/browse/{{ item.location.name|lower }}/">

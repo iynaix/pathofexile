@@ -49,8 +49,9 @@ class Item(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255))
     type = db.Column(db.String(255), nullable=False)
-    x = db.Column(db.SmallInteger(), nullable=False, default=0)
-    y = db.Column(db.SmallInteger(), nullable=False, default=0)
+    #x, y can be null for equipped or socketed items
+    x = db.Column(db.SmallInteger())
+    y = db.Column(db.SmallInteger())
     w = db.Column(db.SmallInteger(), nullable=False, default=1)
     h = db.Column(db.SmallInteger(), nullable=False, default=1)
     rarity = db.Column(db.Enum('normal', 'magic', 'rare', 'unique',
@@ -58,10 +59,11 @@ class Item(db.Model):
     num_sockets = db.Column(db.SmallInteger(), nullable=False, default=0)
     socket_str = db.Column(db.String(20), nullable=False, default="")
     is_identified = db.Column(db.Boolean, nullable=False, default=True)
+    char_location = db.Column(db.String(20))
 
     #funky stuff for item properties, mods etc
     # properties = db.Column(postgres.HSTORE())
-    mods = db.Column(postgres.ARRAY(db.String))
+    mods = db.Column(postgres.ARRAY(db.String(255)))
     requirements = db.relationship("Requirement", backref="item",
                                    lazy="dynamic")
     properties = db.relationship("Property", backref="item",
@@ -109,6 +111,13 @@ class Item(db.Model):
     @property
     def identified(self):
         return self.query.filter(self.is_identified)
+
+    def location_str(self):
+        """Outputs a nicely formatted location string"""
+        out = "%s: " % str(self.location)
+        if self.char_location:
+            return "%s%s" % (out, self.char_location)
+        return "%s(%s, %s)" % (out, self.x, self.y)
 
 
 class Property(db.Model):

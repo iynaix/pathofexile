@@ -140,6 +140,18 @@ class ItemData(object):
         grps = [''.join(sorted(x)) for x in grps.values()]
         return ' '.join(sorted(grps, key=lambda g: (-len(g), g)))
 
+    def char_location(self):
+        x = self.data["inventoryId"]
+        if x.startswith("Stash"):
+            return None
+        if x.endswith("2"):
+            x = x[:-1]
+        if x == "BodyArmour":
+            return "Armour"
+        if x == "MainInventory":
+            return "Inventory"
+        return x
+
     def is_magic(self):
         #normalize to lower case
         if self.name:
@@ -202,16 +214,13 @@ class ItemData(object):
             num_sockets=self.num_sockets(),
             socket_str=self.socket_str,
             is_identified=self.data["identified"],
+            char_location=self.char_location(),
             mods=self.mods,
             requirements=[Requirement(**r) for r in self.requirements],
             properties=[Property(**p) for p in self.properties],
             location=location,
             **kwargs
         )
-
-
-# TODO
-# u'socketedItems': 342,
 
 
 def destroy_database(engine):
@@ -289,11 +298,6 @@ def dump_stash_page(page_no, tab_data, dump=True):
             db.session.add(
                 ItemData(item).sql_dump(loc)
             )
-        else:
-            item = ItemData(item)
-            if item.type == "Blinder":
-                from pprint import pprint
-                pprint(item.data)
 
 
 def dump_char(fname, dump=True):
@@ -312,6 +316,14 @@ def dump_char(fname, dump=True):
             db.session.add(
                 ItemData(item).sql_dump(loc)
             )
+        else:
+            from pprint import pprint
+            item = ItemData(item)
+            # if item.data["socketedItems"]:
+            #     for socketed_item in item.data["socketedItems"]:
+            #         pprint(socketed_item)
+            if not item.data["x"]:
+                print(item.data["inventoryId"])
 
 
 if __name__ == "__main__":
@@ -341,7 +353,6 @@ if __name__ == "__main__":
     if dump:
         db.session.commit()
 
-    if dump:
         print
         print colored.green(len(Item.query.all())),
         print "ITEMS PROCESSED."

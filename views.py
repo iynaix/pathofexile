@@ -12,8 +12,9 @@ CHROMATIC_RE = r"B+G+R+"
 
 
 def search_items():
-    query = Item.identified.filter(
+    query = Item.query.filter(
         Item.socket_str.op('~')(CHROMATIC_RE),
+        Item.is_identified,
     )
     return query.all()
 
@@ -97,7 +98,7 @@ class PurgeView(View):
         context = {
             "chromatics": self.get_chromatic_purge(),
             "rares": self.get_rare_purge(),
-            "unidentified": self.get_unidentified(),
+            "unidentifieds": self.get_unidentified(),
         }
         #apply default ordering for the items
         for k, v in context.iteritems():
