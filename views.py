@@ -90,7 +90,9 @@ class LevelsView(View):
             Item.rarity != "magic",
             Location.is_character == False,
         ).order_by(
-            Item.x, Item.y
+            Location.page_no,
+            Item.x,
+            Item.y
         )
         return items
 
