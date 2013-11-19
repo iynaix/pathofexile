@@ -1,23 +1,15 @@
-from collections import defaultdict
-from flask import render_template
+from collections import defaultdict, Counter, OrderedDict
+from flask import request, render_template
 from flask.views import View
 from jinja2.filters import do_mark_safe
 
 from app import app, db
-from constants import CURRENCIES
+import constants
 from models import (Item, Location, Property, get_chromatic_stash_pages,
                     get_rare_stash_pages)
+from utils import normfind, sorteddict
 
 CHROMATIC_RE = r"B+G+R+"
-
-
-def search_items():
-    # Item.socketed_items != None,
-    query = Item.query.filter(
-        Item.socket_str.op('~')(CHROMATIC_RE),
-        Item.is_identified,
-    )
-    return query.all()
 
 
 @app.template_filter('percent')
@@ -53,9 +45,28 @@ def location_nav():
     return dict(locations=locations)
 
 
-@app.route('/search/')
-def search_results():
-    return render_template('items.html', items=search_items())
+class SearchView(View):
+    """
+    Displays all the items that should be removed
+    """
+    def simple_search(self, search_term):
+        # Item.socketed_items != None,
+        # Item.socket_str.op('~')(CHROMATIC_RE),
+        # Item.is_identified,
+        query = Item.query.filter(
+            Item.full_text.op('@@')(db.func.to_tsquery(search_term))
+        )
+        return query.all()
+
+    def dispatch_request(self):
+        context = {}
+        if "simple_search" in request.form:
+            context["items"] = self.simple_search(
+                                    request.form["simple_search"])
+        return render_template('items.html', **context)
+
+app.add_url_rule('/search/', view_func=SearchView.as_view('search'),
+                 methods=["POST"])
 
 
 @app.route('/browse/<slug>/')
@@ -67,6 +78,52 @@ def browse(slug):
     ).all()
 
     return render_template('browse.html', items=items, title=str(loc))
+
+
+class LevelsView(View):
+    """sorts the items into bins of levels"""
+    def get_items(self):
+        """returns a list of items to be rendered"""
+        items = Item.query.join(Item.location).filter(
+            Item.is_identified,
+            Item.rarity != "normal",
+            Item.rarity != "magic",
+            Location.is_character == False,
+        ).order_by(
+            Item.x, Item.y
+        )
+        return items
+
+    def group_items(self, items):
+        grouped_items = defaultdict(list)
+        for item in items:
+            lvl = 0
+            for req in item.requirements:
+                if req.name == "Level":
+                    lvl = int(req.value)
+                    break
+            grouped_items[lvl].append(item)
+        return sorteddict(grouped_items)
+
+    def dispatch_request(self, slug):
+        items = self.get_items()
+        if slug is not None:
+            if slug.lower() == "misc":
+                item_types = constants.BELTS
+                item_types.update(constants.QUIVERS)
+            else:
+                item_types = getattr(constants, slug.upper()).keys()
+            items = items.filter(
+                Item.type.in_(item_types)
+            )
+
+        return render_template('levels.html',
+                            grouped_items=self.group_items(items.all()))
+
+app.add_url_rule('/levels/', view_func=LevelsView.as_view('levels'),
+                 defaults={"slug": None})
+app.add_url_rule('/levels/<slug>/',
+                 view_func=LevelsView.as_view('levels_slug'))
 
 
 class PurgeView(View):
@@ -140,7 +197,7 @@ class StatsView(View):
                 currency_stats.pop("Alchemy Shard", 0) / 20.0
 
         currencies = []
-        for name, effect in CURRENCIES.iteritems():
+        for name, effect in constants.CURRENCIES.iteritems():
             if name not in currency_stats:
                 continue
             #format the total string
@@ -203,19 +260,75 @@ class StatsView(View):
         }
 
     def get_gem_stats(self):
-        stats = defaultdict(int)
-
         gems = Item.query.join(Item.requirements).filter(
             Item.properties.any(name="Experience")
-        )
-        import q
-        for gem in gems:
-            stats[gem.type] += 1
-        q(stats)
+        ).all()
+
+        all_gems = {"B": [], "G": [], "R": []}
+        for gem_name, count in Counter(g.type for g in gems).iteritems():
+            #look for info for the corresponding gem
+            gval = normfind(constants.GEMS, gem_name)
+
+            #find the first of the gem for popover
+            for g in gems:
+                if g.type == gem_name:
+                    gval["sample"] = g
+                    gval["count"] = count
+                    all_gems[gval["color"]].append(gval)
+                    break
+            else:
+                raise IndexError
 
         return {
-            # "chromatics": reversed(sorted(stats)),
-            # "chromatics_total": sum(s[1] for s in stats),
+            "all_gems": {k: sorted(v, key=lambda x: -x["count"]) for
+                        k, v in all_gems.iteritems()}
+        }
+
+    def get_flask_stats(self):
+        flasks = Item.query.filter(
+            Item.type.like("%Flask%")
+        ).all()
+
+        def flask_type(f):
+            """returns the type of the flask"""
+            if "Life" in f.type:
+                return "Life"
+            elif "Mana" in f.type:
+                return "Mana"
+            elif "Hybrid" in f.type:
+                return "Hybrid"
+            else:
+                return "Misc"
+
+        all_flasks = OrderedDict([
+            ("Life", defaultdict(int)),
+            ("Mana", defaultdict(int)),
+            ("Hybrid", defaultdict(int)),
+            ("Misc", defaultdict(int)),
+        ])
+        for f in flasks:
+            t = flask_type(f)
+            if t != "Misc":
+                for size in constants.FLASK_SIZES:
+                    if size in f.type:
+                        all_flasks[t][size] += 1
+                        break
+            else:
+                for misc_type in constants.MISC_FLASKS:
+                    if misc_type in f.type:
+                        all_flasks[t][misc_type] += 1
+                        break
+
+        all_flasks["Life"] = sorteddict(all_flasks["Life"],
+                                        constants.FLASK_SIZES)
+        all_flasks["Mana"] = sorteddict(all_flasks["Mana"],
+                                        constants.FLASK_SIZES)
+        all_flasks["Hybrid"] = sorteddict(all_flasks["Hybrid"],
+                                          constants.FLASK_SIZES)
+        all_flasks["Misc"] = sorteddict(all_flasks["Misc"],
+                                        constants.MISC_FLASKS)
+        return {
+            "all_flasks": all_flasks,
         }
 
     def dispatch_request(self):
@@ -227,6 +340,7 @@ class StatsView(View):
         context.update(self.get_item_socket_links_stats())
         context.update(self.get_chromatics_stats())
         context.update(self.get_gem_stats())
+        context.update(self.get_flask_stats())
 
         return render_template('stats.html', **context)
 app.add_url_rule('/', view_func=StatsView.as_view('stats'))

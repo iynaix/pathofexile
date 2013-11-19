@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% import 'macros.html' as macros %}
+
+{% block title %}Levels{% endblock title %}
+
+{% block body %}
+<div class="btn-group">
+    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+        Filter Type <span class="caret"></span>
+    </button>
+    <ul class="dropdown-menu" role="menu">
+        <li role="presentation" class="dropdown-header">
+            <h4><a href="/levels/weapons/">Weapons</a></h4>
+        </li>
+        <li><a href="/levels/axes/">Axes</a></li>
+        <li><a href="/levels/bows/">Bows</a></li>
+        <li><a href="/levels/claws/">Claws</a></li>
+        <li><a href="/levels/daggers/">Daggers</a></li>
+        <li><a href="/levels/maces/">Maces</a></li>
+        <li><a href="/levels/staves/">Staves</a></li>
+        <li><a href="/levels/swords/">Swords</a></li>
+        <li><a href="/levels/wands/">Wands</a></li>
+        <li role="presentation" class="dropdown-header">
+            <h4><a href="/levels/armors_all/">Armor</a></h4>
+        </li>
+        <li><a href="/levels/helms/">Helmets</a></li>
+        <li><a href="/levels/armors/">Body Armor</a></li>
+        <li><a href="/levels/gloves/">Gloves</a></li>
+        <li><a href="/levels/boots/">Boots</a></li>
+        <li><a href="/levels/shields/">Shields</a></li>
+        <li role="presentation" class="dropdown-header">
+            <h4><a href="/levels/misc/">Misc</a></h4>
+        </li>
+        <li><a href="/levels/belts/">Belts</a></li>
+        <li><a href="/levels/quivers/">Quivers</a></li>
+    </ul>
+</div>
+
+{% for lvl, items in grouped_items.iteritems() %}
+    <h3>Level {{ lvl }}</h3>
+    {{ macros.item_table(items) }}
+{% endfor %}
+
+{% endblock body %}
+
+

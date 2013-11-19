@@ -120,4 +120,60 @@
         </tr>
     </tbody>
 </table>
+
+<h3>Flasks</h3>
+{% for flask_type, flask_counts in all_flasks.iteritems() %}
+    <h4>{{ flask_type }} Flasks</h4>
+    <table class="table table-striped table-hover">
+        <thead>
+            <tr>
+                <th>Flask Type</th>
+                <th>Count</th>
+                <th>Percentage</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for flask, count in flask_counts.iteritems() %}
+            <tr>
+                <td>
+                    {{ flask }}
+                </td>
+                <td>{{ count }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endfor %}
+
+<h3>Gems</h3>
+{% for color, gems in all_gems.iteritems() %}
+    {% if color == "B" %}
+        <h4>Intelligence Gems</h4>
+    {% elif color == "G" %}
+        <h4>Dexterity Gems</h4>
+    {% elif color == "R" %}
+        <h4>Strength Gems</h4>
+    {% endif %}
+
+    <table class="table table-striped table-hover">
+        <thead>
+            <tr>
+                <th>Gem</th>
+                <th>Color</th>
+                <th>Count</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for v in gems %}
+            <tr>
+                <td>
+                    {{ macros.item_title(v.sample, outer_tag="p", popover=True, multiline=False) }}
+                </td>
+                <td>{{ v.color|socket }}</td>
+                <td>{{ v.count }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endfor %}
 {% endblock body %}

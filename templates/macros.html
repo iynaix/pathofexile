@@ -134,16 +134,21 @@ title, location, sockets
     <thead>
         <tr>
             <th>Name</th>
+            <th>Location</th>
             <th>Num Sockets</th>
             <th>Sockets</th>
             <th>Requirements</th>
-            <th>Location</th>
         </tr>
     </thead>
     <tbody>
         {% for item in items %}
         <tr>
             <td>{{ item_title(item, outer_tag="p", popover=True, multiline=False) }}</td>
+            <td>
+                <a href="/browse/{{ item.location.name|lower }}/">
+                    {{ item.location_str() }}
+                </a>
+            </td>
             <td>{{ item.num_sockets }}</td>
             <td>{{ item.socket_str|socket }}</td>
             <td>
@@ -155,11 +160,6 @@ title, location, sockets
                         {% if not loop.last %},{% endif %}
                     {% endfor %}
                 {% endif %}
-            </td>
-            <td>
-                <a href="/browse/{{ item.location.name|lower }}/">
-                    {{ item.location }}: ({{item.x}}, {{item.y}})
-                </a>
             </td>
         </tr>
         {% endfor %}

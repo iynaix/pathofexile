@@ -3,8 +3,8 @@ from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.dialects import postgres
 
 from app import db
-from constants import QUEST_ITEMS
-from utils import norm
+from constants import QUEST_ITEMS, GEMS
+from utils import norm, normfind
 
 
 """
@@ -142,6 +142,18 @@ class Item(db.Model):
         if self.parent_item:
             ret += " [Socketed]"
         return ret
+
+    def gem_color(self):
+        """
+        returns the letter for the color of the gem, if the item is not a gem,
+        raises ValueError
+        """
+        for p in self.properties:
+            if p.name == "Experience":
+                break
+        else:
+            raise ValueError("Item is not a gem.")
+        return normfind(GEMS, self.type)["color"]
 
 
 class Property(db.Model):

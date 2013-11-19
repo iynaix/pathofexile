@@ -217,11 +217,12 @@ class ItemData(object):
         if self.data["identified"]:
             for prop in self.properties:
                 if prop["value"]:
-                    out.append("%s: %s" % (prop["name"], prop["value"]))
+                    out.append(
+                        norm_mod("%s: %s" % (prop["name"], prop["value"])))
                 else:
-                    out.append(prop["name"])
+                    out.append(norm_mod(prop["name"]))
             for mod in self.mods:
-                out.append(mod)
+                out.append(norm_mod(mod))
         return "\n".join(out)
 
     def sql_dump(self, location, **kwargs):
@@ -240,7 +241,7 @@ class ItemData(object):
             socket_str=self.socket_str,
             is_identified=self.data["identified"],
             char_location=self.char_location(),
-            full_text=self.full_text(),
+            full_text=db.func.to_tsvector(self.full_text()),
             mods=self.mods,
             requirements=[Requirement(**r) for r in self.requirements],
             properties=[Property(**p) for p in self.properties],
