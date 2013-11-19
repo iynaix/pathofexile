@@ -123,7 +123,7 @@ title, location, sockets
 
 {# outputs the data attributes for an item popover #}
 {% macro item_popover(item) -%}
-    data-toggle='popover' data-trigger='hover' data-html='true'
+    data-toggle='popover' data-html='true'
     data-title='{{ item_title(item, sockets=True, in_popover=True).replace("'", "\'") }}'
     data-content='{{ item_html(item, excludes=["title", "location", "sockets"]).replace("'", "\'") }}'
 {%- endmacro %}
