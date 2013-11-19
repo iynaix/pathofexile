@@ -6,9 +6,23 @@ def heroku(cmd):
 
 
 @task
-def deploy():
-    #do the deploy
+def deploy(full=0):
+    """does a deploy to heroku"""
     local("git push heroku master")
+    if full:
+        fetch()
+        update()
 
-    heroku("pg:reset")
-    heroku("pg:push pathofexile")
+
+@task
+def fetch():
+    """updates the inventory data from pathofexile"""
+    local("python fetch.py")
+
+
+@task
+def update():
+    """updates the remote postgres database"""
+
+    heroku("pg:reset HEROKU_POSTGRESQL_MAROON --confirm pathofexilexy")
+    heroku("pg:push pathofexile HEROKU_POSTGRESQL_MAROON")
