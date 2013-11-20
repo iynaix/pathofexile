@@ -39,8 +39,8 @@ def get_chromatic_stash_pages():
     ).all()
     for i, p in enumerate(premium_pages):
         if p.name.lower().startswith("chromatic"):
-            return range(premium_pages[i].page_no,
-                         premium_pages[i + 1].page_no)
+            return list(range(premium_pages[i].page_no,
+                         premium_pages[i + 1].page_no))
 
 
 def get_rare_stash_pages():
@@ -55,7 +55,7 @@ def get_rare_stash_pages():
     for i, p in enumerate(premium_pages[:-1]):
         curr = premium_pages[i].page_no
         nxt = premium_pages[i + 1].page_no
-        diffs.append((nxt - (curr + 1), range(curr + 1, nxt)))
+        diffs.append((nxt - (curr + 1), list(range(curr + 1, nxt))))
     return max(diffs)[-1]
 
 
@@ -95,22 +95,22 @@ class Item(db.Model):
 
     @db.validates('num_sockets')
     def validate_num_sockets(self, key, num_sockets):
-        assert 0 <= num_sockets <= 6, num_sockets
+        assert 0 <= num_sockets <= 6
         return num_sockets
 
     @db.validates('x')
     def validate_x(self, key, x):
-        assert (0 <= x <= 11) or x is None, x
+        assert x is None or 0 <= x <= 11
         return x
 
     @db.validates('y')
     def validate_y(self, key, y):
-        assert (0 <= y <= 11) or y is None, y
+        assert y is None or 0 <= y <= 11
         return y
 
     @db.validates('w')
     def validate_w(self, key, w):
-        assert 1 <= w <= 2, w
+        assert 1 <= w <= 2
         return w
 
     @db.validates('h')

@@ -59,16 +59,16 @@ class ItemData(object):
         return self.data.get(key, default)
 
     def keys(self):
-        return self.data.keys()
+        return list(self.data.keys())
 
     def values(self):
-        return self.data.keys()
+        return list(self.data.keys())
 
     def items(self):
-        return self.data.items()
+        return list(self.data.items())
 
-    def iteritems(self):
-        return self.data.iteritems()
+    def items(self):
+        return iter(self.data.items())
 
     def __contains__(self, val):
         return self.data.__contains__(val)
@@ -137,7 +137,7 @@ class ItemData(object):
             elif s["attr"] == "S":
                 grps[s["group"]].append("R")
         #sort and join the groups
-        grps = [''.join(sorted(x)) for x in grps.values()]
+        grps = [''.join(sorted(x)) for x in list(grps.values())]
         return ' '.join(sorted(grps, key=lambda g: (-len(g), g)))
 
     def char_location(self):
@@ -374,8 +374,8 @@ if __name__ == "__main__":
     if dump:
         db.session.commit()
 
-        print
-        print colored.green(len(Item.query.all())),
-        print "ITEMS PROCESSED."
-        print "DATA DUMP COMPLETED IN",
-        print colored.green("%.4f SECONDS" % (time.time() - start_time))
+        print()
+        print(colored.green(len(Item.query.all())), end=' ')
+        print("ITEMS PROCESSED.")
+        print("DATA DUMP COMPLETED IN", end=' ')
+        print(colored.green("%.4f SECONDS" % (time.time() - start_time)))

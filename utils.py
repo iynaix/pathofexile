@@ -21,7 +21,7 @@ def normfind(iterable, text):
                 return v
 
     elif isinstance(iterable, dict):
-        for k, v in iterable.iteritems():
+        for k, v in iterable.items():
             if norm(k) == text:
                 return v
 
@@ -48,7 +48,7 @@ def sorteddict(d, ordered_arr=None):
 
 
     ret = OrderedDict()
-    keys = d.keys()
+    keys = list(d.keys())
     for k in ordered_arr:
         if k in keys:
             ret[k] = d[k]

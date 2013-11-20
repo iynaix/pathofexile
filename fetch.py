@@ -65,20 +65,20 @@ if __name__ == "__main__":
     #use selenium to get the cookies needed for requests
     cookies = get_login_cookies()
 
-    print "FETCHING CHARACTER DATA... ",
+    print("FETCHING CHARACTER DATA... ", end=' ')
     req = requests.get(CHAR_URL, cookies=cookies)
     path("data/characters.json").write_text(req.text)
-    print "DONE"
+    print("DONE")
 
-    print "FETCHING CHARACTER ITEM DATA... ",
+    print("FETCHING CHARACTER ITEM DATA... ", end=' ')
     for char in req.json():
         name = char["name"]
         req = requests.post(ITEM_URL, cookies=cookies,
                             data={"character": name})
         path("data/items_%s.json" % name).write_text(req.text)
-    print "DONE"
+    print("DONE")
 
-    print "FETCHING STASH ITEM DATA... ",
+    print("FETCHING STASH ITEM DATA... ", end=' ')
     #first page has different fetching params to read the names of the rest of
     #the tabs
     req = requests.post(STASH_URL, cookies=cookies, data={
@@ -96,7 +96,7 @@ if __name__ == "__main__":
             "tabIndex": page_no,
         })
         path("data/stash_%s.json" % (page_no + 1)).write_text(req.text)
-    print "DONE"
+    print("DONE")
 
-    print "DUMPING DATA INTO DATABASE..."
+    print("DUMPING DATA INTO DATABASE...")
     os.system("python dump.py")

@@ -67,7 +67,7 @@ class AdvancedSearchView(MethodView):
     def handle_socket_str(self, val):
         #create the regex
         SOCKET_RE = r'[BGR]*'
-        val = zip(sorted(val), itertools.repeat(SOCKET_RE))
+        val = list(zip(sorted(val), itertools.repeat(SOCKET_RE)))
         val = SOCKET_RE + ''.join(itertools.chain(*val))
         return [Item.socket_str.op('~')(val)]
 
@@ -112,7 +112,7 @@ class AdvancedSearchView(MethodView):
         #generates the query in parts
         filter_args = []
         #dispatch the handling of each funtion to the appropriate methods
-        for k, v in request.form.iteritems():
+        for k, v in list(request.form.items()):
             #special handling for multi selects
             if k.endswith("_multi"):
                 v = [x.strip() for x in request.form.getlist(k)]
@@ -183,7 +183,7 @@ class LevelsView(View):
                 item_types = constants.BELTS
                 item_types.update(constants.QUIVERS)
             else:
-                item_types = getattr(constants, slug.upper()).keys()
+                item_types = list(getattr(constants, slug.upper()).keys())
             items = items.filter(
                 Item.type.in_(item_types)
             )
@@ -230,7 +230,7 @@ class PurgeView(View):
             "unidentifieds": self.get_unidentified(),
         }
         #apply default ordering for the items
-        for k, v in context.iteritems():
+        for k, v in list(context.items()):
             context[k] = v.order_by(
                 Location.id, Item.x, Item.y
             ).all()
@@ -268,7 +268,7 @@ class StatsView(View):
                 currency_stats.pop("Alchemy Shard", 0) / 20.0
 
         currencies = []
-        for name, effect in constants.CURRENCIES.iteritems():
+        for name, effect in list(constants.CURRENCIES.items()):
             if name not in currency_stats:
                 continue
             #format the total string
@@ -336,7 +336,7 @@ class StatsView(View):
         ).all()
 
         all_gems = {"B": [], "G": [], "R": []}
-        for gem_name, count in Counter(g.type for g in gems).iteritems():
+        for gem_name, count in list(Counter(g.type for g in gems).items()):
             #look for info for the corresponding gem
             gval = normfind(constants.GEMS, gem_name)
 
@@ -352,7 +352,7 @@ class StatsView(View):
 
         return {
             "all_gems": {k: sorted(v, key=lambda x: -x["count"]) for
-                        k, v in all_gems.iteritems()}
+                        k, v in list(all_gems.items())}
         }
 
     def get_flask_stats(self):
