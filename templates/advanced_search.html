@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% import 'macros.html' as macros %}
+
+{% block title %}Advanced Search{% endblock title %}
+
+{% block body %}
+<h3>Advanced Search</h3>
+
+<form class="form-horizontal" role="form" action="/advanced_search/" method="post">
+    {{ macros.text_field("item_title", label="Item Title", help_text="Fuzzy search for both name and title.") }}
+    {{ macros.text_field("item_name") }}
+    {{ macros.text_field("item_type") }}
+
+    {{ macros.text_field("socket_str", label="Socket String", help_text="E.g. 'RRR' or 'BGRB'.") }}
+
+    <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-10">
+            <div class="checkbox">
+                <label>
+                    <input type="checkbox" name="is_chromatic" id="id_is_chromatic"> Is Chromatic
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-10">
+            <div class="checkbox">
+                <label>
+                    <input type="checkbox" name="is_socketed" id="id_is_socketed"> Is Socketed
+                </label>
+            </div>
+        </div>
+    </div>
+
+    {{ macros.select_field("rarity", values=["normal", "magic", "rare", "unique"]) }}
+    {{ macros.select_field("sockets", values=range(7)) }}
+    {{ macros.select_field("sockets_links", values=range(2, 7)) }}
+
+    <button type="submit" class="btn btn-default">Search</button>
+</form>
+
+{% endblock body %}
+
+{% block extrajs %}
+    $("button.multi_toggle").on("click", function(e) {
+        $elem = $(e.currentTarget);
+        //set the depressed state
+        $elem.toggleClass("active");
+        //toggle the multiple attribute of the select
+        $select = $elem.closest("div.form-group").find("select");
+        if ($select.is("[multiple]")) {
+            $select.removeAttr("multiple");
+            $select.removeAttr("size");
+
+            $select.prepend("<option value=''></option>");
+        }
+        else {
+            $select.attr("multiple", "multiple");
+            $select.children("option").eq(0).remove(); //remove the first blank option
+            $select.attr("size", Math.min($select.children("option").length, 10));
+        }
+    });
+{% endblock extrajs %}

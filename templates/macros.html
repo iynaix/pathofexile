@@ -166,3 +166,35 @@ title, location, sockets
     </tbody>
 </table>
 {%- endmacro %}
+
+{# outputs a horizontal bootstrap text field #}
+{% macro text_field(name, label="", help_text="") -%}
+<div class="form-group">
+    <label for="{{ name }}" class="col-sm-2 control-label">{{ label|default(name.replace("_", " ").title(), true) }}</label>
+    <div class="col-sm-10">
+        <input type="text" class="form-control input-sm" id="id_{{ name }}" name="{{ name }}">
+        {% if help_text %}
+            <p class="help-block">{{ help_text }}</p>
+        {% endif %}
+    </div>
+</div>
+{%- endmacro %}
+
+{# outputs a horizontal bootstrap select field with an optional multi select button #}
+{% macro select_field(name, label="", multi=True, values=[]) -%}
+<div class="form-group">
+    <label for="{{ name }}" class="col-sm-2 control-label">{{ label|default(name.replace("_", " ").title(), true) }}</label>
+    <div class="col-sm-{% if multi %}9{% else %}10{% endif %}">
+        <select class="form-control" name="{{ name }}_multi" id="{{ name }}">
+            <option value=""></option>
+            {% for v in values %}
+                <option value="{{ v }}">{{ v }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    {% if multi %}
+        <button type="button" class="btn btn-default multi_toggle">Multi</button>
+    {% endif %}
+</div>
+{%- endmacro %}

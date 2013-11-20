@@ -1,13 +1,15 @@
 from collections import defaultdict, Counter, OrderedDict
 from flask import request, render_template
-from flask.views import View
+from flask.views import View, MethodView
 from jinja2.filters import do_mark_safe
+import itertools
 
 from app import app, db
 import constants
 from models import (Item, Location, Property, get_chromatic_stash_pages,
                     get_rare_stash_pages)
 from utils import normfind, sorteddict
+import q
 
 CHROMATIC_RE = r"B+G+R+"
 
@@ -45,28 +47,95 @@ def location_nav():
     return dict(locations=locations)
 
 
-class SearchView(View):
+@app.route('/search/', methods=["POST"])
+def simple_search():
     """
-    Displays all the items that should be removed
+    Performs a simple full text search for items
     """
-    def simple_search(self, search_term):
-        # Item.socketed_items != None,
-        # Item.socket_str.op('~')(CHROMATIC_RE),
-        # Item.is_identified,
-        query = Item.query.filter(
-            Item.full_text.op('@@')(db.func.to_tsquery(search_term))
-        )
-        return query.all()
+    search_term = request.form["simple_search"]
+    items = Item.query.filter(
+        Item.full_text.op('@@')(db.func.to_tsquery(search_term))
+    ).all()
+    return render_template('items.html', items=items)
 
-    def dispatch_request(self):
-        context = {}
-        if "simple_search" in request.form:
-            context["items"] = self.simple_search(
-                                    request.form["simple_search"])
-        return render_template('items.html', **context)
 
-app.add_url_rule('/search/', view_func=SearchView.as_view('search'),
-                 methods=["POST"])
+class AdvancedSearchView(MethodView):
+    """allows for a more fine grained search of items"""
+    def get(self):
+        return render_template('advanced_search.html')
+
+    def handle_socket_str(self, val):
+        #create the regex
+        SOCKET_RE = r'[BGR]*'
+        val = zip(sorted(val), itertools.repeat(SOCKET_RE))
+        val = SOCKET_RE + ''.join(itertools.chain(*val))
+        return [Item.socket_str.op('~')(val)]
+
+    def handle_item_name(self, val):
+        return [Item.name.ilike('%%%s%%' % val)]
+
+    def handle_item_type(self, val):
+        return [Item.type.ilike('%%%s%%' % val)]
+
+    def handle_item_type_select(self, val):
+        # if slug is not None:
+        #     if slug.lower() == "misc":
+        #         item_types = constants.BELTS
+        #         item_types.update(constants.QUIVERS)
+        #     else:
+        #         item_types = getattr(constants, slug.upper()).keys()
+        #     items = items.filter(
+        #         Item.type.in_(item_types)
+        #     )
+        pass
+
+    def handle_item_title(self, val):
+        return [db.or_(Item.name.ilike('%%%s%%' % val),
+                Item.type.ilike('%%%s%%' % val))]
+
+    def handle_is_chromatic(self, val):
+        return [Item.socket_str.op('~')(CHROMATIC_RE)]
+
+    def handle_is_socketed(self, val):
+        return [Item.num_sockets > 1]
+
+    def handle_rarity(self, val):
+        return [Item.rarity.in_(x.lower() for x in val)]
+
+    def handle_sockets(self, val):
+        return [Item.num_sockets.in_(int(x) for x in val)]
+
+    def handle_sockets_links(self, val):
+        return [Item.socket_str.op('~')(r"[BGR]{%s,}" % max(val))]
+
+    def post(self):
+        #generates the query in parts
+        filter_args = []
+        #dispatch the handling of each funtion to the appropriate methods
+        for k, v in request.form.iteritems():
+            #special handling for multi selects
+            if k.endswith("_multi"):
+                v = [x.strip() for x in request.form.getlist(k)]
+                v = [x for x in v if x]
+                k = k[:-6]
+            else:
+                v = v.strip()
+            if v:
+                handler = getattr(self, "handle_%s" % k)
+                filter_args.extend(handler(v))
+
+        items = Item.query.join(Location).filter(
+            Item.is_identified,
+            *filter_args
+        ).order_by(
+            Location.page_no,
+            Item.x,
+            Item.y
+        ).all()
+        return render_template('items.html', items=items)
+
+app.add_url_rule('/advanced_search/',
+                 view_func=AdvancedSearchView.as_view('adv_search'))
 
 
 @app.route('/browse/<slug>/')
@@ -288,7 +357,7 @@ class StatsView(View):
 
     def get_flask_stats(self):
         flasks = Item.query.filter(
-            Item.type.like("%Flask%")
+            Item.type.ilike("%Flask%")
         ).all()
 
         def flask_type(f):
