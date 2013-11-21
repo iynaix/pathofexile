@@ -3,7 +3,7 @@ from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.dialects import postgres
 
 from app import db
-from constants import QUEST_ITEMS, GEMS
+import constants
 from utils import norm, normfind
 
 
@@ -21,14 +21,6 @@ class tsvector(types.TypeDecorator):
 @compiles(tsvector, 'postgresql')
 def compile_tsvector(element, compiler, **kw):
     return 'tsvector'
-
-# def is_gem(query):
-#     return query.join(Item.requirements).filter(
-#         Item.properties.any(name="Experience")
-#     )
-
-# def is_quest_item(query):
-#     return query.filter(func.lower(Item.type).in_(QUEST_ITEMS))
 
 
 def get_chromatic_stash_pages():
@@ -126,7 +118,7 @@ class Item(db.Model):
         return False
 
     def is_quest_item(self):
-        return norm(self.type).startswith(QUEST_ITEMS)
+        return norm(self.type).startswith(constants.QUEST_ITEMS)
 
     @property
     def identified(self):
@@ -153,7 +145,22 @@ class Item(db.Model):
                 break
         else:
             raise ValueError("Item is not a gem.")
-        return normfind(GEMS, self.type)["color"]
+        return normfind(constants.GEMS, self.type)["color"]
+
+    def item_group(self):
+        """returns the major item grouping for an item, e.g. mace, armor etc"""
+        own_type = self.type.lower()
+        for g in ("axes", "bows", "claws", "daggers", "maces", "staves",
+                  "swords", "wands", "helms", "armors", "gloves", "boots",
+                  "shields", "belts", "quivers"):
+            for k, v in getattr(constants, g.upper()).items():
+                if k.lower() in own_type:
+                    #see if there is a subtype
+                    if isinstance(v, str):
+                        return g.title()
+                    else:
+                        return v.get("subtype", g.title())
+        raise ValueError("%s is not a recognized item type." % self.type)
 
 
 class Property(db.Model):

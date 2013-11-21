@@ -4,18 +4,34 @@
 {% block title %}Items to Purge{% endblock title %}
 
 {% block body %}
-{% if chromatics %}
-    <h3>Chromatics ({{ chromatics|length }})</h3>
-    {{ macros.item_table(chromatics) }}
+{% if non_chromatics %}
+    <h3>Non Chromatics ({{ non_chromatics|length }})</h3>
+    {{ macros.item_table(non_chromatics) }}
 {% endif %}
 
-{% if rares %}
-    <h3>Rares ({{ rares|length }})</h3>
-    {{ macros.item_table(rares) }}
+{% if non_rares %}
+    <h3>Non Rares ({{ non_rares|length }})</h3>
+    {{ macros.item_table(non_rares) }}
+{% endif %}
+
+{% if chromatic_rares %}
+    <h3>Chromatic Rares ({{ chromatic_rares|length }})</h3>
+    {{ macros.item_table(chromatic_rares) }}
 {% endif %}
 
 {% if unidentifieds %}
     <h3>Unidentified ({{ unidentifieds|length }})</h3>
     {{ macros.item_table(unidentifieds) }}
 {% endif %}
+
+{% if duplicate_chromatics %}
+    <h3>Duplicate Chromatics ({{ duplicate_chromatics|length }})</h3>
+    {{ macros.item_table(duplicate_chromatics) }}
+{% endif %}
+
+{% if duplicate_rares %}
+    <h3>Duplicate rares ({{ duplicate_rares|length }})</h3>
+    {{ macros.item_table(duplicate_rares) }}
+{% endif %}
+
 {% endblock body %}

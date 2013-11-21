@@ -1,4 +1,4 @@
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 from itertools import groupby
 
 
@@ -35,7 +35,9 @@ def groupsortby(iterable, key=None):
     If not specified or is None, key defaults to an identity function and
     returns the element unchanged.
     """
-    return groupby(sorted(iterable, key), key)
+    for grp_name, grp_values in groupby(sorted(iterable, key=key),
+                                        key=key):
+        yield grp_name, list(grp_values)
 
 
 def sorteddict(d, ordered_arr=None):
@@ -46,10 +48,21 @@ def sorteddict(d, ordered_arr=None):
     if ordered_arr is None:
         return OrderedDict(sorted(d.items()))
 
-
     ret = OrderedDict()
     keys = list(d.keys())
     for k in ordered_arr:
         if k in keys:
             ret[k] = d[k]
     return ret
+
+
+def group_items_by_level(items):
+    grouped_items = defaultdict(list)
+    for item in items:
+        lvl = 0
+        for req in item.requirements:
+            if req.name == "Level":
+                lvl = int(req.value)
+                break
+        grouped_items[lvl].append(item)
+    return sorteddict(grouped_items)

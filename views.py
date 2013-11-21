@@ -8,7 +8,7 @@ from app import app, db
 import constants
 from models import (Item, Location, Property, get_chromatic_stash_pages,
                     get_rare_stash_pages)
-from utils import normfind, sorteddict
+from utils import normfind, sorteddict, group_items_by_level, groupsortby
 
 CHROMATIC_RE = r"B+G+R+"
 
@@ -165,7 +165,7 @@ class LevelsView(View):
         """returns a list of items to be rendered"""
         items = Item.query.join(Item.location).filter(
             Item.is_identified,
-            Location.is_character == False,
+            Location.is_character is False,
             *self.item_filters()
         ).order_by(
             Location.page_no,
@@ -173,17 +173,6 @@ class LevelsView(View):
             Item.y
         )
         return items
-
-    def group_items(self, items):
-        grouped_items = defaultdict(list)
-        for item in items:
-            lvl = 0
-            for req in item.requirements:
-                if req.name == "Level":
-                    lvl = int(req.value)
-                    break
-            grouped_items[lvl].append(item)
-        return sorteddict(grouped_items)
 
     def dispatch_request(self, slug):
         items = self.get_items()
@@ -201,7 +190,7 @@ class LevelsView(View):
             levels_url=self.levels_url,
             levels_slug_url=self.levels_slug_url,
             title=self.title,
-            grouped_items=self.group_items(items.all())
+            grouped_items=group_items_by_level(items.all())
         )
 
 app.add_url_rule('/levels/', view_func=LevelsView.as_view('levels'),
@@ -234,18 +223,65 @@ class PurgeView(View):
     """
     Displays all the items that should be removed
     """
+    def __init__(self):
+        self.chromatic_pages = get_chromatic_stash_pages()
+        self.rare_pages = get_rare_stash_pages()
+        super()
+
     #non-chromatic items in chromatic pages
-    def get_chromatic_purge(self):
+    def get_non_chromatics(self):
         return Item.query.join(Location).filter(
-            Location.page_no.in_(get_chromatic_stash_pages()),
+            Location.page_no.in_(self.chromatic_pages),
             Item.socket_str.op('!~')(CHROMATIC_RE),
             Item.is_identified,
         )
 
-    def get_rare_purge(self):
+    #chromatic rares in chromatic pages
+    def get_chromatic_rares(self):
+        return Item.query.join(Location).filter(
+            Location.page_no.in_(self.chromatic_pages),
+            Item.socket_str.op('~')(CHROMATIC_RE),
+            Item.is_identified,
+            Item.rarity != "normal",
+            Item.rarity != "magic",
+        )
+
+    #chromatic items sharing the same type and level requirements in the
+    #chromatic pages
+    def get_duplicate_chromatics(self):
+        duplicate_chromatics = []
+        chromatic_items = Item.query.join(Location).filter(
+            Location.page_no.in_(self.chromatic_pages),
+            Item.is_identified,
+        )
+        grouped_items = group_items_by_level(chromatic_items)
+        for level, items in grouped_items.items():
+            grps = groupsortby(items, key=lambda x: x.item_group())
+            for k, v in grps:
+                if len(v) > 1:
+                    duplicate_chromatics.extend(v)
+        return duplicate_chromatics
+
+    #rare items sharing the same type and level requirements in the
+    #rare pages
+    def get_duplicate_rares(self):
+        duplicate_rares = []
+        rare_items = Item.query.join(Location).filter(
+            Location.page_no.in_(self.rare_pages),
+            Item.is_identified,
+        )
+        grouped_items = group_items_by_level(rare_items)
+        for level, items in grouped_items.items():
+            grps = groupsortby(items, key=lambda x: x.item_group())
+            for k, v in grps:
+                if len(v) > 1:
+                    duplicate_rares.extend(v)
+        return duplicate_rares
+
+    def get_non_rares(self):
         #non-rare items in rare pages
         return Item.query.join(Location).filter(
-            Location.page_no.in_(get_rare_stash_pages()),
+            Location.page_no.in_(self.rare_pages),
             Item.rarity != "rare",
             Item.is_identified,
         )
@@ -253,13 +289,14 @@ class PurgeView(View):
     def get_unidentified(self):
         #non-rare items in rare pages
         return Item.query.join(Location).filter(
-            Item.is_identified == False,
+            Item.is_identified is False,
         )
 
     def dispatch_request(self):
         context = {
-            "chromatics": self.get_chromatic_purge(),
-            "rares": self.get_rare_purge(),
+            "non_chromatics": self.get_non_chromatics(),
+            "non_rares": self.get_non_rares(),
+            "chromatic_rares": self.get_chromatic_rares(),
             "unidentifieds": self.get_unidentified(),
         }
         #apply default ordering for the items
@@ -267,6 +304,8 @@ class PurgeView(View):
             context[k] = v.order_by(
                 Location.id, Item.x, Item.y
             ).all()
+        context["duplicate_chromatics"] = self.get_duplicate_chromatics()
+        context["duplicate_rares"] = self.get_duplicate_rares()
 
         return render_template('purge.html', **context)
 app.add_url_rule('/purge/', view_func=PurgeView.as_view('purge'))
