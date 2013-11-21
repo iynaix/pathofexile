@@ -7,14 +7,12 @@ import constants
 from utils import norm, normfind
 
 
-"""
-using tsvectors for full text search in sqlalchemy, custom type definition
-
-http://stackoverflow.com/questions/13837111/
-"""
-
-
 class tsvector(types.TypeDecorator):
+    """
+    using tsvectors for full text search in sqlalchemy, custom type definition
+
+    http://stackoverflow.com/questions/13837111/
+    """
     impl = types.UnicodeText
 
 
