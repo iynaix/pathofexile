@@ -68,6 +68,8 @@ class Item(db.Model):
     is_identified = db.Column(db.Boolean, nullable=False, default=True)
     char_location = db.Column(db.String(20))
     full_text = db.Column(tsvector, nullable=False)
+    #for marking the item as deleted
+    is_deleted = db.Column(db.Boolean, nullable=False, default=False)
 
     #funky stuff for item properties, mods etc
     mods = db.Column(postgres.ARRAY(db.String(255)))

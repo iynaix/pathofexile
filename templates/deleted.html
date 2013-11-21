@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% import 'macros.html' as macros %}
+
+{% block title %}Deleted Items{% endblock title %}
+
+{% block body %}
+
+{{ macros.item_table(items) }}
+
+{% endblock body %}

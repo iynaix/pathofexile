@@ -138,6 +138,7 @@ title, location, sockets
             <th>Num Sockets</th>
             <th>Sockets</th>
             <th>Requirements</th>
+            <th>Deleted</th>
         </tr>
     </thead>
     <tbody>
@@ -160,6 +161,11 @@ title, location, sockets
                         {% if not loop.last %},{% endif %}
                     {% endfor %}
                 {% endif %}
+            </td>
+            <td style="text-align:center">
+                <label class="checkbox-inline">
+                    <input type="checkbox" class="mark_delete" value="{{ item.id }}" {% if item.is_deleted %}checked{% endif %}>
+                </label>
             </td>
         </tr>
         {% endfor %}

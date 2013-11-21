@@ -58,6 +58,27 @@ def simple_search():
     return render_template('items.html', items=items)
 
 
+@app.route('/delete/<item_id>', methods=["POST"])
+def item_mark_delete(item_id):
+    """
+    Marks or unmarks an item as deleted
+    """
+    Item.query.get(item_id).is_deleted = bool(int(request.form["checked"]))
+    db.session.commit()
+    return "success"
+
+
+@app.route('/deleted/')
+def deleted_items():
+    """
+    Performs a simple full text search for items
+    """
+    items = Item.query.filter(
+        Item.is_deleted
+    ).all()
+    return render_template('deleted.html', items=items)
+
+
 class AdvancedSearchView(MethodView):
     """allows for a more fine grained search of items"""
     def get(self):

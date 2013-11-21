@@ -30,6 +30,9 @@
                 <ul class="nav navbar-nav">
                     <li><a href="/chromatic_levels/">Chromatic Levels</a></li>
                 </ul>
+                <ul class="nav navbar-nav">
+                    <li><a href="/deleted/">Deleted</a></li>
+                </ul>
                 <ul class="nav navbar-nav navbar-right">
                     <li class="dropdown">
                         <a href="#" class="dropdown-toggle" data-toggle="dropdown">Jump To... <b class="caret"></b></a>
@@ -69,9 +72,18 @@
             };
 
             $(function() {
+                //handle item popovers
                 $(".item_popover").popover({
                     trigger: is_mobile() ? "click" : "hover"
                 });
+
+                //handle marking items as deleted
+                $(".mark_delete").on("click", function(e) {
+                    var $elem = $(e.currentTarget);
+                    var url = "/delete/" + $elem.val();
+                    $.post(url, {"checked": $elem.is(":checked") ? 1 : 0});
+                });
+
                 {% block extrajs %}
                 {% endblock extrajs %}
             });
