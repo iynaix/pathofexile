@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% import 'macros.html' as macros %}
 
-{% block title %}Levels{% endblock title %}
+{% block title %}{{ title }}{% endblock title %}
 
 {% block body %}
 <div class="btn-group">
@@ -10,32 +10,32 @@
     </button>
     <ul class="dropdown-menu" role="menu">
         <li role="presentation" class="dropdown-header">
-            <h4><a href="/levels/">All</a></h4>
+            <h4><a href="{{ url_for(levels_url) }}">All</a></h4>
         </li>
         <li role="presentation" class="dropdown-header">
-            <h4><a href="/levels/weapons/">Weapons</a></h4>
+            <h4><a href="{{ url_for(levels_slug_url, slug="weapons") }}">Weapons</a></h4>
         </li>
-        <li><a href="/levels/axes/">Axes</a></li>
-        <li><a href="/levels/bows/">Bows</a></li>
-        <li><a href="/levels/claws/">Claws</a></li>
-        <li><a href="/levels/daggers/">Daggers</a></li>
-        <li><a href="/levels/maces/">Maces</a></li>
-        <li><a href="/levels/staves/">Staves</a></li>
-        <li><a href="/levels/swords/">Swords</a></li>
-        <li><a href="/levels/wands/">Wands</a></li>
+        <li><a href="{{ url_for(levels_slug_url, slug="axes") }}">Axes</a></li>
+        <li><a href="{{ url_for(levels_slug_url, slug="bows") }}">Bows</a></li>
+        <li><a href="{{ url_for(levels_slug_url, slug="claws") }}">Claws</a></li>
+        <li><a href="{{ url_for(levels_slug_url, slug="daggers") }}">Daggers</a></li>
+        <li><a href="{{ url_for(levels_slug_url, slug="maces") }}">Maces</a></li>
+        <li><a href="{{ url_for(levels_slug_url, slug="staves") }}">Staves</a></li>
+        <li><a href="{{ url_for(levels_slug_url, slug="swords") }}">Swords</a></li>
+        <li><a href="{{ url_for(levels_slug_url, slug="wands") }}">Wands</a></li>
         <li role="presentation" class="dropdown-header">
-            <h4><a href="/levels/armors_all/">Armor</a></h4>
+            <h4><a href=""{{ url_for(levels_slug_url, slug="armors_all") }}>Armor</a></h4>
         </li>
-        <li><a href="/levels/helms/">Helmets</a></li>
-        <li><a href="/levels/armors/">Body Armor</a></li>
-        <li><a href="/levels/gloves/">Gloves</a></li>
-        <li><a href="/levels/boots/">Boots</a></li>
-        <li><a href="/levels/shields/">Shields</a></li>
+        <li><a href="{{ url_for(levels_slug_url, slug="helms") }}">Helmets</a></li>
+        <li><a href="{{ url_for(levels_slug_url, slug="armors") }}">Body Armor</a></li>
+        <li><a href="{{ url_for(levels_slug_url, slug="gloves") }}">Gloves</a></li>
+        <li><a href="{{ url_for(levels_slug_url, slug="boots") }}">Boots</a></li>
+        <li><a href="{{ url_for(levels_slug_url, slug="shields") }}">Shields</a></li>
         <li role="presentation" class="dropdown-header">
-            <h4><a href="/levels/misc/">Misc</a></h4>
+            <h4><a href="{{ url_for(levels_slug_url, slug="misc") }}">Misc</a></h4>
         </li>
-        <li><a href="/levels/belts/">Belts</a></li>
-        <li><a href="/levels/quivers/">Quivers</a></li>
+        <li><a href="{{ url_for(levels_slug_url, slug="belts") }}">Belts</a></li>
+        <li><a href="{{ url_for(levels_slug_url, slug="quivers") }}">Quivers</a></li>
     </ul>
 </div>
 
@@ -45,5 +45,3 @@
 {% endfor %}
 
 {% endblock body %}
-
-

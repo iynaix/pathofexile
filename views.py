@@ -9,7 +9,6 @@ import constants
 from models import (Item, Location, Property, get_chromatic_stash_pages,
                     get_rare_stash_pages)
 from utils import normfind, sorteddict
-import q
 
 CHROMATIC_RE = r"B+G+R+"
 
@@ -151,13 +150,23 @@ def browse(slug):
 
 class LevelsView(View):
     """sorts the items into bins of levels"""
+    levels_url = "levels"
+    levels_slug_url = "levels_slug"
+    title = "Levels"
+
+    def item_filters(self):
+        """returns a list of filters for the items"""
+        return [
+            Item.rarity != "normal",
+            Item.rarity != "magic",
+        ]
+
     def get_items(self):
         """returns a list of items to be rendered"""
         items = Item.query.join(Item.location).filter(
             Item.is_identified,
-            Item.rarity != "normal",
-            Item.rarity != "magic",
             Location.is_character == False,
+            *self.item_filters()
         ).order_by(
             Location.page_no,
             Item.x,
@@ -189,12 +198,36 @@ class LevelsView(View):
             )
 
         return render_template('levels.html',
-                            grouped_items=self.group_items(items.all()))
+            levels_url=self.levels_url,
+            levels_slug_url=self.levels_slug_url,
+            title=self.title,
+            grouped_items=self.group_items(items.all())
+        )
 
 app.add_url_rule('/levels/', view_func=LevelsView.as_view('levels'),
                  defaults={"slug": None})
 app.add_url_rule('/levels/<slug>/',
                  view_func=LevelsView.as_view('levels_slug'))
+
+
+class ChromaticLevelsView(LevelsView):
+    """sorts the chromatic items into bins of levels"""
+
+    levels_url = "chromatic_levels"
+    levels_slug_url = "chromatic_levels_slug"
+    title = "Chromatic Levels"
+
+    def item_filters(self):
+        """returns a list of filters for the items"""
+        return [
+            Location.page_no.in_(get_chromatic_stash_pages()),
+        ]
+
+app.add_url_rule('/chromatic_levels/',
+                 view_func=ChromaticLevelsView.as_view('chromatic_levels'),
+                 defaults={"slug": None})
+app.add_url_rule('/chromatic_levels/<slug>/',
+                view_func=ChromaticLevelsView.as_view('chromatic_levels_slug'))
 
 
 class PurgeView(View):
