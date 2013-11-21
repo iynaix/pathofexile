@@ -165,7 +165,7 @@ class LevelsView(View):
         """returns a list of items to be rendered"""
         items = Item.query.join(Item.location).filter(
             Item.is_identified,
-            Location.is_character is False,
+            Location.is_character == False,
             *self.item_filters()
         ).order_by(
             Location.page_no,
@@ -289,7 +289,7 @@ class PurgeView(View):
     def get_unidentified(self):
         #non-rare items in rare pages
         return Item.query.join(Location).filter(
-            Item.is_identified is False,
+            Item.is_identified == False,
         )
 
     def dispatch_request(self):

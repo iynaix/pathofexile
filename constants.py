@@ -1646,3 +1646,21 @@ for w in [AXES, BOWS, CLAWS, DAGGERS, MACES, STAVES, SWORDS, WANDS]:
 ARMORS_ALL = {}
 for w in [HELMS, ARMORS, GLOVES, BOOTS, SHIELDS]:
     ARMORS_ALL.update(w)
+
+#get all the one handed weapons
+ONE_HANDED_WEAPONS = {}
+for w in [CLAWS, DAGGERS, WANDS]:
+    ONE_HANDED_WEAPONS.update(w)
+for w in [AXES, MACES, SWORDS]:
+    for k, v in w.items():
+        if v["subtype"].startswith(("One", "Mace", "Rapier", "Sceptre")):
+            ONE_HANDED_WEAPONS[k] = v
+
+#get all the two handed weapons
+TWO_HANDED_WEAPONS = {}
+for w in [BOWS, STAVES]:
+    TWO_HANDED_WEAPONS.update(w)
+for w in [AXES, MACES, SWORDS]:
+    for k, v in w.items():
+        if v["subtype"].startswith(("Two", "Maul")):
+            TWO_HANDED_WEAPONS[k] = v
