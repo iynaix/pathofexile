@@ -37,6 +37,8 @@
     {{ macros.select_field("sockets", values=range(7)) }}
     {{ macros.select_field("sockets_links", values=range(2, 7)) }}
 
+    {{ macros.select_field("level", values=range(max_lvl), multi=False) }}
+
     <button type="submit" class="btn btn-default">Search</button>
 </form>
 

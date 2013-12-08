@@ -6,8 +6,8 @@ import itertools
 
 from app import app, db
 import constants
-from models import (Item, Location, Property, get_chromatic_stash_pages,
-                    get_rare_stash_pages)
+from models import (Item, Location, Property, Requirement,
+                    get_chromatic_stash_pages, get_rare_stash_pages)
 from utils import normfind, sorteddict, group_items_by_level, groupsortby
 
 CHROMATIC_RE = r"B+G+R+"
@@ -51,7 +51,7 @@ def simple_search():
     """
     Performs a simple full text search for items
     """
-    search_term = request.form["simple_search"]
+    search_term = request.form["simple_search"].replace(" ", " & ")
     items = Item.query.filter(
         Item.full_text.op('@@')(db.func.to_tsquery(search_term))
     ).all()
@@ -73,8 +73,12 @@ def deleted_items():
     """
     Performs a simple full text search for items
     """
-    items = Item.query.filter(
+    items = Item.query.join(Location).filter(
         Item.is_deleted
+    ).order_by(
+        Location.page_no,
+        Item.x,
+        Item.y
     ).all()
     return render_template('deleted.html', items=items)
 
@@ -82,7 +86,9 @@ def deleted_items():
 class AdvancedSearchView(MethodView):
     """allows for a more fine grained search of items"""
     def get(self):
-        return render_template('advanced_search.html')
+        max_lvl = Requirement.query.filter(Requirement.name == "Level").\
+                order_by(Requirement.value.desc()).first().value
+        return render_template('advanced_search.html', max_lvl=max_lvl)
 
     def handle_socket_str(self, val):
         #create the regex
@@ -110,8 +116,8 @@ class AdvancedSearchView(MethodView):
         pass
 
     def handle_item_title(self, val):
-        return [db.or_(Item.name.ilike('%%%s%%' % val),
-                Item.type.ilike('%%%s%%' % val))]
+        return [Item.name.ilike('%%%s%%' % val) |
+                Item.type.ilike('%%%s%%' % val)]
 
     def handle_is_chromatic(self, val):
         return [Item.socket_str.op('~')(CHROMATIC_RE)]
@@ -127,6 +133,12 @@ class AdvancedSearchView(MethodView):
 
     def handle_sockets_links(self, val):
         return [Item.socket_str.op('~')(r"[BGR]{%s,}" % max(val))]
+
+    def handle_level(self, val):
+        return [
+            (~Item.requirements.any()) |
+            ((Requirement.name == "Level") & (Requirement.value <= int(val)))
+        ]
 
     def post(self):
         #generates the query in parts
@@ -186,7 +198,7 @@ class LevelsView(View):
         """returns a list of items to be rendered"""
         items = Item.query.join(Item.location).filter(
             Item.is_identified,
-            Location.is_character == False,
+            ~Location.is_character,
             *self.item_filters()
         ).order_by(
             Location.page_no,
@@ -310,7 +322,7 @@ class PurgeView(View):
     def get_unidentified(self):
         #non-rare items in rare pages
         return Item.query.join(Location).filter(
-            Item.is_identified == False,
+            ~Item.is_identified,
         )
 
     def dispatch_request(self):

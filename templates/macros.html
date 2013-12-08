@@ -191,7 +191,7 @@ title, location, sockets
 <div class="form-group">
     <label for="{{ name }}" class="col-sm-2 control-label">{{ label|default(name.replace("_", " ").title(), true) }}</label>
     <div class="col-sm-{% if multi %}9{% else %}10{% endif %}">
-        <select class="form-control" name="{{ name }}_multi" id="{{ name }}">
+        <select class="form-control" name="{{ name }}{% if multi %}_multi{% endif %}" id="{{ name }}">
             <option value=""></option>
             {% for v in values %}
                 <option value="{{ v }}">{{ v }}</option>
