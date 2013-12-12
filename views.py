@@ -292,6 +292,7 @@ class PurgeView(View):
             grps = groupsortby(items, key=lambda x: x.item_group())
             for k, v in grps:
                 if len(v) > 1:
+                    v = sorted(v, key=lambda x: x.type)
                     duplicate_chromatics.extend(v)
         return duplicate_chromatics
 
@@ -308,6 +309,7 @@ class PurgeView(View):
             grps = groupsortby(items, key=lambda x: x.item_group())
             for k, v in grps:
                 if len(v) > 1:
+                    v = sorted(v, key=lambda x: x.type)
                     duplicate_rares.extend(v)
         return duplicate_rares
 
