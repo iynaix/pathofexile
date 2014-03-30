@@ -162,6 +162,17 @@ class Item(db.Model):
                         return v.get("subtype", g.title())
         raise ValueError("%s is not a recognized item type." % self.type)
 
+    @property
+    def required_level(self):
+        """
+        convenience property that returns the required level for the item,
+        None otherwise
+        """
+        for req in self.requirements:
+            if req.name == "Level":
+                return int(req.value)
+        return None
+
 
 class Property(db.Model):
     """

@@ -39,7 +39,7 @@
     </ul>
 </div>
 
-{% for lvl, items in grouped_items.items() %}
+{% for lvl, items in all_items|groupby('required_level') %}
     <h3>Level {{ lvl }}</h3>
     {{ macros.item_table(items) }}
 {% endfor %}

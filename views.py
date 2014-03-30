@@ -223,7 +223,7 @@ class LevelsView(View):
             levels_url=self.levels_url,
             levels_slug_url=self.levels_slug_url,
             title=self.title,
-            grouped_items=group_items_by_level(items.all())
+            all_items=items.all(),
         )
 
 app.add_url_rule('/levels/', view_func=LevelsView.as_view('levels'),

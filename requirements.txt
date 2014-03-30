@@ -1,6 +1,10 @@
+clint==0.3.6
 Flask==0.10.1
 Flask-SQLAlchemy==1.0
-SQLAlchemy==0.8.3
 gunicorn==18.0
-psycopg2==2.5.1
--e git+https://github.com/zestyping/q#egg=q
+lxml==3.3.3
+path.py==5.1
+psycopg2==2.5.2
+requests==2.2.1
+SQLAlchemy==0.9.4
+-e git+git@github.com:zestyping/q.git#egg=q

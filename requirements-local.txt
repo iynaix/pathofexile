@@ -1,3 +1,0 @@
-requests==2.0.1
-path.py==5.0
-selenium==2.37.2
