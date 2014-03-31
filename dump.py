@@ -1,8 +1,10 @@
 import json
 import pprint
 import re
+import time
 from collections import defaultdict
 from clint.textui import colored
+
 from constants import PREFIXES, SUFFIXES, UNIQUES
 from path import path
 from utils import norm
@@ -46,8 +48,10 @@ def norm_mod(mod):
 class ItemData(object):
     """Object representing an item"""
 
-    def __init__(self, data):
+    def __init__(self, data, **kwargs):
         self.data = data
+        for k, v in kwargs.items():
+            setattr(self, k, v)
 
     def __repr__(self):
         return pprint.pformat(self.data)
@@ -229,27 +233,38 @@ class ItemData(object):
         """
         returns an Item suitable for adding to the database
         """
-        return Item(
-            name=self.name,
-            type=self.type,
-            x=self.data.get("x", None),
-            y=self.data.get("y", None),
-            w=self.data["w"],
-            h=self.data["h"],
-            rarity=self.rarity,
-            num_sockets=self.num_sockets(),
-            socket_str=self.socket_str,
-            is_identified=self.data["identified"],
-            char_location=self.char_location(),
-            full_text=db.func.to_tsvector(self.full_text()),
-            mods=self.mods,
-            requirements=[Requirement(**r) for r in self.requirements],
-            properties=[Property(**p) for p in self.properties],
-            socketed_items=[ItemData(x).sql_dump(location) for x in
-                            self.data.get("socketedItems", [])],
-            location=location,
-            **kwargs
-        )
+        league = self.data.get("league", getattr(self, "league", "Standard"))
+        try:
+            return Item(
+                name=self.name,
+                type=self.type,
+                x=self.data.get("x", None),
+                y=self.data.get("y", None),
+                w=self.data["w"],
+                h=self.data["h"],
+                rarity=self.rarity,
+                num_sockets=self.num_sockets(),
+                socket_str=self.socket_str,
+                is_identified=self.data["identified"],
+                is_corrupted=self.data["corrupted"],
+                char_location=self.char_location(),
+                full_text=db.func.to_tsvector(self.full_text()),
+                league=league,
+                mods=self.mods,
+                requirements=[Requirement(**r) for r in self.requirements],
+                properties=[Property(**p) for p in self.properties],
+                socketed_items=[
+                    ItemData(x, league=league).sql_dump(location) for x in
+                    self.data.get("socketedItems", [])
+                ],
+                location=location,
+                **kwargs
+            )
+        #show some debugging output
+        except:
+            from pprint import pprint
+            pprint(self.data)
+            raise
 
 
 def destroy_database(engine):
@@ -302,8 +317,8 @@ def destroy_database(engine):
     trans.commit()
 
 
-def dump_stash_page(page_no, tab_data, dump=True):
-    fname = "data/stash_%s.json" % (page_no + 1)
+def dump_stash_page(league, page_no, tab_data, dump=True):
+    fname = "data/stash_%s_%s.json" % (league.lower(), page_no + 1)
 
     #see if the name is numeric to determine if premium
     is_premium = False
@@ -349,7 +364,6 @@ def dump_char(fname, dump=True):
 
 if __name__ == "__main__":
     dump = True
-    import time
     start_time = time.time()
 
     #drop and recreate the database
@@ -357,17 +371,19 @@ if __name__ == "__main__":
         destroy_database(db.engine)
         db.create_all()
 
+    leagues = set()
+    for fname in path("data").files('stash_*.json'):
+        leagues.add(fname.namebase.split("_")[1])
+
     #dump the data from the stash pages
-    fp = open("data/stash_1.json")
-    tabs = json.load(fp)["tabs"]
-    for page_no, tab_data in enumerate(tabs):
-        dump_stash_page(page_no, tab_data, dump=dump)
+    for league in leagues:
+        fp = open("data/stash_%s_1.json" % league)
+        tabs = json.load(fp)["tabs"]
+        for page_no, tab_data in enumerate(tabs):
+            dump_stash_page(league, page_no, tab_data, dump=dump)
 
     #get the data from the characters
-    for f in path("data").listdir():
-        if not f.name.startswith("items_"):
-            continue
-
+    for f in path("data").listdir('items_*.json'):
         dump_char(f, dump=dump)
 
     #final commit
