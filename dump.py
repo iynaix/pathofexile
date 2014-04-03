@@ -1,19 +1,36 @@
+"""Dumping data about the characters and the stash into the database.
+
+Usage:
+  dump.py [--league=<league>]
+  dump.py (-h | --help)
+
+Options:
+  -h --help             Show this screen.
+  --league=<league>     Only process data for these leagues [default: all].
+
+"""
+
+from __future__ import print_function
 import json
 import pprint
 import re
 import time
 from collections import defaultdict
-from clint.textui import colored
 
-from constants import PREFIXES, SUFFIXES, UNIQUES
+from clint.textui import colored
+from docopt import docopt
 from path import path
-from utils import norm
 
 from app import db
+from constants import PREFIXES, SUFFIXES
 from models import Item, Requirement, Property, Location
+from utils import norm, get_constant
 
 MOD_NUM_RE = re.compile(r"[-+]?[0-9\.]+?[%]?")
 WHITESPACE_RE = re.compile('\s+')
+
+
+UNIQUES = get_constant("UNIQUES", normalize=True)
 
 
 def norm_mod(mod):
@@ -70,9 +87,6 @@ class ItemData(object):
 
     def items(self):
         return list(self.data.items())
-
-    def items(self):
-        return iter(self.data.items())
 
     def __contains__(self, val):
         return self.data.__contains__(val)
@@ -363,6 +377,8 @@ def dump_char(fname, dump=True):
 
 
 if __name__ == "__main__":
+    arguments = docopt(__doc__)
+
     dump = True
     start_time = time.time()
 
@@ -371,9 +387,13 @@ if __name__ == "__main__":
         destroy_database(db.engine)
         db.create_all()
 
-    leagues = set()
-    for fname in path("data").files('stash_*.json'):
-        leagues.add(fname.namebase.split("_")[1])
+    league_arg = arguments.get("--league", "all")
+    if league_arg == "all":
+        leagues = set()
+        for fname in path("data").files('stash_*.json'):
+            leagues.add(fname.namebase.split("_")[1])
+    else:
+        leagues = set([x.strip().lower() for x in league_arg.split(",")])
 
     #dump the data from the stash pages
     for league in leagues:
@@ -390,7 +410,6 @@ if __name__ == "__main__":
     if dump:
         db.session.commit()
 
-        print()
         print(colored.green(len(Item.query.all())), end=' ')
         print("ITEMS PROCESSED.")
         print("DATA DUMP COMPLETED IN", end=' ')

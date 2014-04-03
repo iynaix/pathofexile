@@ -8,7 +8,8 @@ from app import app, db
 import constants
 from models import (Item, Location, Property, Requirement,
                     get_chromatic_stash_pages, get_rare_stash_pages)
-from utils import normfind, sorteddict, group_items_by_level, groupsortby
+from utils import (normfind, sorteddict, group_items_by_level, groupsortby,
+                   get_constant)
 
 CHROMATIC_RE = r"B+G+R+"
 
@@ -259,7 +260,7 @@ class PurgeView(View):
     def __init__(self):
         self.chromatic_pages = get_chromatic_stash_pages()
         self.rare_pages = get_rare_stash_pages()
-        super()
+        super(PurgeView, self).__init__()
 
     #non-chromatic items in chromatic pages
     def get_non_chromatics(self):
@@ -438,6 +439,12 @@ class StatsView(View):
         }
 
     def get_gem_stats(self):
+        #get the gems into a dict for easier searching
+        GEMS = {}
+        for gem in get_constant("GEMS"):
+            name = gem.pop("name")
+            GEMS[name] = gem
+
         gems = Item.query.join(Item.requirements).filter(
             Item.properties.any(name="Experience")
         ).all()
@@ -445,7 +452,7 @@ class StatsView(View):
         all_gems = {"B": [], "G": [], "R": []}
         for gem_name, count in list(Counter(g.type for g in gems).items()):
             #look for info for the corresponding gem
-            gval = normfind(constants.GEMS, gem_name)
+            gval = normfind(GEMS, gem_name)
 
             #find the first of the gem for popover
             for g in gems:

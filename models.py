@@ -4,7 +4,14 @@ from sqlalchemy.dialects import postgres
 
 from app import db
 import constants
-from utils import norm, normfind
+from utils import norm, normfind, get_constant
+
+
+#get the gems into a dict for easier searching
+GEMS = {}
+for gem in get_constant("GEMS"):
+    name = gem.pop("name")
+    GEMS[name] = gem
 
 
 class tsvector(types.TypeDecorator):
@@ -147,7 +154,7 @@ class Item(db.Model):
                 break
         else:
             raise ValueError("Item is not a gem.")
-        return normfind(constants.GEMS, self.type)["color"]
+        return normfind(GEMS, self.type)["color"]
 
     def item_group(self):
         """returns the major item grouping for an item, e.g. mace, armor etc"""

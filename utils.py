@@ -1,3 +1,5 @@
+import json
+import subprocess
 from collections import OrderedDict, defaultdict
 from itertools import groupby
 
@@ -66,3 +68,37 @@ def group_items_by_level(items):
                 break
         grouped_items[lvl].append(item)
     return sorteddict(grouped_items)
+
+
+def get_constant(name, normalize=False):
+    """
+    returns the constant from the import if possible, if not it runs the
+    relevant spider to return the required constant
+
+    normalize means a normalized tuple is returned instead, i.e. one thay is
+    suitable for startswith / endswith
+    """
+    try:
+        import constants
+        return getattr(constants, name)
+    except AttributeError:
+        outfile = "constants/%s.json" % name.lower()
+        #is the json file available for reading
+        try:
+            ret = [json.loads(x) for x in open(outfile)]
+        except IOError:
+            #gotta run the spider
+            # block until completion
+            subprocess.call(["scrapy", "crawl", name.lower(), "--nolog", "-o",
+                             outfile, "-t", "jsonlines"])
+            ret = [json.loads(x) for x in open(outfile)]
+
+    #transform to a simple list if they are title items
+    if ret[0].keys() == ["title"]:
+        ret = [x["title"] for x in ret]
+        if normalize:
+            return tuple(norm(x) for x in ret)
+        else:
+            return ret
+    else:
+        return ret
