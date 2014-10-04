@@ -17,7 +17,7 @@ import re
 import time
 from collections import defaultdict
 
-from clint.textui import colored
+from colorama import Fore
 from docopt import docopt
 from path import path
 
@@ -34,7 +34,7 @@ UNIQUES = get_constant("UNIQUES", normalize=True)
 
 
 def norm_mod(mod):
-    #normalizes a mod by removing the numbers
+    # normalizes a mod by removing the numbers
     return WHITESPACE_RE.sub(' ', MOD_NUM_RE.sub("", mod).strip()).lower()
 
 
@@ -154,12 +154,12 @@ class ItemData(object):
                 grps[s["group"]].append("B")
             elif s["attr"] == "S":
                 grps[s["group"]].append("R")
-        #sort and join the groups
+        # sort and join the groups
         grps = [''.join(sorted(x)) for x in list(grps.values())]
         return ' '.join(sorted(grps, key=lambda g: (-len(g), g)))
 
     def char_location(self):
-        if not "inventoryId" in self.data:
+        if "inventoryId" not in self.data:
             return None
 
         x = self.data["inventoryId"]
@@ -175,7 +175,7 @@ class ItemData(object):
         return x
 
     def is_magic(self):
-        #normalize to lower case
+        # normalize to lower case
         if self.name:
             return False
 
@@ -206,9 +206,9 @@ class ItemData(object):
             return "unique"
         if self.is_magic():
             return "magic"
-        #check if item is rare
-        #we're not using the is_rare() method as that would compute the
-        #is_unique() and is_magic() methods again
+        # check if item is rare
+        # we're not using the is_rare() method as that would compute the
+        # is_unique() and is_magic() methods again
         if self.name:
             return "rare"
         return "normal"
@@ -226,7 +226,7 @@ class ItemData(object):
         returns a textual representation of the item for full text search
         """
         out = []
-        #handle title, type and sockets
+        # handle title, type and sockets
         if self.name:
             out.append(self.name)
         out.append(self.type)
@@ -274,7 +274,7 @@ class ItemData(object):
                 location=location,
                 **kwargs
             )
-        #show some debugging output
+        # show some debugging output
         except:
             from pprint import pprint
             pprint(self.data)
@@ -334,7 +334,7 @@ def destroy_database(engine):
 def dump_stash_page(league, page_no, tab_data, dump=True):
     fname = "data/stash_%s_%s.json" % (league.lower(), page_no + 1)
 
-    #see if the name is numeric to determine if premium
+    # see if the name is numeric to determine if premium
     is_premium = False
     try:
         int(tab_data["n"])
@@ -343,7 +343,7 @@ def dump_stash_page(league, page_no, tab_data, dump=True):
     if tab_data['colour'] != {'b': 54, 'g': 84, 'r': 124}:
         is_premium = True
 
-    #create the location
+    # create the location
     loc = Location(
         name=tab_data["n"],
         page_no=page_no + 1,
@@ -362,7 +362,7 @@ def dump_char(fname, dump=True):
     if not isinstance(fname, path):
         fname = path(fname)
 
-    #create the location
+    # create the location
     char_name = fname.split("_").pop().split(".")[0].capitalize()
     loc = Location(
         name=char_name,
@@ -382,7 +382,7 @@ if __name__ == "__main__":
     dump = True
     start_time = time.time()
 
-    #drop and recreate the database
+    # drop and recreate the database
     if dump:
         destroy_database(db.engine)
         db.create_all()
@@ -395,22 +395,22 @@ if __name__ == "__main__":
     else:
         leagues = set([x.strip().lower() for x in league_arg.split(",")])
 
-    #dump the data from the stash pages
+    # dump the data from the stash pages
     for league in leagues:
         fp = open("data/stash_%s_1.json" % league)
         tabs = json.load(fp)["tabs"]
         for page_no, tab_data in enumerate(tabs):
             dump_stash_page(league, page_no, tab_data, dump=dump)
 
-    #get the data from the characters
+    # get the data from the characters
     for f in path("data").listdir('items_*.json'):
         dump_char(f, dump=dump)
 
-    #final commit
+    # final commit
     if dump:
         db.session.commit()
 
-        print(colored.green(len(Item.query.all())), end=' ')
+        print(Fore.GREEN + len(Item.query.all()), end=' ')
         print("ITEMS PROCESSED.")
         print("DATA DUMP COMPLETED IN", end=' ')
-        print(colored.green("%.4f SECONDS" % (time.time() - start_time)))
+        print(Fore.GREEN + "%.4f SECONDS" % (time.time() - start_time))
