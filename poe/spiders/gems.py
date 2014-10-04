@@ -1,4 +1,3 @@
-from scrapy.spider import Spider
 from scrapy.selector import Selector
 
 from . import BasePoESpider
@@ -41,7 +40,7 @@ class GemSpider(BasePoESpider):
         items = []
         for gem in gems.extract():
             item = GemItem()
-            item["name"] = gem
+            item["title"] = gem
             item.update(**kwargs)
             items.append(item)
         return items

@@ -7,11 +7,7 @@ import constants
 from utils import norm, normfind, get_constant
 
 
-#get the gems into a dict for easier searching
-GEMS = {}
-for gem in get_constant("GEMS"):
-    name = gem.pop("name")
-    GEMS[name] = gem
+GEMS = get_constant("GEMS", as_dict=True)
 
 
 class tsvector(types.TypeDecorator):
@@ -162,7 +158,7 @@ class Item(db.Model):
         for g in ("axes", "bows", "claws", "daggers", "maces", "staves",
                   "swords", "wands", "helms", "armors", "gloves", "boots",
                   "shields", "belts", "quivers"):
-            for k, v in getattr(constants, g.upper()).items():
+            for k, v in get_constant(g.upper(), as_dict=True).items():
                 if k.lower() in own_type:
                     #see if there is a subtype
                     if isinstance(v, str):

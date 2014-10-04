@@ -2,6 +2,7 @@ import json
 import subprocess
 from collections import OrderedDict, defaultdict
 from itertools import groupby
+from path import path
 
 
 def norm(s):
@@ -70,28 +71,30 @@ def group_items_by_level(items):
     return sorteddict(grouped_items)
 
 
-def get_constant(name, normalize=False):
+def get_constant(name, normalize=False, as_dict=False):
     """
     returns the constant from the import if possible, if not it runs the
     relevant spider to return the required constant
 
     normalize means a normalized tuple is returned instead, i.e. one thay is
     suitable for startswith / endswith
+
+    as_dict returns a dict as a result
     """
     try:
         import constants
         return getattr(constants, name)
     except AttributeError:
-        outfile = "constants/%s.json" % name.lower()
-        #is the json file available for reading
-        try:
-            ret = [json.loads(x) for x in open(outfile)]
-        except IOError:
+        outfile = path("constants/%s.json" % name.lower())
+        #is the json file available
+        if not outfile.exists() or outfile.size == 0:
             #gotta run the spider
             # block until completion
             subprocess.call(["scrapy", "crawl", name.lower(), "--nolog", "-o",
                              outfile, "-t", "jsonlines"])
-            ret = [json.loads(x) for x in open(outfile)]
+            ret = [json.loads(x) for x in outfile.lines()]
+        else:
+            ret = [json.loads(x) for x in outfile.lines()]
 
     #transform to a simple list if they are title items
     if ret[0].keys() == ["title"]:
@@ -101,4 +104,12 @@ def get_constant(name, normalize=False):
         else:
             return ret
     else:
-        return ret
+        #transform to dict if needed
+        if as_dict:
+            ret1 = {}
+            for r in ret:
+                t = r.pop("title")
+                ret1[t] = r
+            return ret1
+        else:
+            return ret

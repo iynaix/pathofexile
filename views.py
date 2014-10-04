@@ -11,7 +11,10 @@ from models import (Item, Location, Property, Requirement,
 from utils import (normfind, sorteddict, group_items_by_level, groupsortby,
                    get_constant)
 
+# init constants
 CHROMATIC_RE = r"B+G+R+"
+GEMS = get_constant("GEMS", as_dict=True)
+QUIVERS = get_constant("QUIVERS", as_dict=True)
 
 
 @app.template_filter('percent')
@@ -213,7 +216,7 @@ class LevelsView(View):
         if slug is not None:
             if slug.lower() == "misc":
                 item_types = constants.BELTS
-                item_types.update(constants.QUIVERS)
+                item_types.update(QUIVERS)
             else:
                 item_types = list(getattr(constants, slug.upper()).keys())
             items = items.filter(
@@ -440,10 +443,6 @@ class StatsView(View):
 
     def get_gem_stats(self):
         #get the gems into a dict for easier searching
-        GEMS = {}
-        for gem in get_constant("GEMS"):
-            name = gem.pop("name")
-            GEMS[name] = gem
 
         gems = Item.query.join(Item.requirements).filter(
             Item.properties.any(name="Experience")
