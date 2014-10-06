@@ -1,28 +1,16 @@
-"""Dumping data about the characters and the stash into the database.
-
-Usage:
-  dump.py [--league=<league>]
-  dump.py (-h | --help)
-
-Options:
-  -h --help             Show this screen.
-  --league=<league>     Only process data for these leagues [default: all].
-
-"""
+# runs the spider and dumps the data about the characters and the stash into
+# the database
 
 from __future__ import print_function
-import json
 import pprint
 import re
-import time
+import subprocess
 from collections import defaultdict
 
 from colorama import Fore
-from docopt import docopt
-from path import path
+import begin
 
 from app import db
-from constants import PREFIXES, SUFFIXES
 from models import Item, Requirement, Property, Location
 from utils import norm, get_constant
 
@@ -30,6 +18,8 @@ MOD_NUM_RE = re.compile(r"[-+]?[0-9\.]+?[%]?")
 WHITESPACE_RE = re.compile('\s+')
 
 
+PREFIXES = get_constant("PREFIXES", normalize=True)
+SUFFIXES = get_constant("SUFFIXES", normalize=True)
 UNIQUES = get_constant("UNIQUES", normalize=True)
 
 
@@ -278,7 +268,6 @@ class ItemData(object):
         except:
             from pprint import pprint
             pprint(self.data)
-            raise
 
 
 def destroy_database(engine):
@@ -331,86 +320,21 @@ def destroy_database(engine):
     trans.commit()
 
 
-def dump_stash_page(league, page_no, tab_data, dump=True):
-    fname = "data/stash_%s_%s.json" % (league.lower(), page_no + 1)
-
-    # see if the name is numeric to determine if premium
-    is_premium = False
-    try:
-        int(tab_data["n"])
-    except ValueError:
-        is_premium = True
-    if tab_data['colour'] != {'b': 54, 'g': 84, 'r': 124}:
-        is_premium = True
-
-    # create the location
-    loc = Location(
-        name=tab_data["n"],
-        page_no=page_no + 1,
-        is_premium=is_premium,
-        is_character=False,
-    )
-
-    for item in json.load(open(fname))["items"]:
-        if dump:
-            db.session.add(
-                ItemData(item).sql_dump(loc)
-            )
-
-
-def dump_char(fname, dump=True):
-    if not isinstance(fname, path):
-        fname = path(fname)
-
-    # create the location
-    char_name = fname.split("_").pop().split(".")[0].capitalize()
-    loc = Location(
-        name=char_name,
-        is_premium=False,
-        is_character=True,
-    )
-    for item in json.load(open(fname))["items"]:
-        if dump:
-            db.session.add(
-                ItemData(item).sql_dump(loc)
-            )
-
-
-if __name__ == "__main__":
-    arguments = docopt(__doc__)
-
-    dump = True
-    start_time = time.time()
-
+@begin.start(auto_convert=True)
+def run(dump=True, leagues="all"):
     # drop and recreate the database
     if dump:
         destroy_database(db.engine)
         db.create_all()
 
-    league_arg = arguments.get("--league", "all")
-    if league_arg == "all":
-        leagues = set()
-        for fname in path("data").files('stash_*.json'):
-            leagues.add(fname.namebase.split("_")[1])
-    else:
-        leagues = set([x.strip().lower() for x in league_arg.split(",")])
+    leagues = set([l.strip().lower() for l in leagues.split(",")])
 
-    # dump the data from the stash pages
-    for league in leagues:
-        fp = open("data/stash_%s_1.json" % league)
-        tabs = json.load(fp)["tabs"]
-        for page_no, tab_data in enumerate(tabs):
-            dump_stash_page(league, page_no, tab_data, dump=dump)
-
-    # get the data from the characters
-    for f in path("data").listdir('items_*.json'):
-        dump_char(f, dump=dump)
+    # run the spider and fetch the data
+    print("RUNNING SPIDER")
+    # subprocess.call(("scrapy", "crawl", "main", "--nolog"))
 
     # final commit
     if dump:
         db.session.commit()
 
-        print(Fore.GREEN + len(Item.query.all()), end=' ')
-        print("ITEMS PROCESSED.")
-        print("DATA DUMP COMPLETED IN", end=' ')
-        print(Fore.GREEN + "%.4f SECONDS" % (time.time() - start_time))
+        print(Fore.GREEN + str(len(Item.query.all())), end=' ')

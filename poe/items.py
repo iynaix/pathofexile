@@ -53,3 +53,25 @@ class ItemStatItem(BaseItem):
     """
     title = Field()
     stat_type = Field()
+
+
+class MainItem(BaseItem):
+    name = Field()
+    type = Field()
+    x = Field()
+    y = Field()
+    w = Field()
+    h = Field()
+    rarity = Field()
+    num_sockets = Field()
+    socket_str = Field()
+    is_identified = Field()
+    is_corrupted = Field()
+    char_location = Field()
+    full_text = Field()
+    league = Field()
+    mods = Field()
+    requirements = Field()
+    properties = Field()
+    socketed_items = Field()
+    location = Field()
