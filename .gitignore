@@ -1,6 +1,9 @@
 env/*
 data/*
 constants/*
+.scrapy/*
 __pycache__/*
+*.json
+*.pickle
 *.pyc
 credentials.py

@@ -11,7 +11,7 @@ from models import (Item, Location, Property, Requirement,
 from utils import (normfind, sorteddict, group_items_by_level, groupsortby,
                    get_constant)
 
-# init constants
+#  init constants
 CHROMATIC_RE = r"B+G+R+"
 GEMS = get_constant("GEMS", as_dict=True)
 QUIVERS = get_constant("QUIVERS", as_dict=True)
@@ -35,8 +35,8 @@ def socket_filter(x):
             out.append('<span class="label label-danger">&nbsp;</span>')
         else:
             out.append('&nbsp;')
-    #join with hair spaces
-    return do_mark_safe("&#8202;".join(out))
+    # join with hair spaces
+    return do_mark_safe("&# 8202;".join(out))
 
 
 @app.context_processor
@@ -95,7 +95,7 @@ class AdvancedSearchView(MethodView):
         return render_template('advanced_search.html', max_lvl=max_lvl)
 
     def handle_socket_str(self, val):
-        #create the regex
+        # create the regex
         SOCKET_RE = r'[BGR]*'
         val = list(zip(sorted(val), itertools.repeat(SOCKET_RE)))
         val = SOCKET_RE + ''.join(itertools.chain(*val))
@@ -108,15 +108,15 @@ class AdvancedSearchView(MethodView):
         return [Item.type.ilike('%%%s%%' % val)]
 
     def handle_item_type_select(self, val):
-        # if slug is not None:
-        #     if slug.lower() == "misc":
-        #         item_types = constants.BELTS
-        #         item_types.update(constants.QUIVERS)
-        #     else:
-        #         item_types = getattr(constants, slug.upper()).keys()
-        #     items = items.filter(
-        #         Item.type.in_(item_types)
-        #     )
+        #  if slug is not None:
+        #      if slug.lower() == "misc":
+        #          item_types = constants.BELTS
+        #          item_types.update(constants.QUIVERS)
+        #      else:
+        #          item_types = getattr(constants, slug.upper()).keys()
+        #      items = items.filter(
+        #          Item.type.in_(item_types)
+        #      )
         pass
 
     def handle_item_title(self, val):
@@ -145,11 +145,11 @@ class AdvancedSearchView(MethodView):
         ]
 
     def post(self):
-        #generates the query in parts
+        # generates the query in parts
         filter_args = []
-        #dispatch the handling of each funtion to the appropriate methods
+        # dispatch the handling of each funtion to the appropriate methods
         for k, v in list(request.form.items()):
-            #special handling for multi selects
+            # special handling for multi selects
             if k.endswith("_multi"):
                 v = [x.strip() for x in request.form.getlist(k)]
                 v = [x for x in v if x]
@@ -265,7 +265,7 @@ class PurgeView(View):
         self.rare_pages = get_rare_stash_pages()
         super(PurgeView, self).__init__()
 
-    #non-chromatic items in chromatic pages
+    # non-chromatic items in chromatic pages
     def get_non_chromatics(self):
         return Item.query.join(Location).filter(
             Location.page_no.in_(self.chromatic_pages),
@@ -273,7 +273,7 @@ class PurgeView(View):
             Item.is_identified,
         )
 
-    #chromatic rares in chromatic pages
+    # chromatic rares in chromatic pages
     def get_chromatic_rares(self):
         return Item.query.join(Location).filter(
             Location.page_no.in_(self.chromatic_pages),
@@ -283,8 +283,8 @@ class PurgeView(View):
             Item.rarity != "magic",
         )
 
-    #chromatic items sharing the same type and level requirements in the
-    #chromatic pages
+    # chromatic items sharing the same type and level requirements in the
+    # chromatic pages
     def get_duplicate_chromatics(self):
         duplicate_chromatics = []
         chromatic_items = Item.query.join(Location).filter(
@@ -300,8 +300,8 @@ class PurgeView(View):
                     duplicate_chromatics.extend(v)
         return duplicate_chromatics
 
-    #rare items sharing the same type and level requirements in the
-    #rare pages
+    # rare items sharing the same type and level requirements in the
+    # rare pages
     def get_duplicate_rares(self):
         duplicate_rares = []
         rare_items = Item.query.join(Location).filter(
@@ -318,7 +318,7 @@ class PurgeView(View):
         return duplicate_rares
 
     def get_non_rares(self):
-        #non-rare items in rare pages
+        # non-rare items in rare pages
         return Item.query.join(Location).filter(
             Location.page_no.in_(self.rare_pages),
             Item.rarity != "rare",
@@ -326,7 +326,7 @@ class PurgeView(View):
         )
 
     def get_unidentified(self):
-        #non-rare items in rare pages
+        # non-rare items in rare pages
         return Item.query.join(Location).filter(
             ~Item.is_identified,
         )
@@ -338,7 +338,7 @@ class PurgeView(View):
             "chromatic_rares": self.get_chromatic_rares(),
             "unidentifieds": self.get_unidentified(),
         }
-        #apply default ordering for the items
+        # apply default ordering for the items
         for k, v in list(context.items()):
             context[k] = v.order_by(
                 Location.id, Item.x, Item.y
@@ -361,14 +361,14 @@ class StatsView(View):
             Item.is_identified,
         ).all()
         for item in items:
-            #look for the stack property
+            # look for the stack property
             for p in item.properties:
                 if p.name.startswith("Stack"):
-                    #get the size of the stack
+                    # get the size of the stack
                     currency_stats[item.type] += int(p.value.split("/")[0])
                     break
 
-        #handle shards and fragments
+        # handle shards and fragments
         currency_stats["Scroll of Wisdom"] += \
                 currency_stats.pop("Scroll Fragment", 0) / 20.0
         currency_stats["Orb of Transmutation"] += \
@@ -382,7 +382,7 @@ class StatsView(View):
         for name, effect in list(constants.CURRENCIES.items()):
             if name not in currency_stats:
                 continue
-            #format the total string
+            # format the total string
             total = str(currency_stats[name])
             if int(currency_stats[name]) != currency_stats[name]:
                 total = "%.2f" % currency_stats[name]
@@ -416,8 +416,8 @@ class StatsView(View):
 
     def get_item_socket_links_stats(self):
         stats = db.session.query(
-            #first instance of space, since the strings are sorted in order
-            #of length
+            # first instance of space, since the strings are sorted in order
+            # of length
             db.func.strpos(Item.socket_str, " ").label("link_length"),
             db.func.count(Item.id),
         ).filter(Item.is_identified).group_by("link_length").all()
@@ -429,8 +429,8 @@ class StatsView(View):
 
     def get_chromatics_stats(self):
         stats = db.session.query(
-            #first instance of space, since the strings are sorted in order
-            #of length
+            # first instance of space, since the strings are sorted in order
+            # of length
             db.cast(Item.socket_str.op('~')(CHROMATIC_RE), db.Integer).
             label("is_chromatic"),
             db.func.count(Item.id),
@@ -442,7 +442,7 @@ class StatsView(View):
         }
 
     def get_gem_stats(self):
-        #get the gems into a dict for easier searching
+        # get the gems into a dict for easier searching
 
         gems = Item.query.join(Item.requirements).filter(
             Item.properties.any(name="Experience")
@@ -450,10 +450,10 @@ class StatsView(View):
 
         all_gems = {"B": [], "G": [], "R": []}
         for gem_name, count in list(Counter(g.type for g in gems).items()):
-            #look for info for the corresponding gem
+            # look for info for the corresponding gem
             gval = normfind(GEMS, gem_name)
 
-            #find the first of the gem for popover
+            # find the first of the gem for popover
             for g in gems:
                 if g.type == gem_name:
                     gval["sample"] = g
@@ -481,8 +481,7 @@ class StatsView(View):
                 return "Mana"
             elif "Hybrid" in f.type:
                 return "Hybrid"
-            else:
-                return "Misc"
+            return "Misc"
 
         all_flasks = OrderedDict([
             ("Life", defaultdict(int)),
@@ -493,24 +492,24 @@ class StatsView(View):
         for f in flasks:
             t = flask_type(f)
             if t != "Misc":
-                for size in constants.FLASK_SIZES:
+                for size in get_constant("FLASK_SIZES"):
                     if size in f.type:
                         all_flasks[t][size] += 1
                         break
             else:
-                for misc_type in constants.MISC_FLASKS:
+                for misc_type in get_constant("MISC_FLASKS"):
                     if misc_type in f.type:
                         all_flasks[t][misc_type] += 1
                         break
 
         all_flasks["Life"] = sorteddict(all_flasks["Life"],
-                                        constants.FLASK_SIZES)
+                                        get_constant("FLASK_SIZES"))
         all_flasks["Mana"] = sorteddict(all_flasks["Mana"],
-                                        constants.FLASK_SIZES)
+                                        get_constant("FLASK_SIZES"))
         all_flasks["Hybrid"] = sorteddict(all_flasks["Hybrid"],
-                                          constants.FLASK_SIZES)
+                                          get_constant("FLASK_SIZES"))
         all_flasks["Misc"] = sorteddict(all_flasks["Misc"],
-                                        constants.MISC_FLASKS)
+                                        get_constant("MISC_FLASKS"))
         return {
             "all_flasks": all_flasks,
         }

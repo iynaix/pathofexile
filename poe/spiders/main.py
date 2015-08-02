@@ -8,9 +8,9 @@ import credentials
 # from poe.items import CurrencyItem
 
 LOGIN_URL = "https://www.pathofexile.com/login"
-CHAR_URL = "http://www.pathofexile.com/character-window/get-characters"
-ITEM_URL = "http://www.pathofexile.com/character-window/get-items"
-STASH_URL = "http://www.pathofexile.com/character-window/get-stash-items"
+CHAR_URL = "https://www.pathofexile.com/character-window/get-characters"
+ITEM_URL = "https://www.pathofexile.com/character-window/get-items"
+STASH_URL = "https://www.pathofexile.com/character-window/get-stash-items"
 
 
 class MainSpider(Spider):
@@ -19,7 +19,7 @@ class MainSpider(Spider):
     """
     name = "main"
     start_urls = [LOGIN_URL]
-    leagues = ["rampage"]
+    leagues = ["warbands"]
     download_delay = 3
 
     def parse(self, resp):
@@ -37,11 +37,13 @@ class MainSpider(Spider):
         if "Logged in as" not in resp.body_as_unicode():
             raise SystemExit("NOT LOGGED IN.")
 
+        # get the character data
         yield Request(
             CHAR_URL,
             callback=self.fetch_all_char_data
         )
 
+        # get the league data
         for league in self.leagues:
             league = league.title()
             yield FormRequest(

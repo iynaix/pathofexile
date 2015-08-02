@@ -7,8 +7,8 @@ import re
 import subprocess
 from collections import defaultdict
 
-from colorama import Fore
-import begin
+from blessings import Terminal
+import click
 
 from app import db
 from models import Item, Requirement, Property, Location
@@ -320,21 +320,31 @@ def destroy_database(engine):
     trans.commit()
 
 
-@begin.start(auto_convert=True)
-def run(dump=True, leagues="all"):
+@click.command()
+@click.option('--leagues', default="all",
+              help="Leagues(s) to fetch. Use 'all to fetch all leagues'")
+@click.option('--debug/--no-debug', default=False,
+              help="Enable scrapy's log for debugging")
+def run(leagues, debug):
+    t = Terminal()
     # drop and recreate the database
-    if dump:
-        destroy_database(db.engine)
-        db.create_all()
+    destroy_database(db.engine)
+    db.create_all()
 
     leagues = set([l.strip().lower() for l in leagues.split(",")])
 
-    # run the spider and fetch the data
-    print("RUNNING SPIDER")
-    # subprocess.call(("scrapy", "crawl", "main", "--nolog"))
+    # run the spider and fetch the data, we never cache
+    click.echo("RUNNING SPIDER...")
+    cmd = ["scrapy", "crawl", "main", "--set", "HTTPCACHE_ENABLED=0"]
+    if not debug:
+        cmd.append("--nolog")
+    subprocess.call(cmd)
 
     # final commit
-    if dump:
-        db.session.commit()
+    click.echo(t.green("WRITING TO DATABASE..."))
+    db.session.commit()
+    click.echo(t.green(str(len(Item.query.all()))))
 
-        print(Fore.GREEN + str(len(Item.query.all())), end=' ')
+
+if __name__ == "__main__":
+    run()

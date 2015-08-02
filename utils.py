@@ -47,7 +47,7 @@ def sorteddict(d, ordered_arr=None):
     """
     returns an OrderedDict from d in the order given by ordered_arr
     """
-    #just return the dict with sorted keys
+    # just return the dict with sorted keys
     if ordered_arr is None:
         return OrderedDict(sorted(d.items()))
 
@@ -86,17 +86,17 @@ def get_constant(name, normalize=False, as_dict=False):
         return getattr(constants, name)
     except AttributeError:
         outfile = path("constants/%s.json" % name.lower())
-        #is the json file available
+        # is the json file available
         if not outfile.exists() or outfile.size == 0:
-            #gotta run the spider
-            # block until completion
+            # gotta run the spider
+            #  block until completion
             subprocess.call(["scrapy", "crawl", name.lower(), "--nolog", "-o",
                              outfile, "-t", "jsonlines"])
             ret = [json.loads(x) for x in outfile.lines()]
         else:
             ret = [json.loads(x) for x in outfile.lines()]
 
-    #transform to a simple list if they are title items
+    # transform to a simple list if they are title items
     if ret[0].keys() == ["title"]:
         ret = [x["title"] for x in ret]
         if normalize:
@@ -104,7 +104,7 @@ def get_constant(name, normalize=False, as_dict=False):
         else:
             return ret
     else:
-        #transform to dict if needed
+        # transform to dict if needed
         if as_dict:
             ret1 = {}
             for r in ret:

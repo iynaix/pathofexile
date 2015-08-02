@@ -1,4 +1,4 @@
-from scrapy.spider import Spider
+from scrapy.spiders import Spider
 from scrapy.selector import Selector
 
 from poe.items import TitleItem, ItemTypeItem, ItemSubtypeItem
@@ -15,14 +15,14 @@ class BaseTitleSpider(BasePoESpider):
     Gets the text of the first cells of each row of each table and returns the
     item
     """
-    #type of item used to instantiate
+    # type of item used to instantiate
     item_class = TitleItem
-    #dict of extra keys and values to be set for each yielded item
+    # dict of extra keys and values to be set for each yielded item
     item_kwargs = {}
-    #is the text to be extracted in the table cell a link?
+    # is the text to be extracted in the table cell a link?
     is_link = True
-    #tables that will be parsed, specified as a list of args to be passed to
-    #slice
+    # tables that will be parsed, specified as a list of args to be passed to
+    # slice
     table_slice = []
 
     def parse(self, response):
@@ -174,7 +174,7 @@ class FlaskSizeSpider(BaseTitleSpider):
         title = super(FlaskSizeSpider, self).process_title(title)
         if not title.endswith(" Life Flask"):
             raise ValueError
-        return ' '.join(title.split()[:-2])
+        return title.rsplit(' ', 2)[0]
 
 
 class MiscFlaskSpider(BaseTitleSpider):
@@ -189,7 +189,7 @@ class MiscFlaskSpider(BaseTitleSpider):
             raise ValueError
         if title.endswith((" Life Flask", " Mana Flask", " Hybrid Flask")):
             raise ValueError
-        return ' '.join(title.split()[:-1])
+        return title.rsplit(' ', 1)[0]
 
 
 class AxeSpider(BaseTitleSpider):

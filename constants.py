@@ -32,32 +32,32 @@ from utils import norm, get_constant
 #     "Tower Key",
 # ]
 
-# CURRENCIES = OrderedDict([
-#     ("Scroll of Wisdom", "Identifies an item"),
-#     ("Portal Scroll", "Creates a portal to town"),
-#     ("Armourer's Scrap", "Improves the quality of an armour"),
-#     ("Blacksmith's Whetstone", "Improves the quality of a weapon"),
-#     ("Glassblower's Bauble", "Improves the quality of a flask"),
-#     ("Cartographer's Chisel", "Improves the quality of a map"),
-#     ("Gemcutter's Prism", "Improves the quality of a gem"),
-#     ("Jeweller's Orb", "Reforges the number of sockets on an item"),
-#     ("Chromatic Orb", "Reforges the colour of sockets on an item"),
-#     ("Orb of Fusing", "Reforges the links between sockets on an item"),
-#     ("Orb of Transmutation", "Upgrades a normal item to a magic item"),
-#     ("Orb of Chance", "Upgrades a normal item to a random rarity"),
-#     ("Orb of Alchemy", "Upgrades a normal item to rare item"),
-#     ("Regal Orb", "Upgrades a magic item to rare item"),
-#     ("Orb of Augmentation", "Enchants a magic item with a new random property"),
-#     ("Exalted Orb", "Enchants a rare item with a new random property"),
-#     ("Orb of Alteration", "Reforges a magic item with new random properties"),
-#     ("Chaos Orb", "Reforges a rare item with new random properties"),
-#     ("Blessed Orb", "Randomises the numeric values of the implicit properties of an item"),
-#     ("Divine Orb", "Randomises the numeric values of the random properties of an item"),
-#     ("Orb of Scouring", "Removes all properties from an item"),
-#     ("Mirror of Kalandra", "Creates a mirrored copy of an item"),
-#     ("Eternal Orb", "Creates an imprint of an item for later restoration"),
-#     ("Orb of Regret", "Grants a passive skill refund point"),
-# ])
+CURRENCIES = OrderedDict([
+    ("Scroll of Wisdom", "Identifies an item"),
+    ("Portal Scroll", "Creates a portal to town"),
+    ("Armourer's Scrap", "Improves the quality of an armour"),
+    ("Blacksmith's Whetstone", "Improves the quality of a weapon"),
+    ("Glassblower's Bauble", "Improves the quality of a flask"),
+    ("Cartographer's Chisel", "Improves the quality of a map"),
+    ("Gemcutter's Prism", "Improves the quality of a gem"),
+    ("Jeweller's Orb", "Reforges the number of sockets on an item"),
+    ("Chromatic Orb", "Reforges the colour of sockets on an item"),
+    ("Orb of Fusing", "Reforges the links between sockets on an item"),
+    ("Orb of Transmutation", "Upgrades a normal item to a magic item"),
+    ("Orb of Chance", "Upgrades a normal item to a random rarity"),
+    ("Orb of Alchemy", "Upgrades a normal item to rare item"),
+    ("Regal Orb", "Upgrades a magic item to rare item"),
+    ("Orb of Augmentation", "Enchants a magic item with a new random property"),
+    ("Exalted Orb", "Enchants a rare item with a new random property"),
+    ("Orb of Alteration", "Reforges a magic item with new random properties"),
+    ("Chaos Orb", "Reforges a rare item with new random properties"),
+    ("Blessed Orb", "Randomises the numeric values of the implicit properties of an item"),
+    ("Divine Orb", "Randomises the numeric values of the random properties of an item"),
+    ("Orb of Scouring", "Removes all properties from an item"),
+    ("Mirror of Kalandra", "Creates a mirrored copy of an item"),
+    ("Eternal Orb", "Creates an imprint of an item for later restoration"),
+    ("Orb of Regret", "Grants a passive skill refund point"),
+])
 
 """
 #normalize to lower case
@@ -96,33 +96,31 @@ for w in [AXES, MACES, SWORDS]:
 """
 
 
-if __name__ == "__main__":
-    """force a fetch of all the constants"""
-    CONSTANTS = [
-        "GEMS",
-        "UNIQUES",
-        "QUIVERS",
-        "BELTS",
-        "WANDS",
-        "STAVES",
-        "DAGGERS",
-        "CLAWS",
-        "GLOVES",
-        "BOOTS",
-        "SHIELDS",
-        "HELMS",
-        "ARMORS",
-        "BOWS",
-        "AXES",
-        "MACES",
-        "SWORDS",
-        "PREFIXES",
-        "SUFFIXES",
-        "CURRENCIES",
-        "FLASK_SIZES",
-        "MISC_FLASKS",
-        "QUEST_ITEMS",
-    ]
-    for c in CONSTANTS:
-        print "FETCHING CONSTANT '%s'" % c
-        get_constant(c)
+"""force a fetch of all the constants"""
+CONSTANTS = [
+    "GEMS",
+    "UNIQUES",
+    "QUIVERS",
+    "BELTS",
+    "WANDS",
+    "STAVES",
+    "DAGGERS",
+    "CLAWS",
+    "GLOVES",
+    "BOOTS",
+    "SHIELDS",
+    "HELMS",
+    "ARMORS",
+    "BOWS",
+    "AXES",
+    "MACES",
+    "SWORDS",
+    "PREFIXES",
+    "SUFFIXES",
+    "CURRENCIES",
+    "FLASK_SIZES",
+    "MISC_FLASKS",
+    "QUEST_ITEMS",
+]
+for c in CONSTANTS:
+    get_constant(c)
