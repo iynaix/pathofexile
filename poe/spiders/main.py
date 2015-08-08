@@ -130,8 +130,9 @@ class MainSpider(Spider):
         if "error" in data:
             raise HTTPError("Request Throttled")
 
-        from pprint import pprint
-        print resp.meta["location"]
-        for item in data["items"]:
-            # ITEM SQL_DUMP HERE
-            pprint(item)
+        yield data
+        # from pprint import pprint
+        # print resp.meta["location"]
+        # for item in data["items"]:
+        #     # ITEM SQL_DUMP HERE
+        #     pprint(item)

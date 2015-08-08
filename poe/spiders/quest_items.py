@@ -1,5 +1,4 @@
 import re
-from scrapy.selector import Selector
 
 from . import BasePoESpider
 from poe.items import TitleItem
@@ -14,17 +13,12 @@ class QuestItemSpider(BasePoESpider):
         "http://pathofexile.gamepedia.com/Category:Quest_items"
     ]
 
-    def parse(self, response):
-        sel = Selector(response)
-
+    def parse(self, resp):
         quest_items = set()
-        for quest_item in sel.xpath("//table//li/a/text()").extract():
+        for quest_item in resp.css("table a::text").extract():
             quest_item = re.sub(r' \(.*\)', '', quest_item)
             if quest_item.endswith("/ko"):
                 continue
             quest_items.add(quest_item)
 
-        for quest_item in sorted(quest_items):
-            item = TitleItem()
-            item["title"] = quest_item
-            yield item
+        return {"QUEST_ITEMS": sorted(quest_items)}

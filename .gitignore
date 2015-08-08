@@ -3,6 +3,7 @@ data/*
 constants/*
 .scrapy/*
 __pycache__/*
+*.ipynb*
 *.json
 *.pickle
 *.pyc

@@ -335,7 +335,8 @@ def run(leagues, debug):
 
     # run the spider and fetch the data, we never cache
     click.echo("RUNNING SPIDER...")
-    cmd = ["scrapy", "crawl", "main", "--set", "HTTPCACHE_ENABLED=0"]
+    cmd = ["scrapy", "crawl", "main", "--set", "HTTPCACHE_ENABLED=0",
+           "-t" "jsonlines", "-o", "all_items.json"]
     if not debug:
         cmd.append("--nolog")
     subprocess.call(cmd)
