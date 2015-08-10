@@ -13,7 +13,7 @@ NEWSPIDER_MODULE = 'poe.spiders'
 
 # HTTPCACHE_ENABLED = True
 # cache for a day
-HTTPCACHE_EXPIRATION_SECS = 24 * 60 * 60
+# HTTPCACHE_EXPIRATION_SECS = 24 * 60 * 60
 # RETRY_HTTP_CODES = [500, 502, 503, 504, 400, 408, 403]
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent

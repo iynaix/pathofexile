@@ -33,19 +33,18 @@ class ItemDataSpider(Spider):
         return ret
 
     def parse_data_page(self, resp):
-        # print t.green(resp.meta["title"].upper())
-        headers = resp.css("h1::text").extract_first()
+        page_header = resp.meta["title"]
+        headers = resp.css("h1::text").extract()
 
         tables = resp.css("table.itemDataTable")
-        for header, table in zip(headers, tables):
-            return {
-                "header": header,
-                "data": self.table_extractor(table),
-            }
-
         # not standard item data list, probably a gem page, handle separately
         if not tables:
             return self.parse_gem_page(resp)
+
+        ret = {page_header: {}}
+        for header, table in zip(headers, tables):
+            ret[page_header][header] = self.table_extractor(table)
+        return ret
 
     def parse_gem_page(self, resp):
         ret = []
@@ -68,6 +67,5 @@ class ItemDataSpider(Spider):
             ret = zip(ret[::2], ret[1::2])
 
         return {
-            "header": resp.meta["title"],
-            "data": ret,
+            resp.meta["title"]: ret,
         }

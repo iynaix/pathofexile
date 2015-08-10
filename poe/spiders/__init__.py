@@ -1,7 +1,7 @@
 from scrapy.spiders import Spider
 from scrapy.selector import Selector
 
-from poe.items import TitleItem, ItemTypeItem, ItemSubtypeItem
+from poe.items import TitleItem
 
 
 class BasePoESpider(Spider):
@@ -70,100 +70,6 @@ class UniqueSpider(BaseTitleSpider):
     ]
 
 
-class QuiverSpider(BaseTitleSpider):
-    name = "quivers"
-    start_urls = [
-        "http://pathofexile.gamepedia.com/Quiver"
-    ]
-    item_class = ItemTypeItem
-    item_kwargs = {"type": "Quiver"}
-
-
-class BeltSpider(BaseTitleSpider):
-    name = "belts"
-    start_urls = [
-        "http://pathofexile.gamepedia.com/Belt"
-    ]
-    item_class = ItemTypeItem
-    item_kwargs = {"type": "Belt"}
-
-
-class WandSpider(BaseTitleSpider):
-    name = "wands"
-    start_urls = [
-        "http://pathofexile.gamepedia.com/Wand"
-    ]
-    item_class = ItemTypeItem
-    item_kwargs = {"type": "Wand"}
-
-
-class StaveSpider(BaseTitleSpider):
-    name = "staves"
-    start_urls = [
-        "http://pathofexile.gamepedia.com/Staff"
-    ]
-    item_class = ItemTypeItem
-    item_kwargs = {"type": "Stave"}
-
-
-class DaggerSpider(BaseTitleSpider):
-    name = "daggers"
-    start_urls = [
-        "http://pathofexile.gamepedia.com/Dagger"
-    ]
-    item_class = ItemTypeItem
-    item_kwargs = {"type": "Dagger"}
-    table_slice = [1]
-
-
-class ClawSpider(BaseTitleSpider):
-    name = "claws"
-    start_urls = [
-        "http://pathofexile.gamepedia.com/Claw"
-    ]
-    item_class = ItemTypeItem
-    item_kwargs = {"type": "Claw"}
-    table_slice = [2]
-
-
-class BowSpider(BaseTitleSpider):
-    name = "bows"
-    start_urls = [
-        "http://pathofexile.gamepedia.com/Bow"
-    ]
-    item_class = ItemTypeItem
-    item_kwargs = {"type": "Bow"}
-    table_slice = [1]
-
-
-class PrefixSpider(BaseTitleSpider):
-    name = "prefixes"
-    start_urls = [
-        "http://pathofexile.gamepedia.com/Item_Affix"
-    ]
-    is_link = False
-
-    def process_title(self, title):
-        title = super(PrefixSpider, self).process_title(title)
-        if title.startswith("of "):
-            raise ValueError
-        return title
-
-
-class SuffixSpider(BaseTitleSpider):
-    name = "suffixes"
-    start_urls = [
-        "http://pathofexile.gamepedia.com/Item_Affix"
-    ]
-    is_link = False
-
-    def process_title(self, title):
-        title = super(SuffixSpider, self).process_title(title)
-        if not title.startswith("of "):
-            raise ValueError
-        return title
-
-
 class FlaskSizeSpider(BaseTitleSpider):
     name = "flask_sizes"
     start_urls = [
@@ -190,61 +96,3 @@ class MiscFlaskSpider(BaseTitleSpider):
         if title.endswith((" Life Flask", " Mana Flask", " Hybrid Flask")):
             raise ValueError
         return title.rsplit(' ', 1)[0]
-
-
-class AxeSpider(BaseTitleSpider):
-    name = "axes"
-    start_urls = [
-        "http://pathofexile.gamepedia.com/Axe"
-    ]
-    item_class = ItemSubtypeItem
-    table_slice = [2]
-
-    def get_item_kwargs(self, table_idx):
-        """
-        hook to allow processing of extra item kwargs before saving
-        """
-        if table_idx == 0:
-            return dict(type="Axe", subtype="One Handed Axe")
-        elif table_idx == 1:
-            return dict(type="Axe", subtype="Two Handed Axe")
-
-
-class MaceSpider(BaseTitleSpider):
-    name = "maces"
-    start_urls = [
-        "http://pathofexile.gamepedia.com/Mace"
-    ]
-    item_class = ItemSubtypeItem
-    table_slice = [3]
-
-    def get_item_kwargs(self, table_idx):
-        """
-        hook to allow processing of extra item kwargs before saving
-        """
-        if table_idx == 0:
-            return dict(type="Mace", subtype="Mace")
-        elif table_idx == 1:
-            return dict(type="Mace", subtype="Sceptre")
-        elif table_idx == 2:
-            return dict(type="Mace", subtype="Maul")
-
-
-class SwordSpider(BaseTitleSpider):
-    name = "swords"
-    start_urls = [
-        "http://pathofexile.gamepedia.com/Sword"
-    ]
-    item_class = ItemSubtypeItem
-    table_slice = [3]
-
-    def get_item_kwargs(self, table_idx):
-        """
-        hook to allow processing of extra item kwargs before saving
-        """
-        if table_idx == 0:
-            return dict(type="Sword", subtype="One Handed Sword")
-        elif table_idx == 1:
-            return dict(type="Sword", subtype="Rapier")
-        elif table_idx == 2:
-            return dict(type="Sword", subtype="Two Handed Sword")
