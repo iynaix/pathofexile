@@ -49,29 +49,8 @@ def groupby_stat_type(items):
     return ret
 
 
-if __name__ == "__main__":
-    data = {}
-    with open("item_data.json") as fp:
-        for line in fp:
-            data.update(json.loads(line))
-
-    CURRENCIES = {x[2]: x[4] for x in data["Currency"].values()[0]}
-
-    PREFIXES = []
-    for prefix_type, prefixes in data["Prefixes"].iteritems():
-        PREFIXES.extend([p[0] for p in prefixes])
-
-    SUFFIXES = []
-    for suffix_type, suffixes in data["Suffixes"].iteritems():
-        SUFFIXES.extend([p[0] for p in suffixes])
-
-    BOOTS = groupby_stat_type(data["Armour"]["Boots"])
-    SHIELDS = groupby_stat_type(data["Armour"]["Shield"])
-    GLOVES = groupby_stat_type(data["Armour"]["Gloves"])
-    HELMS = groupby_stat_type(data["Armour"]["Helmet"])
-    ARMORS = groupby_stat_type(data["Armour"]["Body Armour"])
-
-    from pprint import pprint
+def get_weapon_constants(data):
+    """returns all the weapon constants"""
     BOWS = [x[0] for x in data["Weapons"]["Bow"] if stat_type(x)]
     WANDS = [x[0] for x in data["Weapons"]["Wand"] if stat_type(x)]
     CLAWS = [x[0] for x in data["Weapons"]["Claw"] if stat_type(x)]
@@ -113,4 +92,56 @@ if __name__ == "__main__":
     for w in AXES, MACES, SWORDS:
         WEAPONS.extend(w.keys())
 
-    ARMORS = HELMS + ARMORS + GLOVES + BOOTS + SHIELDS
+    return {k: v for k, v in locals().iteritems() if k.upper() == k}
+
+def get_armor_constants(data):
+    """returns all the weapon constants"""
+    BOOTS = groupby_stat_type(data["Armour"]["Boots"])
+    SHIELDS = groupby_stat_type(data["Armour"]["Shield"])
+    GLOVES = groupby_stat_type(data["Armour"]["Gloves"])
+    HELMS = groupby_stat_type(data["Armour"]["Helmet"])
+    ARMORS = groupby_stat_type(data["Armour"]["Body Armour"])
+
+    ret = {"ARMORS_ALL": []}
+    for k, v in locals().iteritems():
+        if k.upper() != k:
+            continue
+        ret[k] = v
+        ret["ARMORS_ALL"].extend(v.keys())
+    return ret
+
+
+def get_gamepedia_constants(data):
+    from pprint import pprint
+    DIVINATION_CARDS = [x[0] for x in data["List of divination cards"]]
+    QUIVERS = [x[0] for x in data["Quivers"]]
+    QUIVERS.extend([x[0] for x in data["Old quivers"]])
+    pprint(QUIVERS)
+
+
+# process item data from official PoE site
+data = {}
+with open("item_data.json") as fp:
+    for line in fp:
+        data.update(json.loads(line))
+
+CURRENCIES = {x[2]: x[4] for x in data["Currency"].values()[0]}
+
+PREFIXES = []
+for prefix_type, prefixes in data["Prefixes"].iteritems():
+    PREFIXES.extend([p[0] for p in prefixes])
+
+SUFFIXES = []
+for suffix_type, suffixes in data["Suffixes"].iteritems():
+    SUFFIXES.extend([p[0] for p in suffixes])
+
+# get_weapon_constants(data)
+# get_armor_constants(data)
+
+# process item data from gamepedia
+data = {}
+with open("gamepedia.json") as fp:
+    for line in fp:
+        data.update(json.loads(line))
+
+get_gamepedia_constants(data)
