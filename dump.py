@@ -2,25 +2,20 @@
 # the database
 
 from __future__ import print_function
+import json
 import pprint
 import re
 import subprocess
 from collections import defaultdict
 
-from blessings import Terminal
+# from blessings import Terminal
 import click
 
 from app import db
 from models import Item, Requirement, Property, Location
-from utils import norm, get_constant
 
 MOD_NUM_RE = re.compile(r"[-+]?[0-9\.]+?[%]?")
 WHITESPACE_RE = re.compile('\s+')
-
-
-PREFIXES = get_constant("PREFIXES", normalize=True)
-SUFFIXES = get_constant("SUFFIXES", normalize=True)
-UNIQUES = get_constant("UNIQUES", normalize=True)
 
 
 def norm_mod(mod):
@@ -164,52 +159,19 @@ class ItemData(object):
             return "Inventory"
         return x
 
-    def is_magic(self):
-        # normalize to lower case
-        if self.name:
-            return False
-
-        t = norm(self.type)
-        return t.startswith(PREFIXES) or t.endswith(SUFFIXES)
-
-    def is_rare(self):
-        if self.is_unique() or self.is_magic():
-            return False
-        return bool(self.name)
-
-    def is_unique(self):
-        name = norm(self.name)
-        if not name:
-            return False
-        return name in UNIQUES
-
-    def is_normal(self):
-        return not (self.is_magic() or self.is_rare() or self.is_unique())
-
     @property
     def rarity(self):
         """
         returns a string representing the rarity of the item, possible values
         are: normal, magic, rare, unique
         """
-        if self.is_unique():
+        if self.data["frameType"] == 3:
             return "unique"
-        if self.is_magic():
+        if self.data["frameType"] == 1:
             return "magic"
-        # check if item is rare
-        # we're not using the is_rare() method as that would compute the
-        # is_unique() and is_magic() methods again
-        if self.name:
+        if self.data["frameType"] == 2:
             return "rare"
         return "normal"
-
-    def title_contains(self, search_str):
-        """
-        utility function, does the given search string exist within the item
-        name or type?
-        """
-        search_str = norm(search_str)
-        return search_str in norm(self.name) or search_str in norm(self.type)
 
     def full_text(self):
         """
@@ -320,31 +282,38 @@ def destroy_database(engine):
     trans.commit()
 
 
+def parse_items(fp):
+    for item in fp:
+        item = json.loads(item)
+        print(ItemData(item).dql_dump())
+
+
 @click.command()
 @click.option('--leagues', default="all",
               help="Leagues(s) to fetch. Use 'all to fetch all leagues'")
 @click.option('--debug/--no-debug', default=False,
               help="Enable scrapy's log for debugging")
 def run(leagues, debug):
-    t = Terminal()
-    # drop and recreate the database
-    destroy_database(db.engine)
-    db.create_all()
+    # t = Terminal()
+    # # drop and recreate the database
+    # destroy_database(db.engine)
+    # db.create_all()
 
-    leagues = set([l.strip().lower() for l in leagues.split(",")])
+    # leagues = set([l.strip().lower() for l in leagues.split(",")])
 
-    # run the spider and fetch the data, we never cache
-    click.echo("RUNNING SPIDER...")
-    cmd = ["scrapy", "crawl", "main", "--set", "HTTPCACHE_ENABLED=0",
-           "-t" "jsonlines", "-o", "all_items.json"]
-    if not debug:
-        cmd.append("--nolog")
-    subprocess.call(cmd)
+    # # run the spider and fetch the data, we never cache
+    # click.echo("RUNNING SPIDER...")
+    # cmd = ["scrapy", "crawl", "main", "-t" "jsonlines", "-o", "all_items.json"]
+    # if not debug:
+    #     cmd.append("--nolog")
+    # subprocess.call(cmd)
 
     # final commit
-    click.echo(t.green("WRITING TO DATABASE..."))
-    db.session.commit()
-    click.echo(t.green(str(len(Item.query.all()))))
+    with open("all_items.json") as fp:
+        parse_items(fp)
+    # click.echo(t.green("WRITING TO DATABASE..."))
+    # db.session.commit()
+    # click.echo(t.green(str(len(Item.query.all()))))
 
 
 if __name__ == "__main__":
