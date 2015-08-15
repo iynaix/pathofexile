@@ -117,12 +117,6 @@ class ItemData(object):
         return props
 
     @property
-    def mods(self):
-        """returns a list of mods"""
-        return self.data.get('implicitMods', []) + \
-            self.data.get('explicitMods', [])
-
-    @property
     def socket_str(self):
         """
         shows the available sockets from longest link to shortest, separated
@@ -191,7 +185,9 @@ class ItemData(object):
                         norm_mod("%s: %s" % (prop["name"], prop["value"])))
                 else:
                     out.append(norm_mod(prop["name"]))
-            for mod in self.mods:
+            for mod in self.data.get('implicitMods', []):
+                out.append(norm_mod(mod))
+            for mod in self.data.get('explicitMods', []):
                 out.append(norm_mod(mod))
         return "\n".join(out)
 
@@ -217,7 +213,8 @@ class ItemData(object):
                 char_location=self.char_location(),
                 full_text=db.func.to_tsvector(self.full_text()),
                 league=league,
-                mods=self.mods,
+                implicit_mods=self.data.get('implicitMods', []),
+                explicit_mods=self.data.get('explicitMods', []),
                 requirements=[Requirement(**r) for r in self.requirements],
                 properties=[Property(**p) for p in self.properties],
                 socketed_items=[

@@ -77,8 +77,9 @@ class Item(db.Model):
     is_deleted = db.Column(db.Boolean, nullable=False, default=False)
     league = db.Column(db.String(20), default="Standard")
 
-    # unky stuff for item properties, mods etc
-    mods = db.Column(postgres.ARRAY(db.String(255)))
+    # funky stuff for item properties, mods etc
+    implicit_mods = db.Column(postgres.ARRAY(db.String(255)))
+    explicit_mods = db.Column(postgres.ARRAY(db.String(255)))
     requirements = db.relationship("Requirement", backref="item")
     properties = db.relationship("Property", backref="item")
     location_id = db.Column(db.Integer, db.ForeignKey('location.id'))
