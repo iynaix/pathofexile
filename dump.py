@@ -8,7 +8,7 @@ import re
 import subprocess
 from collections import defaultdict
 
-# from blessings import Terminal
+from blessings import Terminal
 import click
 
 from app import db
@@ -209,6 +209,7 @@ class ItemData(object):
                 w=self.data["w"],
                 h=self.data["h"],
                 rarity=self.rarity,
+                icon=self.data["icon"],
                 num_sockets=self.num_sockets(),
                 socket_str=self.socket_str,
                 is_identified=self.data["identified"],
@@ -223,13 +224,13 @@ class ItemData(object):
                     ItemData(x, league=league).sql_dump(location) for x in
                     self.data.get("socketedItems", [])
                 ],
-                location=location,
+                location=Location(**location),
                 **kwargs
             )
         # show some debugging output
         except:
-            from pprint import pprint
-            pprint(self.data)
+            raise
+            pprint.pprint(self.data)
 
 
 def destroy_database(engine):
@@ -282,10 +283,38 @@ def destroy_database(engine):
     trans.commit()
 
 
-def parse_items(fp):
-    for item in fp:
-        item = json.loads(item)
-        print(ItemData(item).dql_dump())
+def dump_items(pages):
+    for page in pages:
+        loc = page.pop("location")
+        for item in page["items"]:
+            sql = ItemData(item).sql_dump(loc)
+            # click.echo(sql)
+            db.session.add(sql)
+
+
+def run_scraper(crawler_name, debug=False, **kwargs):
+    """runs the given scraper and writes the jsonlines output"""
+    outfile = "%s.json" % crawler_name
+    open(outfile, 'w').close()  # truncate the output file
+
+    cmd = ["scrapy", "crawl"]
+    if not debug:
+        cmd.append("--nolog")
+    cmd.append(crawler_name)
+
+    # pass in extra keyword args as needed
+    for k, v in kwargs.iteritems():
+        cmd += ['-a', "%s=%s" % (k, v)]
+
+    cmd += ["-t", "jsonlines", "-o", outfile]
+    # click.echo(" ".join(cmd))
+    subprocess.call(cmd)
+
+
+def read_jsonlines(crawler_name):
+    """returns the fetched data as a list of dicts"""
+    with open("%s.json" % crawler_name) as fp:
+        return [json.loads(line) for line in fp]
 
 
 @click.command()
@@ -294,26 +323,22 @@ def parse_items(fp):
 @click.option('--debug/--no-debug', default=False,
               help="Enable scrapy's log for debugging")
 def run(leagues, debug):
-    # t = Terminal()
-    # # drop and recreate the database
-    # destroy_database(db.engine)
-    # db.create_all()
+    t = Terminal()
+    # drop and recreate the database
+    destroy_database(db.engine)
+    db.create_all()
 
     # leagues = set([l.strip().lower() for l in leagues.split(",")])
 
-    # # run the spider and fetch the data, we never cache
-    # click.echo("RUNNING SPIDER...")
-    # cmd = ["scrapy", "crawl", "main", "-t" "jsonlines", "-o", "all_items.json"]
-    # if not debug:
-    #     cmd.append("--nolog")
-    # subprocess.call(cmd)
+    # run the spider and fetch the data, we never cache
+    click.echo(t.green("RUNNING SPIDER..."))
+    # run_scraper("main")  # , debug=True)
+    dump_items(read_jsonlines("main"))
 
     # final commit
-    with open("all_items.json") as fp:
-        parse_items(fp)
-    # click.echo(t.green("WRITING TO DATABASE..."))
-    # db.session.commit()
-    # click.echo(t.green(str(len(Item.query.all()))))
+    click.echo(t.green("WRITING TO DATABASE..."))
+    db.session.commit()
+    click.echo(t.green("%d Items Written" % (Item.query.count())))
 
 
 if __name__ == "__main__":

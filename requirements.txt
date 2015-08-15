@@ -3,8 +3,11 @@ click==4.1
 Flask==0.10.1
 Flask-SQLAlchemy==2.0
 gunicorn==19.3.0
+ipdb==0.8.1
+ipython==4.0.0
 lxml==3.4.4
 path.py==7.4
+pillow==2.9.0
 psycopg2==2.6.1
 q==2.6
 requests==2.7.0

@@ -40,7 +40,7 @@ class MainSpider(Spider):
         # get the character data
         yield Request(
             CHAR_URL,
-            callback=self.fetch_all_char_data
+            callback=self.parse_char_data
         )
 
         # get the league data
@@ -52,12 +52,13 @@ class MainSpider(Spider):
                     "league": league,
                     "tabs": "1",
                     "tabIndex": "0",
+                    "accountName": "iynaix",
                 },
                 meta={'league': league},
-                callback=self.fetch_all_stash_data
+                callback=self.parse_stash_data
             )
 
-    def fetch_all_char_data(self, resp):
+    def parse_char_data(self, resp):
         data = json.loads(resp.body_as_unicode())
         if "error" in data:
             raise HTTPError("Request Throttled")
@@ -67,23 +68,24 @@ class MainSpider(Spider):
             if char["league"].lower() not in self.leagues:
                 continue
 
-            loc = dict(
-                name=char["name"],
-                is_premium=False,
-                is_character=True,
-            )
-
             yield FormRequest(
                 ITEM_URL,
-                formdata={"character": char["name"]},
+                formdata={
+                    "character": char["name"],
+                    "accountName": "iynaix",
+                },
                 meta={
                     'league': char["league"].title(),
-                    'location': loc,
+                    'location': {
+                        "name": char["name"],
+                        "is_premium": False,
+                        "is_character": True,
+                    },
                 },
-                callback=self.fetch_item_data
+                callback=self.parse_item
             )
 
-    def fetch_all_stash_data(self, resp):
+    def parse_stash_data(self, resp):
         league = resp.meta['league']
         data = json.loads(resp.body_as_unicode())
         if "error" in data:
@@ -122,17 +124,21 @@ class MainSpider(Spider):
                     'league': league,
                     'location': loc,
                 },
-                callback=self.fetch_item_data
+                callback=self.parse_item
             )
 
-    def fetch_item_data(self, resp):
+    def parse_item(self, resp):
         data = json.loads(resp.body_as_unicode())
         if "error" in data:
             raise HTTPError("Request Throttled")
 
+        # we need the location as extra data
+        data["location"] = resp.meta["location"]
+
+        # download item image
+        data["image_urls"] = []
+        for item in data.get("items", []):
+            data["image_urls"].append(item["icon"])
+            data["image_urls"].extend(
+                            x["icon"] for x in item.get("socketedItems", []))
         yield data
-        # from pprint import pprint
-        # print resp.meta["location"]
-        # for item in data["items"]:
-        #     # ITEM SQL_DUMP HERE
-        #     pprint(item)

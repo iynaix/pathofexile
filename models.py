@@ -43,7 +43,7 @@ def get_rare_stash_pages():
         Location.is_character == False,
     ).all()
 
-    #longest non premium range are the rares
+    # ongest non premium range are the rares
     diffs = []
     for i, p in enumerate(premium_pages[:-1]):
         curr = premium_pages[i].page_no
@@ -59,30 +59,31 @@ class Item(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255))
     type = db.Column(db.String(255), nullable=False)
-    #x, y can be null for equipped or socketed items
+    # , y can be null for equipped or socketed items
     x = db.Column(db.SmallInteger())
     y = db.Column(db.SmallInteger())
     w = db.Column(db.SmallInteger(), nullable=False, default=1)
     h = db.Column(db.SmallInteger(), nullable=False, default=1)
     rarity = db.Column(db.Enum('normal', 'magic', 'rare', 'unique',
                                 name='rarities'))
+    icon = db.Column(db.String(500))
     num_sockets = db.Column(db.SmallInteger(), nullable=False, default=0)
     socket_str = db.Column(db.String(20), nullable=False, default="")
     is_identified = db.Column(db.Boolean, nullable=False, default=True)
     char_location = db.Column(db.String(20))
     full_text = db.Column(tsvector, nullable=False)
     is_corrupted = db.Column(db.Boolean, nullable=False, default=False)
-    #for marking the item as deleted
+    # or marking the item as deleted
     is_deleted = db.Column(db.Boolean, nullable=False, default=False)
     league = db.Column(db.String(20), default="Standard")
 
-    #funky stuff for item properties, mods etc
+    # unky stuff for item properties, mods etc
     mods = db.Column(postgres.ARRAY(db.String(255)))
     requirements = db.relationship("Requirement", backref="item")
     properties = db.relationship("Property", backref="item")
     location_id = db.Column(db.Integer, db.ForeignKey('location.id'))
 
-    #socketed items use these for the parent item
+    # ocketed items use these for the parent item
     parent_id = db.Column(db.Integer, db.ForeignKey('item.id'))
     parent_item = db.relationship('Item', remote_side=[id],
                                   backref="socketed_items")
@@ -115,7 +116,7 @@ class Item(db.Model):
         assert 1 <= h <= 4, h
         return h
 
-    #various helpers for the model
+    # arious helpers for the model
     def is_gem(self):
         for p in self.properties:
             if p.name == "Experience":
@@ -160,7 +161,7 @@ class Item(db.Model):
                   "shields", "belts", "quivers"):
             for k, v in get_constant(g.upper(), as_dict=True).items():
                 if k.lower() in own_type:
-                    #see if there is a subtype
+                    # ee if there is a subtype
                     if isinstance(v, str):
                         return g.title()
                     else:
