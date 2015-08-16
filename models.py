@@ -1,6 +1,7 @@
 from sqlalchemy import types
-from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.dialects import postgres
+from sqlalchemy.ext.compiler import compiles
+from sqlalchemy.sql.expression import ClauseElement
 
 from app import db
 import constants
@@ -24,16 +25,22 @@ def compile_tsvector(element, compiler, **kw):
     return 'tsvector'
 
 
-def get_chromatic_stash_pages():
-    """returns all the stash pages that are chromatic"""
-    premium_pages = Location.query.filter(
-        Location.is_premium,
-        Location.is_character == False,
-    ).all()
-    for i, p in enumerate(premium_pages):
-        if p.name.lower().startswith("chromatic"):
-            return list(range(premium_pages[i].page_no,
-                         premium_pages[i + 1].page_no))
+def get_or_create(session, model, defaults=None, **kwargs):
+    """
+    SqlAlchemy equivalent of Django's get_or_create
+
+    http://stackoverflow.com/questions/2546207/
+    """
+    instance = session.query(model).filter_by(**kwargs).first()
+    if instance:
+        return instance
+    else:
+        params = dict((k, v) for k, v in kwargs.iteritems()
+                      if not isinstance(v, ClauseElement))
+        params.update(defaults or {})
+        instance = model(**params)
+        session.add(instance)
+        return instance
 
 
 def get_rare_stash_pages():

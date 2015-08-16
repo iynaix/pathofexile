@@ -12,7 +12,7 @@ from blessings import Terminal
 import click
 
 from app import db
-from models import Item, Requirement, Property, Location
+from models import get_or_create, Item, Requirement, Property, Location
 
 MOD_NUM_RE = re.compile(r"[-+]?[0-9\.]+?[%]?")
 WHITESPACE_RE = re.compile('\s+')
@@ -221,7 +221,7 @@ class ItemData(object):
                     ItemData(x, league=league).sql_dump(location) for x in
                     self.data.get("socketedItems", [])
                 ],
-                location=Location(**location),
+                location=get_or_create(db.session, Location, **location),
                 **kwargs
             )
         # show some debugging output

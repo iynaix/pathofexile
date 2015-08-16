@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import json
-from collections import OrderedDict
-from utils import norm, get_constant
+from utils import norm
 
 # """
 # #normalize to lower case
@@ -11,10 +10,6 @@ from utils import norm, get_constant
 # """force a fetch of all the constants"""
 # CONSTANTS = [
 #     "UNIQUES",
-#     "GEMS",
-
-#     "QUIVERS",
-#     "BELTS",
 
 #     "FLASK_SIZES",
 #     "MISC_FLASKS",
@@ -137,6 +132,11 @@ SUFFIXES = []
 for suffix_type, suffixes in data["Suffixes"].iteritems():
     SUFFIXES.extend([p[0] for p in suffixes])
 
+GEMS = {}
+for key in ("Strength", "Dexterity", "Intelligence", "Support Gems"):
+    for k, v in data[key]:
+        GEMS[k] = v
+
 # dynamically add the variables to the module namespace
 vars().update(get_weapon_constants(data))
 vars().update(get_armor_constants(data))
@@ -148,6 +148,3 @@ with open("gamepedia.json") as fp:
         data.update(json.loads(line))
 
 vars().update(get_gamepedia_constants(data))
-
-from pprint import pprint
-pprint(data["Belts"])
