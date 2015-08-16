@@ -228,6 +228,7 @@ class LevelsView(View):
             title=self.title,
             all_items=items.all(),
         )
+
 app.add_url_rule('/levels/', view_func=LevelsView.as_view('levels'),
                  defaults={"slug": None})
 app.add_url_rule('/levels/<slug>/',

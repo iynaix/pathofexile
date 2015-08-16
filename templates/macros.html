@@ -43,6 +43,8 @@ title, location, sockets
         {{ item_title(item, outer_tag="h4", sockets=True) }}
     {% endif %}
 
+    <img src="{{ item.icon }}">
+
     {# item location #}
     {% if "location" not in excludes %}
         <{{ outer_tag }}>

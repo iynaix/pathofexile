@@ -1,3 +1,5 @@
+import hashlib
+
 from sqlalchemy import types
 from sqlalchemy.dialects import postgres
 from sqlalchemy.ext.compiler import compiles
@@ -6,7 +8,6 @@ from sqlalchemy.sql.expression import ClauseElement
 from app import db
 import constants
 from utils import norm, normfind, get_constant
-
 
 GEMS = get_constant("GEMS", as_dict=True)
 
@@ -105,6 +106,12 @@ class Item(db.Model):
     @property
     def mods(self):
         return self.implicit_mods + self.explicit_mods
+
+    @property
+    def image_url(self):
+        _, _, query = self.icon.rpartition("?")
+        sha = hashlib.sha1(self.icon).hexdigest()
+        return "images/full/%s.png?%s" % (sha, query)
 
     @db.validates('num_sockets')
     def validate_num_sockets(self, key, num_sockets):

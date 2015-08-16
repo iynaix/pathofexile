@@ -56,8 +56,7 @@
         </nav>
 
         <div class="container" style="padding-bottom:250px">
-        {% block body %}
-        {% endblock body %}
+            {% block body %}{% endblock body %}
         </div>
 
         <script src="/static/js/jquery.min.js"></script>
@@ -81,8 +80,7 @@
                     $.post(url, {"checked": $elem.is(":checked") ? 1 : 0});
                 });
 
-                {% block extrajs %}
-                {% endblock extrajs %}
+                {% block extrajs %}{% endblock extrajs %}
             });
         </script>
     </body>
