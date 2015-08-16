@@ -59,7 +59,7 @@ class Item(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255))
     type = db.Column(db.String(255), nullable=False)
-    # , y can be null for equipped or socketed items
+    # x, y can be null for equipped or socketed items
     x = db.Column(db.SmallInteger())
     y = db.Column(db.SmallInteger())
     w = db.Column(db.SmallInteger(), nullable=False, default=1)
@@ -84,13 +84,20 @@ class Item(db.Model):
     properties = db.relationship("Property", backref="item")
     location_id = db.Column(db.Integer, db.ForeignKey('location.id'))
 
-    # ocketed items use these for the parent item
+    # socketed items use these for the parent item
     parent_id = db.Column(db.Integer, db.ForeignKey('item.id'))
     parent_item = db.relationship('Item', remote_side=[id],
                                   backref="socketed_items")
 
     def __repr__(self):
-        return self.name + self.type
+        if self.name:
+            return "%s %s" % (self.name, self.type)
+        else:
+            return self.type
+
+    @property
+    def mods(self):
+        return self.implicit_mods + self.explicit_mods
 
     @db.validates('num_sockets')
     def validate_num_sockets(self, key, num_sockets):
@@ -117,7 +124,7 @@ class Item(db.Model):
         assert 1 <= h <= 4, h
         return h
 
-    # arious helpers for the model
+    # various helpers for the model
     def is_gem(self):
         for p in self.properties:
             if p.name == "Experience":
@@ -162,7 +169,7 @@ class Item(db.Model):
                   "shields", "belts", "quivers"):
             for k, v in get_constant(g.upper(), as_dict=True).items():
                 if k.lower() in own_type:
-                    # ee if there is a subtype
+                    # see if there is a subtype
                     if isinstance(v, str):
                         return g.title()
                     else:

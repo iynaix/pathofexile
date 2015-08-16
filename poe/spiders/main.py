@@ -136,9 +136,9 @@ class MainSpider(Spider):
         data["location"] = resp.meta["location"]
 
         # download item image
-        data["image_urls"] = []
+        data["file_urls"] = []
         for item in data.get("items", []):
-            data["image_urls"].append(item["icon"])
-            data["image_urls"].extend(
+            data["file_urls"].append(item["icon"])
+            data["file_urls"].extend(
                             x["icon"] for x in item.get("socketedItems", []))
         yield data

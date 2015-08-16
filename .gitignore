@@ -1,6 +1,7 @@
 env/*
 data/*
 constants/*
+images/*
 .scrapy/*
 __pycache__/*
 *.ipynb*

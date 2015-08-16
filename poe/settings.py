@@ -13,10 +13,12 @@ NEWSPIDER_MODULE = 'poe.spiders'
 
 # RETRY_HTTP_CODES = [500, 502, 503, 504, 400, 408, 403]
 
-# downloading item images
+# downloading item images, don't use image pipeline as it converts images
+# to jpg
 ITEM_PIPELINES = {
-    'scrapy.pipelines.images.ImagesPipeline': 1
+    'scrapy.pipelines.files.FilesPipeline': 1
 }
+FILES_STORE = 'images'
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 # USER_AGENT = 'poe (+http://www.yourdomain.com)'

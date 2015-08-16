@@ -329,7 +329,7 @@ def run(leagues, debug):
 
     # run the spider and fetch the data, we never cache
     click.echo(t.green("RUNNING SPIDER..."))
-    # run_scraper("main")  # , debug=True)
+    run_scraper("main")  # , debug=True)
     dump_items(read_jsonlines("main"))
 
     # final commit

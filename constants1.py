@@ -51,6 +51,8 @@ def groupby_stat_type(items):
 
 def get_weapon_constants(data):
     """returns all the weapon constants"""
+    global BOWS, WANDS, CLAWS, DAGGERS, STAVES
+
     BOWS = [x[0] for x in data["Weapons"]["Bow"] if stat_type(x)]
     WANDS = [x[0] for x in data["Weapons"]["Wand"] if stat_type(x)]
     CLAWS = [x[0] for x in data["Weapons"]["Claw"] if stat_type(x)]
@@ -93,6 +95,7 @@ def get_weapon_constants(data):
         WEAPONS.extend(w.keys())
 
     return {k: v for k, v in locals().iteritems() if k.upper() == k}
+
 
 def get_armor_constants(data):
     """returns all the weapon constants"""
