@@ -3,7 +3,7 @@ import hashlib
 from sqlalchemy import types
 from sqlalchemy.dialects import postgres
 from sqlalchemy.ext.compiler import compiles
-from sqlalchemy.sql.expression import ClauseElement
+from sqlalchemy.sql.expression import false
 
 from app import db
 import constants
@@ -26,29 +26,11 @@ def compile_tsvector(element, compiler, **kw):
     return 'tsvector'
 
 
-def get_or_create(session, model, defaults=None, **kwargs):
-    """
-    SqlAlchemy equivalent of Django's get_or_create
-
-    http://stackoverflow.com/questions/2546207/
-    """
-    instance = session.query(model).filter_by(**kwargs).first()
-    if instance:
-        return instance
-    else:
-        params = dict((k, v) for k, v in kwargs.iteritems()
-                      if not isinstance(v, ClauseElement))
-        params.update(defaults or {})
-        instance = model(**params)
-        session.add(instance)
-        return instance
-
-
 def get_rare_stash_pages():
     """returns all the stash pages that are rare"""
     premium_pages = Location.query.filter(
         Location.is_premium,
-        Location.is_character == False,
+        Location.is_character == false(),
     ).all()
 
     # ongest non premium range are the rares

@@ -12,7 +12,7 @@ from blessings import Terminal
 import click
 
 from app import db
-from models import get_or_create, Item, Requirement, Property, Location
+from models import Item, Requirement, Property, Location
 
 MOD_NUM_RE = re.compile(r"[-+]?[0-9\.]+?[%]?")
 WHITESPACE_RE = re.compile('\s+')
@@ -49,7 +49,6 @@ def norm_mod(mod):
 
 class ItemData(object):
     """Object representing an item"""
-
     def __init__(self, data, **kwargs):
         self.data = data
         for k, v in kwargs.items():
@@ -221,7 +220,7 @@ class ItemData(object):
                     ItemData(x, league=league).sql_dump(location) for x in
                     self.data.get("socketedItems", [])
                 ],
-                location=get_or_create(db.session, Location, **location),
+                location=location,
                 **kwargs
             )
         # show some debugging output
@@ -282,7 +281,7 @@ def destroy_database(engine):
 
 def dump_items(pages):
     for page in pages:
-        loc = page.pop("location")
+        loc = Location(**page.pop("location"))
         for item in page["items"]:
             sql = ItemData(item).sql_dump(loc)
             # click.echo(sql)

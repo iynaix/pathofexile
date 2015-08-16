@@ -1,4 +1,4 @@
-from collections import defaultdict, Counter, OrderedDict
+from collections import defaultdict, Counter
 from flask import request, render_template
 from flask.views import View, MethodView
 from jinja2.filters import do_mark_safe
@@ -7,8 +7,7 @@ import itertools
 from app import app, db
 import constants
 from models import Item, Location, Property, Requirement, get_rare_stash_pages
-from utils import (normfind, sorteddict, group_items_by_level, groupsortby,
-                   get_constant)
+from utils import normfind, group_items_by_level, groupsortby, get_constant
 
 #  init constants
 CHROMATIC_RE = r"B+G+R+"
@@ -338,7 +337,7 @@ class StatsView(View):
             Item.rarity,
         ).filter(Item.is_identified).group_by(Item.rarity).all()
         return {
-            "rarities": reversed(sorted(stats)),
+            "rarities": sorted(stats, reverse=True),
             "rarities_total": sum(s[0] for s in stats),
         }
 
@@ -348,7 +347,7 @@ class StatsView(View):
             db.func.count(Item.id),
         ).filter(Item.is_identified).group_by(Item.num_sockets).all()
         return {
-            "item_sockets": reversed(sorted(stats)),
+            "item_sockets": sorted(stats, reverse=True),
             "item_sockets_total": sum(s[1] for s in stats),
         }
 
@@ -361,7 +360,7 @@ class StatsView(View):
         ).filter(Item.is_identified).group_by("link_length").all()
 
         return {
-            "item_sockets_links": reversed(sorted(stats)),
+            "item_sockets_links": sorted(stats, reverse=True),
             "item_sockets_links_total": sum(s[1] for s in stats),
         }
 
