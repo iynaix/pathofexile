@@ -138,7 +138,15 @@ class MainSpider(Spider):
         # download item image
         data["file_urls"] = []
         for item in data.get("items", []):
+            item["icon"] = self.img_url(resp, item["icon"])
             data["file_urls"].append(item["icon"])
-            data["file_urls"].extend(
-                            x["icon"] for x in item.get("socketedItems", []))
+            for i in item.get("socketedItems", []):
+                i["icon"] = self.img_url(resp, i["icon"])
+                data["file_urls"].append(i["icon"])
         yield data
+
+    def img_url(self, resp, url):
+        """some image urls are relative, so normalize the image url"""
+        if url.startswith("http"):
+            return url
+        return resp.urljoin("url")
