@@ -149,4 +149,4 @@ class MainSpider(Spider):
         """some image urls are relative, so normalize the image url"""
         if url.startswith("http"):
             return url
-        return resp.urljoin("url")
+        return resp.urljoin(url)
