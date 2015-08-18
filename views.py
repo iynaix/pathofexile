@@ -177,7 +177,9 @@ app.add_url_rule('/advanced_search/',
 @app.route('/browse/<slug>/')
 def browse(slug):
     """renders all the details of a location"""
-    loc = Location.query.filter(Location.name == slug.lower()).one()
+    loc = Location.query.filter(
+        db.func.lower(Location.name) == slug.lower()
+    ).one()
     items = Item.query.filter(Item.location == loc).order_by(
         Item.x, Item.y
     ).all()

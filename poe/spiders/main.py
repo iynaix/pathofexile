@@ -25,14 +25,17 @@ class MainSpider(Spider):
             import credentials
             username, password = credentials.USERNAME, credentials.PASSWORD
         except ImportError:
-            pass
+            import getpass
+            print "NO CREDENTIALS"
+            username = raw_input("Username (Email): ").strip()
+            password = getpass.getpass("Password: ")
 
         return FormRequest.from_response(
             resp,
             formxpath="//form[contains(@class,'poeForm')]",
             formdata={
-                'login_email': credentials.USERNAME,
-                'login_password': credentials.PASSWORD,
+                'login_email': username,
+                'login_password': password,
             },
             callback=self.after_login,
         )
