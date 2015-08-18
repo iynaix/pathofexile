@@ -63,10 +63,9 @@ title, location, sockets
         {% endif %}
 
         {% if item.requirements %}
-            <h5>Requirements:</h5>
             <p>
                 {% for req in item.requirements %}
-                    <span class="{{ req.name[:3]|lower }}">{{ req.name }}: {{ req.value }}</span></br>
+                    <span class="{{ req.name[:3]|lower }}">{{ req.name }}: {{ req.value }}</span>&nbsp;
                 {% endfor %}
             </p>
         {% endif %}
@@ -82,16 +81,17 @@ title, location, sockets
             </p>
         {% endif %}
 
-        {% if item.mods %}
-            <h5>Mods:</h5>
-            <p>
-                {% for mod in item.mods %}
-                    <span class="magic">
-                        {{ mod }}
-                    </span></br>
-                {% endfor %}
-            </p>
-        {% endif %}
+        {% for mod in item.implicit_mods %}
+            <span class="magic">
+                {{ mod }}
+            </span></br>
+        {% endfor %}
+        {% if item.implicit_mods %}<br>{% endif %}
+        {% for mod in item.explicit_mods %}
+            <span class="magic">
+                {{ mod }}
+            </span></br>
+        {% endfor %}
     {% else %}
         <span class="unidentified">Unidentified</span>
     {% endif %}
