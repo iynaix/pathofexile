@@ -87,6 +87,21 @@ def deleted_items():
     return render_template('deleted.html', items=items)
 
 
+@app.route('/test/')
+def test_items():
+    """
+    For testing on a subset of items
+    """
+    items = Item.query.filter(
+        db.func.array_length(Item.implicit_mods, 1) > 0,
+    ).limit(20)
+    return render_template(
+        'test.html',
+        title="Implicit Mod Display",
+        items=items,
+    )
+
+
 class AdvancedSearchView(MethodView):
     """allows for a more fine grained search of items"""
     def get(self):
