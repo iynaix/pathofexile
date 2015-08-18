@@ -17,7 +17,7 @@ def deploy(full=0):
 @task
 def fetch():
     """updates the inventory data from pathofexile"""
-    local("python fetch.py")
+    local("python dump.py")
 
 
 @task

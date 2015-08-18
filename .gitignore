@@ -5,7 +5,7 @@ images/*
 .scrapy/*
 __pycache__/*
 *.ipynb*
-*.json
+main.json
 *.pickle
 *.pyc
 credentials.py

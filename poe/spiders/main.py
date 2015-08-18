@@ -3,8 +3,6 @@ import json
 from scrapy import Spider, Request, FormRequest
 from urllib2 import HTTPError
 
-import credentials
-
 # from poe.items import CurrencyItem
 
 LOGIN_URL = "https://www.pathofexile.com/login"
@@ -23,6 +21,12 @@ class MainSpider(Spider):
     download_delay = 3
 
     def parse(self, resp):
+        try:
+            import credentials
+            username, password = credentials.USERNAME, credentials.PASSWORD
+        except ImportError:
+            pass
+
         return FormRequest.from_response(
             resp,
             formxpath="//form[contains(@class,'poeForm')]",
