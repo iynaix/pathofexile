@@ -35,25 +35,6 @@ def mod_norm(mod):
         return RANGE_MOD_RE.sub(r"X - X", mod)
     return NORM_MOD_RE.sub("X", mod)
 
-# def find_gaps(self):
-#     """returns the coordinates that have not been used"""
-#     #a page is 12 * 12
-#     page = []
-#     for i in range(12):
-#         page.append([0] * 12)
-
-#     for item in self.items:
-#         for x in range(item["x"], item["x"] + item["w"]):
-#             for y in range(item["y"], item["y"] + item["h"]):
-#                 page[y][x] = 1
-
-#     gaps = []
-#     for y in range(12):
-#         for x in range(12):
-#             if not page[y][x]:
-#                 gaps.append((x, y))
-#     return gaps
-
 # def is_filled(self):
 #     """is the page filled?"""
 #     return not bool(self.find_gaps())

@@ -1,8 +1,7 @@
 import hashlib
 
-from sqlalchemy import types
+from sqlalchemy import types, true, false
 from sqlalchemy.ext.compiler import compiles
-from sqlalchemy.sql.expression import true, false
 
 from app import db
 import constants
@@ -25,20 +24,25 @@ def compile_tsvector(element, compiler, **kw):
     return 'tsvector'
 
 
-def get_rare_stash_pages():
-    """returns all the stash pages that are rare"""
+def in_page_group(group_name):
     premium_pages = Location.query.filter(
         Location.is_premium,
         Location.is_character == false(),
-    ).all()
+    ).order_by(Location.page_no).all()
 
-    # ongest non premium range are the rares
-    diffs = []
-    for i, p in enumerate(premium_pages[:-1]):
-        curr = premium_pages[i].page_no
-        nxt = premium_pages[i + 1].page_no
-        diffs.append((nxt - (curr + 1), list(range(curr + 1, nxt))))
-    return max(diffs)[-1]
+    # longest non premium range are the rares
+    grp_name = group_name.lower()
+    for curr, nxt in zip(premium_pages, premium_pages[1:]):
+        if curr.name.lower() == grp_name:
+            return (Location.page_no >= curr.page_no,
+                    Location.page_no < nxt.page_no)
+    else:
+        # is it the last premium page
+        last = premium_pages[-1]
+        if last.name.lower() == grp_name:
+            return (Location.page_no >= last.page_no,)
+
+    raise IndexError("'%s' group not found." % group_name)
 
 
 class Item(db.Model):

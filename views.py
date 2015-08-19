@@ -1,12 +1,15 @@
 from collections import defaultdict, Counter
+import itertools
+
 from flask import request, render_template
 from flask.views import View, MethodView
 from jinja2.filters import do_mark_safe
-import itertools
+from sqlalchemy import false
 
 from app import app, db
 import constants
-from models import Item, Location, Property, Requirement, get_rare_stash_pages
+from models import (Item, Location, Property, Requirement, Modifier,
+                    in_page_group)
 from utils import normfind, group_items_by_level, groupsortby, get_constant
 
 #  init constants
@@ -45,8 +48,6 @@ def location_nav():
             locations["characters"].append(loc)
         else:
             locations["stash"].append(loc)
-    import q
-    q(locations["stash"])
     return dict(locations=locations)
 
 
@@ -89,15 +90,30 @@ def deleted_items():
 
 @app.route('/test/')
 def test_items():
-    """
-    For testing on a subset of items
-    """
-    items = Item.query.filter(
-        db.func.array_length(Item.implicit_mods, 1) > 0,
-    ).limit(20)
+    """For displaying tests on a subset of items"""
+    low_attr_items = db.session.query(
+        Item,
+        db.func.count(Modifier.id),
+    ).join(Modifier, Location).group_by(
+        Item,
+        Location.page_no,
+    ).filter(
+        Modifier.is_implicit == false(),
+        *in_page_group("rare")
+    ).having(
+        db.func.count(Modifier.id) <= 4
+    ).order_by(Location.page_no)
+
+    items = []
+    for item, _ in low_attr_items:
+        # keep items with double resist mods
+        if sum(1 for m in item.explicit_mods
+               if "Resist" in m.value) >= 2:
+            items.append(item)
+
     return render_template(
         'test.html',
-        title="Implicit Mod Display",
+        title="<= 4 Explicit Mods",
         items=items,
     )
 
@@ -258,15 +274,14 @@ class PurgeView(View):
     Displays all the items that should be removed
     """
     def __init__(self):
-        self.rare_pages = get_rare_stash_pages()
         super(PurgeView, self).__init__()
 
     def get_duplicate_rares(self):
         """rare items sharing the same type and level reqs in the rare pages"""
         duplicate_rares = []
         rare_items = Item.query.join(Location).filter(
-            Location.page_no.in_(self.rare_pages),
             Item.is_identified,
+            *in_page_group("rare")
         )
         grouped_items = group_items_by_level(rare_items)
         for level, items in grouped_items.items():
@@ -280,9 +295,9 @@ class PurgeView(View):
     def get_non_rares(self):
         # non-rare items in rare pages
         return Item.query.join(Location).filter(
-            Location.page_no.in_(self.rare_pages),
             Item.rarity != "rare",
             Item.is_identified,
+            *in_page_group("rare")
         )
 
     def get_unidentified(self):
