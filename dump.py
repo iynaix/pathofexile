@@ -1,7 +1,6 @@
 # runs the spider and dumps the data about the characters and the stash into
 # the database
 
-from __future__ import print_function
 import json
 import pprint
 import re
@@ -12,18 +11,31 @@ from blessings import Terminal
 import click
 
 from app import db
-from models import Item, Requirement, Property, Location
+from models import Item, Requirement, Property, Location, Modifier
 
 MOD_NUM_RE = re.compile(r"[-+]?[0-9\.]+?[%]?")
+RANGE_MOD_RE = re.compile(r"(\d+)-(\d+)")
+NORM_MOD_RE = re.compile(r"""[-+]?  # possible sign
+                             (\d+\.)? # possible decimal
+                             \d+  # actual number
+                         """, re.VERBOSE)
 WHITESPACE_RE = re.compile('\s+')
 
 
-def norm_mod(mod):
-    # normalizes a mod by removing the numbers
+def mod_tsvector(mod):
+    """normalizes a mod for full text search by removing the numbers"""
     return WHITESPACE_RE.sub(' ', MOD_NUM_RE.sub("", mod).strip()).lower()
 
 
-# def find_holes(self):
+def mod_norm(mod):
+    """normalizes the numeric values for mods, replacing them with an 'X'"""
+    if re.search(r"\d", mod) is None:
+        return mod
+    if RANGE_MOD_RE.search(mod):
+        return RANGE_MOD_RE.sub(r"X - X", mod)
+    return NORM_MOD_RE.sub("X", mod)
+
+# def find_gaps(self):
 #     """returns the coordinates that have not been used"""
 #     #a page is 12 * 12
 #     page = []
@@ -35,16 +47,16 @@ def norm_mod(mod):
 #             for y in range(item["y"], item["y"] + item["h"]):
 #                 page[y][x] = 1
 
-#     holes = []
+#     gaps = []
 #     for y in range(12):
 #         for x in range(12):
 #             if not page[y][x]:
-#                 holes.append((x, y))
-#     return holes
+#                 gaps.append((x, y))
+#     return gaps
 
 # def is_filled(self):
 #     """is the page filled?"""
-#     return not bool(self.find_holes())
+#     return not bool(self.find_gaps())
 
 
 class ItemData(object):
@@ -88,7 +100,7 @@ class ItemData(object):
 
     @property
     def requirements(self):
-        """reformats the requirements into a simple dictionary"""
+        """reformats the requirements into a simple dict"""
         reqs = []
         for r in self.data.get("requirements", []):
             v = r["values"][0][0]
@@ -98,6 +110,24 @@ class ItemData(object):
                 v = int(v)
             reqs.append({"name": r["name"], "value": v})
         return reqs
+
+    @property
+    def mods(self):
+        """reformats the modifiers with normalization into a list of dicts"""
+        ret = []
+        for m in self.data.get("implicitMods", []):
+            ret.append({
+                "value": m,
+                "normalized": mod_norm(m),
+                "is_implicit": True,
+            })
+        for m in self.data.get("explicitMods", []):
+            ret.append({
+                "value": m,
+                "normalized": mod_norm(m),
+                "is_implicit": False,
+            })
+        return ret
 
     @property
     def properties(self):
@@ -181,13 +211,13 @@ class ItemData(object):
             for prop in self.properties:
                 if prop["value"]:
                     out.append(
-                        norm_mod("%s: %s" % (prop["name"], prop["value"])))
+                        mod_tsvector("%s: %s" % (prop["name"], prop["value"])))
                 else:
-                    out.append(norm_mod(prop["name"]))
+                    out.append(mod_tsvector(prop["name"]))
             for mod in self.data.get('implicitMods', []):
-                out.append(norm_mod(mod))
+                out.append(mod_tsvector(mod))
             for mod in self.data.get('explicitMods', []):
-                out.append(norm_mod(mod))
+                out.append(mod_tsvector(mod))
         return "\n".join(out)
 
     def sql_dump(self, location, **kwargs):
@@ -212,8 +242,7 @@ class ItemData(object):
                 char_location=self.char_location(),
                 full_text=db.func.to_tsvector(self.full_text()),
                 league=league,
-                implicit_mods=self.data.get('implicitMods', []),
-                explicit_mods=self.data.get('explicitMods', []),
+                mods=[Modifier(**m) for m in self.mods],
                 requirements=[Requirement(**r) for r in self.requirements],
                 properties=[Property(**p) for p in self.properties],
                 socketed_items=[
@@ -320,20 +349,21 @@ def read_jsonlines(crawler_name):
               help="Enable scrapy's log for debugging")
 def run(leagues, debug):
     t = Terminal()
-    # drop and recreate the database
-    destroy_database(db.engine)
-    db.create_all()
-
     # leagues = set([l.strip().lower() for l in leagues.split(",")])
 
     # run the spider and fetch the data, we never cache
-    click.echo(t.green("RUNNING SPIDER..."))
+    click.echo(t.green("FETCHING ITEMS..."))
     run_scraper("main", debug=debug)
-    dump_items(read_jsonlines("main"))
 
-    # final commit
+    # drop and recreate the database
     click.echo(t.green("WRITING TO DATABASE..."))
+    destroy_database(db.engine)
+    db.create_all()
+
+    # actual parsing and writing of items to the database
+    dump_items(read_jsonlines("main"))
     db.session.commit()
+
     click.echo(t.green("%d Items Written" % (Item.query.count())))
 
 

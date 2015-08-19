@@ -1,9 +1,8 @@
 import hashlib
 
 from sqlalchemy import types
-from sqlalchemy.dialects import postgres
 from sqlalchemy.ext.compiler import compiles
-from sqlalchemy.sql.expression import false
+from sqlalchemy.sql.expression import true, false
 
 from app import db
 import constants
@@ -68,10 +67,10 @@ class Item(db.Model):
     league = db.Column(db.String(20), default="Standard")
 
     # funky stuff for item properties, mods etc
-    implicit_mods = db.Column(postgres.ARRAY(db.String(255)))
-    explicit_mods = db.Column(postgres.ARRAY(db.String(255)))
-    requirements = db.relationship("Requirement", backref="item")
-    properties = db.relationship("Property", backref="item")
+    mods = db.relationship("Modifier", backref="item", lazy="dynamic")
+    requirements = db.relationship("Requirement", backref="item",
+                                   lazy="dynamic")
+    properties = db.relationship("Property", backref="item", lazy="dynamic")
     location_id = db.Column(db.Integer, db.ForeignKey('location.id'))
 
     # socketed items use these for the parent item
@@ -86,14 +85,18 @@ class Item(db.Model):
             return self.type
 
     @property
-    def mods(self):
-        return self.implicit_mods + self.explicit_mods
-
-    @property
     def image_url(self):
         _, _, query = self.icon.rpartition("?")
         sha = hashlib.sha1(self.icon).hexdigest()
         return "images/full/%s.png?%s" % (sha, query)
+
+    @property
+    def implicit_mods(self):
+        return self.mods.filter(Modifier.is_implicit == true()).all()
+
+    @property
+    def explicit_mods(self):
+        return self.mods.filter(Modifier.is_implicit == false()).all()
 
     @db.validates('num_sockets')
     def validate_num_sockets(self, key, num_sockets):
@@ -185,9 +188,7 @@ class Item(db.Model):
 
 
 class Property(db.Model):
-    """
-    Model representing a single property of an item
-    """
+    """Model representing a single property of an item"""
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), nullable=False)
     value = db.Column(db.String(255))
@@ -195,13 +196,26 @@ class Property(db.Model):
 
 
 class Requirement(db.Model):
-    """
-    Model representing a single requirement of an item
-    """
+    """Model representing a single requirement of an item"""
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), nullable=False)
     value = db.Column(db.SmallInteger(), nullable=False)
     item_id = db.Column(db.Integer, db.ForeignKey('item.id'))
+
+
+class Modifier(db.Model):
+    """Model representing a single modifier of an item"""
+    id = db.Column(db.Integer, primary_key=True)
+    value = db.Column(db.String(255), nullable=False)
+    normalized = db.Column(db.String(255), nullable=False)
+    is_implicit = db.Column(db.Boolean, nullable=False, default=False)
+    item_id = db.Column(db.Integer, db.ForeignKey('item.id'))
+
+    def __str__(self):
+        return self.value
+
+    def __repr__(self):
+        return self.value
 
 
 class Location(db.Model):
