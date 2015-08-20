@@ -109,7 +109,10 @@ def test_items():
         # keep items with double resist mods
         if sum(1 for m in item.explicit_mods
                if "Resist" in m.value) >= 2:
-            items.append(item)
+                    continue
+        if "Belt" in item.type:
+            continue
+        items.append(item)
 
     return render_template(
         'test.html',
