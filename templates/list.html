@@ -1,0 +1,12 @@
+
+{% extends 'base.html' %}
+{% from 'macros.html' import item_list, item_table %}
+
+{% block title %}{{ title }}{% endblock title %}
+
+{% block body %}
+    <h3>{{ title }}</h3><br>
+
+    {# crazy indirection for calling the required macro dynamically #}
+    {{ item_renderer|macro(items) }}
+{% endblock body %}

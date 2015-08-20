@@ -3,6 +3,7 @@ import itertools
 
 from flask import request, render_template
 from flask.views import View, MethodView
+from jinja2 import contextfilter
 from jinja2.filters import do_mark_safe
 from sqlalchemy import false
 
@@ -40,8 +41,19 @@ def socket_filter(x):
     return do_mark_safe("&#8202;".join(out))
 
 
+@app.template_filter('macro')
+@contextfilter
+def call_macro_by_name(context, macro_name, *args, **kwargs):
+    """
+    Meta filter that allows the dynamic calling of a macro
+
+    http://stackoverflow.com/questions/10629838/
+    """
+    return context.vars[macro_name](*args, **kwargs)
+
+
 @app.context_processor
-def location_nav():
+def main_context_processor():
     locations = {"stash": [], "characters": []}
     for loc in Location.query.order_by(Location.page_no).all():
         if loc.is_character:
@@ -85,7 +97,12 @@ def deleted_items():
         Item.x,
         Item.y
     ).all()
-    return render_template('deleted.html', items=items)
+    return render_template(
+        'list.html',
+        items=items,
+        title="To Delete",
+        item_renderer="item_table",
+    )
 
 
 @app.route('/test/')
@@ -115,9 +132,10 @@ def test_items():
         items.append(item)
 
     return render_template(
-        'test.html',
+        'list.html',
         title="<= 4 Explicit Mods",
         items=items,
+        item_renderer="item_table",
     )
 
 
@@ -218,7 +236,12 @@ def browse(slug):
         Item.x, Item.y
     ).all()
 
-    return render_template('browse.html', items=items, title=str(loc))
+    return render_template(
+        'list.html',
+        items=items,
+        title=str(loc),
+        item_renderer="item_list",
+    )
 
 
 class LevelsView(View):
