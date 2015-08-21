@@ -124,10 +124,13 @@ def test_items():
     items = []
     for item, _ in low_attr_items:
         # keep items with double resist mods
-        if sum(1 for m in item.explicit_mods
-               if "Resist" in m.value) >= 2:
+        if sum(1 for m in item.mods if "Resist" in m.value) >= 2:
                     continue
         if "Belt" in item.type:
+            continue
+        if "Quiver" in item.type:
+            continue
+        if item.num_sockets == 6:
             continue
         items.append(item)
 

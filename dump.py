@@ -35,10 +35,6 @@ def mod_norm(mod):
         return RANGE_MOD_RE.sub(r"X - X", mod)
     return NORM_MOD_RE.sub("X", mod)
 
-# def is_filled(self):
-#     """is the page filled?"""
-#     return not bool(self.find_gaps())
-
 
 class ItemData(object):
     """Object representing an item"""
@@ -73,11 +69,13 @@ class ItemData(object):
 
     @property
     def name(self):
-        return self.data.get("name", "")
+        # strip the strange metadata
+        return re.sub(r"<.*>", "", self.data.get("name", ""))
 
     @property
     def type(self):
-        return self.data["typeLine"]
+        # strip the strange metadata
+        return re.sub(r"<.*>", "", self.data["typeLine"])
 
     @property
     def requirements(self):
