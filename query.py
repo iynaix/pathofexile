@@ -1,8 +1,11 @@
+import json
+import re
 import click
+from collections import namedtuple
 
 from app import db
 from models import Item, Modifier, Location, in_page_group
-from sqlalchemy.sql.expression import false
+# from sqlalchemy import false
 
 
 def find_gaps(loc):
@@ -26,16 +29,38 @@ def find_gaps(loc):
     return gaps
 
 
-locs = Location.query.filter(
-    *in_page_group("Rare")
-).order_by(Location.page_no).all()
-for loc in locs:
-    gaps = find_gaps(loc)
-    if not gaps:
-        continue
-    click.echo(loc)
-    click.echo(gaps)
-    print
+data = {}
+for l in open("item_data.json"):
+    data.update(json.loads(l))
 
-# for item in items:
-#     click.echo(item)
+from pprint import pprint
+
+# namedtuples are easier to work with
+Affix = namedtuple('Affix', ('name', 'lvl', 'stat', 'value'))
+
+AFFIXES = []
+for k in ("Prefixes", "Suffixes"):
+    for affixes in data[k].values():
+        for a in affixes:
+            a[1] = int(a[1])
+            if len(a) == 4:
+                AFFIXES.append(
+                    Affix(*a)
+                )
+            # has min and max stats
+            elif len(a) == 6:
+                AFFIXES.append(
+                    Affix(a[0], a[1], a[2:4], a[4:])
+                )
+            elif len(a) == 8:
+                AFFIXES.append(
+                    Affix(a[0], a[1], a[2:5], a[5:])
+                )
+
+# try the stats thing on a bow
+bow = Item.query.filter(
+    Item.name.like("%Tempest Wing%"),
+    Item.type == "Citadel Bow",
+).one()
+
+print bow.numeric_mods

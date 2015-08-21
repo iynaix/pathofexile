@@ -2,6 +2,7 @@ import hashlib
 
 from sqlalchemy import types, true, false
 from sqlalchemy.ext.compiler import compiles
+from sqlalchemy.databases import postgres
 
 from app import db
 import constants
@@ -101,6 +102,12 @@ class Item(db.Model):
     @property
     def explicit_mods(self):
         return self.mods.filter(Modifier.is_implicit == false()).all()
+
+    @property
+    def numeric_mods(self):
+        return self.mods.filter(
+            Modifier.original != Modifier.normalized
+        ).all()
 
     @db.validates('num_sockets')
     def validate_num_sockets(self, key, num_sockets):
@@ -210,16 +217,23 @@ class Requirement(db.Model):
 class Modifier(db.Model):
     """Model representing a single modifier of an item"""
     id = db.Column(db.Integer, primary_key=True)
-    value = db.Column(db.String(255), nullable=False)
+
+    # value = db.Column(db.String(255), nullable=False)
+    # normalized = db.Column(db.String(255), nullable=False)
+
+    # original mod text
+    original = db.Column(db.String(255), nullable=False)
     normalized = db.Column(db.String(255), nullable=False)
+    # numeric values (if any)
+    values = db.Column(postgres.ARRAY(db.Float(asdecimal=True)))
     is_implicit = db.Column(db.Boolean, nullable=False, default=False)
     item_id = db.Column(db.Integer, db.ForeignKey('item.id'))
 
     def __str__(self):
-        return self.value
+        return self.original
 
     def __repr__(self):
-        return self.value
+        return self.original
 
 
 class Location(db.Model):
