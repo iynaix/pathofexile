@@ -7,6 +7,7 @@ import re
 import subprocess
 from collections import defaultdict
 from decimal import Decimal
+from pprint import pprint
 
 from blessings import Terminal
 import click
@@ -304,8 +305,13 @@ def dump_items(pages):
     for page in pages:
         loc = Location(**page.pop("location"))
         for item in page["items"]:
-            sql = ItemData(item).sql_dump(loc)
-            # click.echo(sql)
+            try:
+                item = ItemData(item)
+                sql = item.sql_dump(loc)
+            except AssertionError:
+                # nice to have debugging info
+                pprint(item.data)
+                raise
             db.session.add(sql)
 
 

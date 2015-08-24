@@ -116,12 +116,12 @@ class Item(db.Model):
 
     @db.validates('x')
     def validate_x(self, key, x):
-        assert x is None or 0 <= x <= 11
+        assert x is None or x >= 0
         return x
 
     @db.validates('y')
     def validate_y(self, key, y):
-        assert y is None or 0 <= y <= 11
+        assert y is None or y >= 0
         return y
 
     @db.validates('w')

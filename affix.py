@@ -18,8 +18,8 @@ class Affix(object):
 
         # variable length depending on the number of mods
         rest = args[2:]
-        self.stats = rest[:(len(args) / 2)]
-        self.values = rest[(len(args) / 2):]
+        self.stats = rest[::2]
+        self.values = rest[1::2]
 
 
 def get_affixes():
@@ -54,9 +54,12 @@ from fuzzywuzzy import fuzz, process
 from blessings import Terminal
 
 
-t = Terminal()
-for item in results:
-    for mod in item.numeric_mods:
-        mod = mod.original
-        match, ratio = process.extractOne(mod, affix_stats, scorer=fuzz.QRatio)
-        click.echo("%s\t%s\t%s" % (t.green(mod), t.yellow(match), t.red(str(ratio))))
+for a in affix_stats:
+    print a
+# t = Terminal()
+# for item in results:
+#     for mod in item.numeric_mods:
+#         mod = mod.original
+#         match, ratio = process.extractOne(mod, affix_stats,
+#                                           scorer=fuzz.token_set_ratio)
+#         click.echo("%s\t%s\t%s" % (t.green(mod), t.yellow(match), t.red(str(ratio))))
