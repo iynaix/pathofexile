@@ -6,6 +6,8 @@ import pprint
 import re
 import subprocess
 from collections import defaultdict
+from decimal import Decimal
+from pprint import pprint
 
 from blessings import Terminal
 import click
@@ -16,8 +18,7 @@ from models import Item, Requirement, Property, Location, Modifier
 MOD_NUM_RE = re.compile(r"[-+]?[0-9\.]+?[%]?")
 RANGE_MOD_RE = re.compile(r"(\d+)-(\d+)")
 NORM_MOD_RE = re.compile(r"""[-+]?  # possible sign
-                             (\d+\.)? # possible decimal
-                             \d+  # actual number
+                             (?P<num>(\d+\.)?\d+)  # actual number
                          """, re.VERBOSE)
 WHITESPACE_RE = re.compile('\s+')
 
@@ -28,13 +29,23 @@ def mod_tsvector(mod):
 
 
 def mod_norm(mod):
-    """normalizes the numeric values for mods, replacing them with an 'X'"""
+    """
+    normalizes the numeric values for mods, replacing them with an 'X'
+    returns a tuple (normalized mod string, list of numeric mod values)
+    """
     if re.search(r"\d", mod) is None:
-        return mod
-    if RANGE_MOD_RE.search(mod):
-        return RANGE_MOD_RE.sub(r"X - X", mod)
-    return NORM_MOD_RE.sub("X", mod)
+        return (mod, [])
 
+    # double values, is a range
+    m = RANGE_MOD_RE.search(mod)
+    if m:
+        return (RANGE_MOD_RE.sub(r"X - X", mod),
+                [float(n) for n in m.groups()])
+
+    # single value
+    m = NORM_MOD_RE.search(mod)
+    return (NORM_MOD_RE.sub("X", mod),
+            [Decimal(m.groupdict()["num"])])
 
 class ItemData(object):
     """Object representing an item"""
@@ -95,15 +106,19 @@ class ItemData(object):
         """reformats the modifiers with normalization into a list of dicts"""
         ret = []
         for m in self.data.get("implicitMods", []):
+            normalized, values = mod_norm(m)
             ret.append({
-                "value": m,
-                "normalized": mod_norm(m),
+                "original": m,
+                "normalized": normalized,
+                "values": values,
                 "is_implicit": True,
             })
         for m in self.data.get("explicitMods", []):
+            normalized, values = mod_norm(m)
             ret.append({
-                "value": m,
-                "normalized": mod_norm(m),
+                "original": m,
+                "normalized": normalized,
+                "values": values,
                 "is_implicit": False,
             })
         return ret
@@ -291,8 +306,13 @@ def dump_items(pages):
     for page in pages:
         loc = Location(**page.pop("location"))
         for item in page["items"]:
-            sql = ItemData(item).sql_dump(loc)
-            # click.echo(sql)
+            try:
+                item = ItemData(item)
+                sql = item.sql_dump(loc)
+            except AssertionError:
+                # nice to have debugging info
+                pprint(item.data)
+                raise
             db.session.add(sql)
 
 

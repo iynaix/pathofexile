@@ -9,6 +9,7 @@ LOGIN_URL = "https://www.pathofexile.com/login"
 CHAR_URL = "https://www.pathofexile.com/character-window/get-characters"
 ITEM_URL = "https://www.pathofexile.com/character-window/get-items"
 STASH_URL = "https://www.pathofexile.com/character-window/get-stash-items"
+PASSIVE_URL = "https://www.pathofexile.com/character-window/get-passive-skills"
 
 
 class MainSpider(Spider):
@@ -75,21 +76,35 @@ class MainSpider(Spider):
             if char["league"].lower() not in self.leagues:
                 continue
 
+            metadata = {
+                'league': char["league"].title(),
+                'location': {
+                    "name": char["name"],
+                    "is_character": True,
+                }
+            }
+
+            # get items for the user
             yield FormRequest(
                 ITEM_URL,
                 formdata={
                     "character": char["name"],
                     "accountName": "iynaix",
                 },
-                meta={
-                    'league': char["league"].title(),
-                    'location': {
-                        "name": char["name"],
-                        "is_premium": False,
-                        "is_character": True,
-                    },
+                meta=metadata,
+                callback=self.parse_item,
+            )
+
+            # get jewels in passive tree for the user
+            yield FormRequest(
+                PASSIVE_URL,
+                formdata={
+                    "character": char["name"],
+                    "accountName": "iynaix",
+                    "reqData": "0",
                 },
-                callback=self.parse_item
+                meta=metadata,
+                callback=self.parse_item,
             )
 
     def parse_stash_data(self, resp):
