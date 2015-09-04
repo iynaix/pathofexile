@@ -5,7 +5,7 @@ from flask import request, render_template
 from flask.views import View, MethodView
 from jinja2 import contextfilter
 from jinja2.filters import do_mark_safe
-from sqlalchemy import false
+from sqlalchemy import false, not_, and_
 
 from app import app, db
 import constants
@@ -116,6 +116,19 @@ def test_items():
         Location.page_no,
     ).filter(
         Modifier.is_implicit == false(),
+        # keep the 6 socket items
+        Item.num_sockets != 6,
+        # item types we are not interested in
+        and_(
+            not_(Item.type.like('%Quiver%')),
+            not_(Item.type.like('%Belt%')),
+        ),
+        # modifiers that we aren't interested in
+        and_(
+            not_(Modifier.normalized.like('%Light Radius%')),
+            not_(Modifier.normalized.like('%Accuracy Rating%')),
+            not_(Modifier.normalized.like('%Stun Recovery%')),
+        ),
         *in_page_group("rare")
     ).having(
         db.func.count(Modifier.id) <= 4
@@ -125,12 +138,6 @@ def test_items():
     for item, _ in low_attr_items:
         # keep items with double resist mods
         if sum(1 for m in item.mods if "Resist" in m.normalized) >= 2:
-            continue
-        if "Belt" in item.type:
-            continue
-        if "Quiver" in item.type:
-            continue
-        if item.num_sockets == 6:
             continue
         items.append(item)
 
