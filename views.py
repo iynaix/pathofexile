@@ -122,6 +122,7 @@ def test_items():
         and_(
             not_(Item.type.like('%Quiver%')),
             not_(Item.type.like('%Belt%')),
+            not_(Item.type.like('%Sash%')),
         ),
         # modifiers that we aren't interested in
         and_(
@@ -132,7 +133,7 @@ def test_items():
         *in_page_group("rare")
     ).having(
         db.func.count(Modifier.id) <= 4
-    ).order_by(Location.page_no)
+    ).order_by(Location.page_no, Item.type)
 
     items = []
     for item, _ in low_attr_items:
