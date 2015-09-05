@@ -11,7 +11,7 @@ from app import app, db
 import constants
 from models import (Item, Location, Property, Requirement, Modifier,
                     in_page_group)
-from utils import normfind, group_items_by_level, groupsortby, get_constant
+from utils import normfind, get_constant
 
 #  init constants
 CHROMATIC_RE = r"B+G+R+"
@@ -105,9 +105,9 @@ def deleted_items():
     )
 
 
-@app.route('/test/')
-def test_items():
-    """For displaying tests on a subset of items"""
+@app.route('/low_mods/')
+def low_mods():
+    """For displaying rare items with too few mods"""
     low_attr_items = db.session.query(
         Item,
         db.func.count(Modifier.id),
@@ -143,8 +143,26 @@ def test_items():
 
     return render_template(
         'list.html',
-        title="<= 4 Explicit Mods",
+        title="< 5 Explicit Mods",
         items=items,
+        item_renderer="item_table",
+    )
+
+
+@app.route('/test/')
+def test_items():
+    """For displaying tests on a subset of items"""
+    # es_items = Item.query.filter(
+    #     Property.name == "Energy Shield",
+    # ).join(Property, Location).order_by(Property.value, Location.page_no)
+    es_items = Property.query.filter(
+        Property.name == "Energy Shield",
+    ).join(Item).order_by(Property.value.desc())
+
+    return render_template(
+        'list.html',
+        title="Energy Shield Items",
+        items=[p.item for p in es_items],
         item_renderer="item_table",
     )
 
@@ -312,22 +330,6 @@ class PurgeView(View):
     def __init__(self):
         super(PurgeView, self).__init__()
 
-    def get_duplicate_rares(self):
-        """rare items sharing the same type and level reqs in the rare pages"""
-        duplicate_rares = []
-        rare_items = Item.query.join(Location).filter(
-            Item.is_identified,
-            *in_page_group("rare")
-        )
-        grouped_items = group_items_by_level(rare_items)
-        for level, items in grouped_items.items():
-            grps = groupsortby(items, key=lambda x: x.item_group())
-            for k, v in grps:
-                if len(v) > 1:
-                    v = sorted(v, key=lambda x: x.type)
-                    duplicate_rares.extend(v)
-        return duplicate_rares
-
     def get_non_rares(self):
         # non-rare items in rare pages
         return Item.query.join(Location).filter(
@@ -340,6 +342,7 @@ class PurgeView(View):
         # non-rare items in rare pages
         return Item.query.join(Location).filter(
             ~Item.is_identified,
+            *in_page_group("rare")
         )
 
     def dispatch_request(self):
@@ -352,7 +355,6 @@ class PurgeView(View):
             context[k] = v.order_by(
                 Location.id, Item.x, Item.y
             ).all()
-        context["duplicate_rares"] = self.get_duplicate_rares()
         return render_template('purge.html', **context)
 app.add_url_rule('/purge/', view_func=PurgeView.as_view('purge'))
 
