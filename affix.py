@@ -4,6 +4,7 @@ from decimal import Decimal
 
 import click
 from blessings import Terminal
+from pprint import pprint
 
 from app import db
 from models import Item, Modifier, Location, in_page_group
@@ -53,64 +54,24 @@ def get_affixes():
     return ret
 
 
-def color_table(*args):
-    """prints a nice table in pretty colors"""
-    colors = (t.green, t.blue, t.yellow, t.red,)
-    return "\t".join(color(str(s)) for color, s in zip(colors, args))
+def dump_db_affixes():
+    for affix in db.session.query(
+        Modifier.normalized
+    ).filter(
+        # only want numeric mods
+        Modifier.normalized.like('%X%'),
+        # filter divination card stuff
+        ~Modifier.normalized.like('<%'),
+    ).distinct().order_by(Modifier.normalized).all():
+        print affix[0]
 
 
-from pprint import pprint
+def dump_scraped_affixes():
+    affix_stats = []
+    for affix in get_affixes():
+        affix_stats.extend(affix.stats)
 
-# try the stats thing on a bow
-results = Item.query.filter(
-    # Item.name.like("%Tempest Wing%"),
-    # Item.type == "Citadel Bow",
-    Item.type.like("%Bow%"),
-).all()
+    for affix in sorted(set(affix_stats)):
+        print affix
 
-# print bow.numeric_mods
-
-AFFIXES = get_affixes()
-affix_stats = []
-for a in AFFIXES:
-    affix_stats.extend(a.stats)
-
-from fuzzywuzzy import fuzz, process
-
-
-# # testing mods
-# t = Terminal()
-# for item in results:
-#     for mod in item.numeric_mods:
-#         match, ratio = process.extractOne(mod.original, affix_stats,
-#                                           scorer=fuzz.token_set_ratio)
-#         click.echo("\t".join((
-#             t.green(mod.original),
-#             t.blue(mod.normalized),
-#             t.yellow(match),
-#             t.red(str(ratio))
-#         )))
-
-x = set()
-numeric_mods = Modifier.query.filter(
-    Modifier.original != Modifier.normalized,
-    # Modifier.normalized.like("%increased%"),
-    # Modifier.normalized.like("%X - X%"),
-).all()
-for mod in numeric_mods:
-    # X% increased
-    new = re.sub(r"^\d+% increased (?P<mod>.*)", r"\g<mod> +%", mod.original)
-    if mod.original != new:
-        continue
-
-    new = re.sub(r"Adds \d+-\d+ (?P<mod>.*) to Attacks",
-                 r"Added \g<mod>", mod.original)
-    if mod.original != new:
-        continue
-
-    print color_table(mod.original, mod.normalized)
-    # print color_table(mod.original, new)
-
-
-for a in x:
-    print a
+dump_db_affixes()

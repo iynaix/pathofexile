@@ -1,6 +1,7 @@
 blessings==1.6
 click==4.1
 Flask==0.10.1
+Flask-Restless==0.17.0
 Flask-Script==2.0.5
 Flask-SQLAlchemy==2.0
 fuzzywuzzy==0.6.1
@@ -15,4 +16,5 @@ q==2.6
 requests==2.7.0
 Scrapy==1.0.1
 service-identity==14.0.0
+simplejson==3.8.0
 SQLAlchemy==1.0.8

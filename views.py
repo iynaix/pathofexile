@@ -1,5 +1,6 @@
 from collections import defaultdict, Counter
 import itertools
+import simplejson as json
 
 from flask import request, render_template
 from flask.views import View, MethodView
@@ -7,7 +8,7 @@ from jinja2 import contextfilter
 from jinja2.filters import do_mark_safe
 from sqlalchemy import false, not_, and_
 
-from app import app, db
+from app import app, db, manager
 import constants
 from models import (Item, Location, Property, Requirement, Modifier,
                     in_page_group)
@@ -479,4 +480,11 @@ app.add_url_rule('/', view_func=StatsView.as_view('stats'))
 
 
 if __name__ == '__main__':
+    def postprocessor(result, **kwargs):
+        json.dumps(result, use_decimal=True)
+
+    # create API endpoints, which will be available at /api/<tablename> by
+    manager.create_api(Item, methods=['GET'], postprocessors={
+        'GET_MANY': [postprocessor],
+    })
     app.run(debug=True, port=8000)
