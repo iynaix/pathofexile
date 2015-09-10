@@ -106,49 +106,62 @@ def deleted_items():
     )
 
 
-@app.route('/low_mods/')
-def low_mods():
-    """For displaying rare items with too few mods"""
-    low_attr_items = db.session.query(
-        Item,
-        db.func.count(Modifier.id),
-    ).join(Modifier, Location).group_by(
-        Item,
-        Location.page_no,
-    ).filter(
-        Modifier.is_implicit == false(),
-        # keep the 6 socket items
-        Item.num_sockets != 6,
-        # item types we are not interested in
-        and_(
-            not_(Item.type.like('%Quiver%')),
-            not_(Item.type.like('%Belt%')),
-            not_(Item.type.like('%Sash%')),
-        ),
-        # modifiers that we aren't interested in
-        and_(
-            not_(Modifier.normalized.like('%Light Radius%')),
-            not_(Modifier.normalized.like('%Accuracy Rating%')),
-            not_(Modifier.normalized.like('%Stun Recovery%')),
-        ),
-        *in_page_group("rare")
-    ).having(
-        db.func.count(Modifier.id) <= 4
-    ).order_by(Location.page_no, Item.type)
+class LowModsView(View):
+    """Displays rare items with too few mods"""
+    def get_items(self):
+        return db.session.query(
+            Item,
+            db.func.count(Modifier.id),
+        ).join(Modifier, Location).group_by(
+            Item,
+            Location.page_no,
+        ).filter(
+            Modifier.is_implicit == false(),
+            # keep the 6 socket items
+            Item.num_sockets != 6,
+            # item types we are not interested in
+            and_(
+                not_(Item.type.like('%Quiver%')),
+                not_(Item.type.like('%Belt%')),
+                not_(Item.type.like('%Sash%')),
+            ),
+            # modifiers that we aren't interested in
+            and_(
+                not_(Modifier.normalized.like('%Light Radius%')),
+                not_(Modifier.normalized.like('%Accuracy Rating%')),
+                not_(Modifier.normalized.like('%Stun Recovery%')),
+            ),
+            *in_page_group("rare")
+        ).having(
+            db.func.count(Modifier.id) <= 4
+        ).order_by(Location.page_no, Item.type)
 
-    items = []
-    for item, _ in low_attr_items:
-        # keep items with double resist mods
-        if sum(1 for m in item.mods if "Resist" in m.normalized) >= 2:
-            continue
-        items.append(item)
+    def insufficient_resists(self, item):
+        """only interested in items with higher amounts of resists"""
+        resist_mods = [m for m in item.explicit_mods
+                       if "Resist" in m.normalized]
 
-    return render_template(
-        'list.html',
-        title="< 5 Explicit Mods",
-        items=items,
-        item_renderer="item_table",
-    )
+        # triple / quad resists, good to go
+        if len(resist_mods) > 2:
+            return False
+
+        # check if for
+        return sum(
+            1 for m in resist_mods
+            if "All" not in m.normalized and m.values[0] > 10
+        ) < 2
+
+    def dispatch_request(self):
+        items = self.get_items()
+        items = [item for item, _ in items if self.insufficient_resists(item)]
+
+        return render_template(
+            'list.html',
+            title="< 5 Explicit Mods",
+            items=items,
+            item_renderer="item_table",
+        )
+app.add_url_rule('/low_mods/', view_func=LowModsView.as_view('low_mods'))
 
 
 @app.route('/test/')
@@ -275,7 +288,7 @@ def browse(slug):
 
 
 class LevelsView(View):
-    """sorts the items into bins of levels"""
+    """Sorts the items into bins of levels"""
     levels_url = "levels"
     levels_slug_url = "levels_slug"
     title = "Levels"
