@@ -1,5 +1,6 @@
 from collections import defaultdict, Counter
 import itertools
+import simplejson as json
 
 from flask import request, render_template
 from flask.views import View, MethodView
@@ -7,7 +8,7 @@ from jinja2 import contextfilter
 from jinja2.filters import do_mark_safe
 from sqlalchemy import false, not_, and_
 
-from app import app, db
+from app import app, db, manager
 import constants
 from models import (Item, Location, Property, Requirement, Modifier,
                     in_page_group)
@@ -143,12 +144,32 @@ def low_mods():
             continue
         items.append(item)
 
-    return render_template(
-        'list.html',
-        title="< 5 Explicit Mods",
-        items=items,
-        item_renderer="item_table",
-    )
+    def insufficient_resists(self, item):
+        """only interested in items with higher amounts of resists"""
+        resist_mods = [m for m in item.explicit_mods
+                       if "Resist" in m.normalized]
+
+        # triple / quad resists, good to go
+        if len(resist_mods) > 2:
+            return False
+
+        # check if for
+        return sum(
+            1 for m in resist_mods
+            if "All" not in m.normalized and m.values[0] > 10
+        ) < 2
+
+    def dispatch_request(self):
+        items = self.get_items()
+        items = [item for item, _ in items if self.insufficient_resists(item)]
+
+        return render_template(
+            'list.html',
+            title="< 5 Explicit Mods",
+            items=items,
+            item_renderer="item_table",
+        )
+app.add_url_rule('/low_mods/', view_func=LowModsView.as_view('low_mods'))
 
 
 @app.route('/test/')
@@ -275,7 +296,7 @@ def browse(slug):
 
 
 class LevelsView(View):
-    """sorts the items into bins of levels"""
+    """Sorts the items into bins of levels"""
     levels_url = "levels"
     levels_slug_url = "levels_slug"
     title = "Levels"
@@ -480,4 +501,11 @@ app.add_url_rule('/', view_func=StatsView.as_view('stats'))
 
 
 if __name__ == '__main__':
+    def postprocessor(result, **kwargs):
+        json.dumps(result, use_decimal=True)
+
+    # create API endpoints, which will be available at /api/<tablename> by
+    manager.create_api(Item, methods=['GET'], postprocessors={
+        'GET_MANY': [postprocessor],
+    })
     app.run(debug=True, port=8000)
