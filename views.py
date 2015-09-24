@@ -117,18 +117,19 @@ def low_mods():
     ).filter(
         Modifier.is_implicit == false(),
         # keep the 6 socket items
-        Item.num_sockets != 6,
+        # Item.num_sockets != 6,
         # item types we are not interested in
-        and_(
-            not_(Item.type.like('%Quiver%')),
-            not_(Item.type.like('%Belt%')),
-            not_(Item.type.like('%Sash%')),
-        ),
+        # and_(
+        #     not_(Item.type.like('%Quiver%')),
+        #     not_(Item.type.like('%Belt%')),
+        #     not_(Item.type.like('%Sash%')),
+        # ),
         # modifiers that we aren't interested in
         and_(
             not_(Modifier.normalized.like('%Light Radius%')),
             not_(Modifier.normalized.like('%Accuracy Rating%')),
             not_(Modifier.normalized.like('%Stun Recovery%')),
+            not_(Modifier.normalized.like('%Reduced Attribute%')),
         ),
         *in_page_group("rare")
     ).having(
