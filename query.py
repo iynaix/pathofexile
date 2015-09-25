@@ -29,6 +29,20 @@ def find_gaps(loc):
     return gaps
 
 
+items = Item.query.join(Item.location).filter(
+    *in_page_group("gems")
+).all()
+from collections import Counter
+gem_counts = Counter(item.type.replace("Superior ", "") for item in items)
+
+for gem, cnt in gem_counts.most_common():
+    if cnt < 4:
+        break
+    print gem, cnt
+
+exit()
+
+
 data = {}
 for l in open("item_data.json"):
     data.update(json.loads(l))
