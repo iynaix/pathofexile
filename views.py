@@ -106,43 +106,45 @@ def deleted_items():
     )
 
 
-@app.route('/low_mods/')
-def low_mods():
+class LowModsView(View):
     """For displaying rare items with too few mods"""
-    low_attr_items = db.session.query(
-        Item,
-        db.func.count(Modifier.id),
-    ).join(Modifier, Location).group_by(
-        Item,
-        Location.page_no,
-    ).filter(
-        Modifier.is_implicit == false(),
-        # keep the 6 socket items
-        # Item.num_sockets != 6,
-        # item types we are not interested in
-        # and_(
-        #     not_(Item.type.like('%Quiver%')),
-        #     not_(Item.type.like('%Belt%')),
-        #     not_(Item.type.like('%Sash%')),
-        # ),
-        # modifiers that we aren't interested in
-        and_(
-            not_(Modifier.normalized.like('%Light Radius%')),
-            not_(Modifier.normalized.like('%Accuracy Rating%')),
-            not_(Modifier.normalized.like('%Stun Recovery%')),
-            not_(Modifier.normalized.like('%Reduced Attribute%')),
-        ),
-        *in_page_group("rare")
-    ).having(
-        db.func.count(Modifier.id) <= 4
-    ).order_by(Location.page_no, Item.type)
+    def get_items(self):
+        low_attr_items = db.session.query(
+            Item,
+            db.func.count(Modifier.id),
+        ).join(Modifier, Location).group_by(
+            Item,
+            Location.page_no,
+        ).filter(
+            Modifier.is_implicit == false(),
+            # keep the 6 socket items
+            # Item.num_sockets != 6,
+            # item types we are not interested in
+            # and_(
+            #     not_(Item.type.like('%Quiver%')),
+            #     not_(Item.type.like('%Belt%')),
+            #     not_(Item.type.like('%Sash%')),
+            # ),
+            # modifiers that we aren't interested in
+            and_(
+                not_(Modifier.normalized.like('%Light Radius%')),
+                not_(Modifier.normalized.like('%Accuracy Rating%')),
+                not_(Modifier.normalized.like('%Stun Recovery%')),
+                not_(Modifier.normalized.like('%Reduced Attribute%')),
+            ),
+            *in_page_group("rare")
+        ).having(
+            db.func.count(Modifier.id) <= 4
+        ).order_by(Location.page_no, Item.type)
 
-    items = []
-    for item, _ in low_attr_items:
-        # keep items with double resist mods
-        if sum(1 for m in item.mods if "Resist" in m.normalized) >= 2:
-            continue
-        items.append(item)
+        # items = []
+        # for item, _ in low_attr_items:
+        #     # keep items with double resist mods
+        #     if sum(1 for m in item.mods if "Resist" in m.normalized) >= 2:
+        #         continue
+        #     items.append(item)
+        # return items
+        return [item for item, _ in low_attr_items]
 
     def insufficient_resists(self, item):
         """only interested in items with higher amounts of resists"""
@@ -153,15 +155,15 @@ def low_mods():
         if len(resist_mods) > 2:
             return False
 
-        # check if for
+        # check for min resist values
         return sum(
             1 for m in resist_mods
-            if "All" not in m.normalized and m.values[0] > 10
+            if "All" not in m.normalized and m.values[0] > 20
         ) < 2
 
     def dispatch_request(self):
         items = self.get_items()
-        items = [item for item, _ in items if self.insufficient_resists(item)]
+        items = [item for item in items if self.insufficient_resists(item)]
 
         return render_template(
             'list.html',
