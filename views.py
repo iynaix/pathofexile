@@ -177,17 +177,26 @@ app.add_url_rule('/low_mods/', view_func=LowModsView.as_view('low_mods'))
 @app.route('/test/')
 def test_items():
     """For displaying tests on a subset of items"""
-    # es_items = Item.query.filter(
-    #     Property.name == "Energy Shield",
-    # ).join(Property, Location).order_by(Property.value, Location.page_no)
-    es_items = Property.query.filter(
-        Property.name == "Energy Shield",
-    ).join(Item).order_by(Property.value.desc())
+    items = db.session.query(
+        Item,
+        db.func.count(Modifier.id),
+    ).join(Location, Modifier).group_by(
+        Item,
+        Location.page_no,
+    ).filter(
+        Modifier.is_implicit == false(),
+        Modifier.normalized.like("%Resist%"),
+        *in_page_group("rare")
+    ).having(
+        db.func.count(Modifier.normalized.like("%Resist%")) == 2,
+    # ).order_by(
+    #     gem_cnt.desc()
+    ).all()
 
     return render_template(
         'list.html',
-        title="Energy Shield Items",
-        items=[p.item for p in es_items],
+        title="Item Resists",
+        items=[item for item, cnt in items],
         item_renderer="item_table",
     )
 

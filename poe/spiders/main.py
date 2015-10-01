@@ -18,8 +18,17 @@ class MainSpider(Spider):
     """
     name = "main"
     start_urls = [LOGIN_URL]
-    leagues = ["warbands"]
     download_delay = 3
+
+    def __init__(self, *args, **kwargs):
+        super(MainSpider, self).__init__(*args, **kwargs)
+        leagues = kwargs.get("leagues", "All")
+        self.leagues = set([l.strip().title() for l in leagues.split(",")])
+
+    def valid_league(self, league):
+        if "All" in self.leagues:
+            return True
+        return league.title() in self.leagues
 
     def parse(self, resp):
         try:
@@ -51,33 +60,22 @@ class MainSpider(Spider):
             callback=self.parse_char_data
         )
 
-        # get the league data
-        for league in self.leagues:
-            league = league.title()
-            yield FormRequest(
-                STASH_URL,
-                formdata={
-                    "league": league,
-                    "tabs": "1",
-                    "tabIndex": "0",
-                    "accountName": "iynaix",
-                },
-                meta={'league': league},
-                callback=self.parse_stash_data
-            )
-
     def parse_char_data(self, resp):
         data = json.loads(resp.body_as_unicode())
         if "error" in data:
             raise HTTPError("Request Throttled")
 
+        stash_leagues = set()
         for char in data:
             # no need to scrape
-            if char["league"].lower() not in self.leagues:
+            if not self.valid_league(char["league"]):
                 continue
 
+            # get the leagues to fetch for stashes
+            stash_leagues.add(char["league"])
+
             metadata = {
-                'league': char["league"].title(),
+                'league': char["league"],
                 'location': {
                     "name": char["name"],
                     "is_character": True,
@@ -105,6 +103,22 @@ class MainSpider(Spider):
                 },
                 meta=metadata,
                 callback=self.parse_item,
+            )
+
+        # get the stash data
+        # called from within get_char_data as we need to get the leagues
+        # before parsing
+        for league in stash_leagues:
+            yield FormRequest(
+                STASH_URL,
+                formdata={
+                    "league": league,
+                    "tabs": "1",
+                    "tabIndex": "0",
+                    "accountName": "iynaix",
+                },
+                meta={'league': league},
+                callback=self.parse_stash_data
             )
 
     def parse_stash_data(self, resp):

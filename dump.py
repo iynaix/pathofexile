@@ -2,7 +2,6 @@
 # the database
 
 import json
-import pprint
 import re
 import subprocess
 from collections import defaultdict
@@ -46,6 +45,7 @@ def mod_norm(mod):
     m = NORM_MOD_RE.search(mod)
     return (NORM_MOD_RE.sub("X", mod),
             [Decimal(m.groupdict()["num"])])
+
 
 class ItemData(object):
     """Object representing an item"""
@@ -343,16 +343,18 @@ def read_jsonlines(crawler_name):
 
 @click.command()
 @click.option('--leagues', default="all",
-              help="Leagues(s) to fetch. Use 'all to fetch all leagues'")
+              help="Leagues(s) to fetch. Use 'all' to fetch all leagues")
+@click.option('--fetch/--no-fetch', default=True,
+              help="Performs fetching of data from Path of Exile.")
 @click.option('--debug/--no-debug', default=False,
               help="Enable scrapy's log for debugging")
-def run(leagues, debug):
+def run(leagues, fetch, debug):
     t = Terminal()
-    # leagues = set([l.strip().lower() for l in leagues.split(",")])
 
-    # run the spider and fetch the data, we never cache
-    click.echo(t.green("FETCHING ITEMS..."))
-    run_scraper("main", debug=debug)
+    # run the spider
+    if fetch:
+        click.echo(t.green("FETCHING ITEMS..."))
+        run_scraper("main", debug=debug, leagues=leagues)
 
     # drop and recreate the database
     click.echo(t.green("WRITING TO DATABASE..."))
