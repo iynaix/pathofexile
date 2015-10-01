@@ -12,7 +12,7 @@ from app import app, db, manager
 import constants
 from models import (Item, Location, Property, Requirement, Modifier,
                     in_page_group)
-from utils import normfind, get_constant
+from utils import get_constant
 
 #  init constants
 CHROMATIC_RE = r"B+G+R+"
@@ -473,28 +473,11 @@ class StatsView(View):
     def get_gem_stats(self):
         # get the gems into a dict for easier searching
 
-        gems = Item.query.join(Item.requirements).filter(
+        gems = Item.query.filter(
             Item.properties.any(name="Experience")
         ).all()
-
-        all_gems = {"B": [], "G": [], "R": []}
-        for gem_name, count in list(Counter(g.type for g in gems).items()):
-            # look for info for the corresponding gem
-            gval = normfind(GEMS, gem_name)
-
-            # find the first of the gem for popover
-            for g in gems:
-                if g.type == gem_name:
-                    gval["sample"] = g
-                    gval["count"] = count
-                    all_gems[gval["color"]].append(gval)
-                    break
-            else:
-                raise IndexError
-
         return {
-            "all_gems": {k: sorted(v, key=lambda x: -x["count"]) for
-                        k, v in list(all_gems.items())}
+            "all_gems": Counter(g.type for g in gems).most_common()
         }
 
     def dispatch_request(self):
@@ -504,8 +487,7 @@ class StatsView(View):
         context.update(self.get_item_rarity_stats())
         context.update(self.get_item_socket_stats())
         context.update(self.get_item_socket_links_stats())
-        context["all_gems"] = {}
-        # context.update(self.get_gem_stats())
+        context.update(self.get_gem_stats())
 
         return render_template('stats.html', **context)
 app.add_url_rule('/', view_func=StatsView.as_view('stats'))

@@ -98,34 +98,20 @@
 </table>
 
 <h3>Gems</h3>
-{% for color, gems in all_gems.items() %}
-    {% if color == "B" %}
-        <h4>Intelligence Gems</h4>
-    {% elif color == "G" %}
-        <h4>Dexterity Gems</h4>
-    {% elif color == "R" %}
-        <h4>Strength Gems</h4>
-    {% endif %}
-
-    <table class="table table-striped table-hover">
-        <thead>
-            <tr>
-                <th>Gem</th>
-                <th>Color</th>
-                <th>Count</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for v in gems %}
-            <tr>
-                <td>
-                    {{ macros.item_title(v.sample, outer_tag="p", popover=True, multiline=False) }}
-                </td>
-                <td>{{ v.color|socket }}</td>
-                <td>{{ v.count }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-{% endfor %}
+<table class="table table-striped table-hover">
+    <thead>
+        <tr>
+            <th>Gem</th>
+            <th>Count</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for gem, count in all_gems %}
+        <tr>
+            <td>{{ gem }}</td>
+            <td>{{ count }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
 {% endblock body %}

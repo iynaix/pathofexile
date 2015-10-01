@@ -27,40 +27,6 @@ def find_gaps(loc):
     return gaps
 
 
-def count_gems():
-    DROP_ONLY_GEMS = (
-        "Added Chaos Damage",
-        "Detonate Mines",
-        "Empower",
-        "Enhance",
-        "Enlighten",
-        "Portal",
-    )
-
-    gem_cnt = db.func.count(Item.type).label("gem_count")
-    gems = db.session.query(
-        Item.type,
-        gem_cnt,
-    ).join(Location).group_by(
-        Item.type,
-    ).filter(
-        ~Item.type.like("Superior %"),  # exclude quality gems
-        ~Item.type.like("Vaal %"),  # exclude vaal gems
-        ~Item.type.in_(DROP_ONLY_GEMS),  # exclude drop only gems
-        *in_page_group("gems")
-    ).having(
-        gem_cnt > 3,
-    ).order_by(
-        gem_cnt.desc()
-    ).all()
-
-    for gem, cnt in gems:
-        print gem, cnt
-
-
-exit()
-
-
 data = {}
 for l in open("item_data.json"):
     data.update(json.loads(l))
