@@ -29,6 +29,8 @@ def in_page_group(group_name):
     premium_pages = Location.query.filter(
         Location.is_premium,
         Location.is_character == false(),
+        ~Location.name.like("% (Remove-only)"),
+        ~Location.name.op("~")(r"\d+"),  # page name shouldn't be an int
     ).order_by(Location.page_no).all()
 
     # longest non premium range are the rares

@@ -17,4 +17,5 @@ requests==2.7.0
 Scrapy==1.0.1
 service-identity==14.0.0
 simplejson==3.8.0
+stellar==0.4.3
 SQLAlchemy==1.0.8
