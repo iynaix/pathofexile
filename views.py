@@ -8,7 +8,8 @@ from jinja2 import contextfilter
 from jinja2.filters import do_mark_safe
 from sqlalchemy import false, not_, and_
 
-from app import app, db, manager
+from app import app, db, api
+from resources import ItemResource, ItemListResource, LocationResource
 import constants
 from models import (Item, Location, Property, Requirement, Modifier,
                     in_page_group)
@@ -494,11 +495,20 @@ app.add_url_rule('/', view_func=StatsView.as_view('stats'))
 
 
 if __name__ == '__main__':
-    def postprocessor(result, **kwargs):
-        json.dumps(result, use_decimal=True)
+    # def postprocessor(result, **kwargs):
+    #     json.dumps(result, use_decimal=True)
 
-    # create API endpoints, which will be available at /api/<tablename> by
-    manager.create_api(Item, methods=['GET'], postprocessors={
-        'GET_MANY': [postprocessor],
-    })
+    # # create API endpoints, which will be available at /api/<tablename> by
+    # api.create_api(Item, methods=['GET'], postprocessors={
+    #     'GET_MANY': [postprocessor],
+    # })
+    # api.create_api(Item, methods=['GET'], postprocessors={
+    #     'GET_MANY': [postprocessor],
+    # })
+
+    # set up the API
+    api.add_resource(ItemResource, '/api/item/<item_id>')
+    api.add_resource(ItemListResource, '/api/item')
+    api.add_resource(LocationResource, '/api/location/<slug>')
+
     app.run(debug=True, port=8000)
