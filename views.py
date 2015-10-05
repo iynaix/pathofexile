@@ -1,8 +1,7 @@
 from collections import defaultdict, Counter
 import itertools
-import simplejson as json
 
-from flask import request, render_template
+from flask import request, render_template, send_from_directory
 from flask.views import View, MethodView
 from jinja2 import contextfilter
 from jinja2.filters import do_mark_safe
@@ -300,7 +299,8 @@ def browse(slug):
     ).all()
 
     return render_template(
-        'list.html',
+        # 'list.html',
+        'list_ng.html',
         items=items,
         title=str(loc),
         item_renderer="item_list",
@@ -492,6 +492,12 @@ class StatsView(View):
 
         return render_template('stats.html', **context)
 app.add_url_rule('/', view_func=StatsView.as_view('stats'))
+
+
+@app.route('/images/<path:filename>')
+def base_static(filename):
+    return send_from_directory(app.root_path + '/images/',
+                               "%s?%s" % (filename, request.query_string))
 
 
 if __name__ == '__main__':

@@ -95,7 +95,7 @@ class Item(db.Model):
     def image_url(self):
         _, _, query = self.icon.rpartition("?")
         sha = hashlib.sha1(self.icon).hexdigest()
-        return "images/full/%s.png?%s" % (sha, query)
+        return "/images/full/%s.png?%s" % (sha, query)
 
     @property
     def implicit_mods(self):

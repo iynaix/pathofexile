@@ -47,6 +47,6 @@
 }
 
 /* extra spacing between name and type for list view */
-ul.item_listing li h4 span:nth-child(2) {
-    background-color:red
-}
+/* ul.item_listing li h4 span:nth-child(2) { */
+/*     background-color:red */
+/* } */

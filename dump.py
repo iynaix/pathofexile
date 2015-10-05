@@ -188,6 +188,14 @@ class ItemData(object):
             return "magic"
         if self.data["frameType"] == 2:
             return "rare"
+        # Normal: 0,
+        # Magic: 1,
+        # Rare: 2,
+        # Unique: 3,
+        # Gem: 4,
+        # Currency: 5,
+        # Quest: 7,
+        # DivinationCardFrame: 6
         return "normal"
 
     def full_text(self):
