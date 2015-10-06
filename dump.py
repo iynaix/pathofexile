@@ -179,16 +179,18 @@ class ItemData(object):
     @property
     def rarity(self):
         """
-        returns a string representing the rarity of the item, possible values
-        are: normal, magic, rare, unique
+        returns a string of the rarity of the item, based on frameType
         """
-        if self.data["frameType"] == 3:
-            return "unique"
-        if self.data["frameType"] == 1:
-            return "magic"
-        if self.data["frameType"] == 2:
-            return "rare"
-        return "normal"
+        return (
+            "normal",
+            "magic",
+            "rare",
+            "unique",
+            "gem",
+            "currency",
+            "quest",
+            "divination_card",
+        )[self.data["frameType"]]
 
     def full_text(self):
         """
@@ -252,56 +254,6 @@ class ItemData(object):
             pprint.pprint(self.data)
 
 
-def destroy_database(engine):
-    """
-    completely destroys the database, copied from
-
-    http://www.sqlalchemy.org/trac/wiki/UsageRecipes/DropEverything
-    """
-    from sqlalchemy.engine import reflection
-    from sqlalchemy.schema import (
-        MetaData,
-        Table,
-        DropTable,
-        ForeignKeyConstraint,
-        DropConstraint,
-    )
-
-    conn = engine.connect()
-
-    # the transaction only applies if the DB supports
-    # transactional DDL, i.e. Postgresql, MS SQL Server
-    trans = conn.begin()
-
-    inspector = reflection.Inspector.from_engine(engine)
-
-    # gather all data first before dropping anything.
-    # some DBs lock after things have been dropped in
-    # a transaction.
-    metadata = MetaData()
-
-    tbs = []
-    all_fks = []
-
-    for table_name in inspector.get_table_names():
-        fks = []
-        for fk in inspector.get_foreign_keys(table_name):
-            if not fk['name']:
-                continue
-            fks.append(ForeignKeyConstraint((), (), name=fk['name']))
-        t = Table(table_name, metadata, *fks)
-        tbs.append(t)
-        all_fks.extend(fks)
-
-    for fkc in all_fks:
-        conn.execute(DropConstraint(fkc))
-
-    for table in tbs:
-        conn.execute(DropTable(table))
-
-    trans.commit()
-
-
 def dump_items(pages):
     for page in pages:
         loc = Location(**page.pop("location"))
@@ -358,7 +310,7 @@ def run(leagues, fetch, debug):
 
     # drop and recreate the database
     click.echo(t.green("WRITING TO DATABASE..."))
-    destroy_database(db.engine)
+    db.drop_all()
     db.create_all()
 
     # actual parsing and writing of items to the database

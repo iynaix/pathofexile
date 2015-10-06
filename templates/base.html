@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<html>
+<html ng-app="poe_app">
     <head>
         <title>{% block title %}{% endblock title %}</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <!-- AngularJS -->
-        <!--<script src="https://code.angularjs.org/2.0.0-alpha.26/angular2.sfx.dev.js"></script>-->
+        <script src="/static/js/angular-1.4.7.min.js"></script>
         <!-- Bootstrap -->
         <link href="/static/css/bootstrap.min.css" rel="stylesheet">
         <!-- Custom css -->
         <link href="/static/css/base.css" rel="stylesheet">
     </head>
-    <body>
+    <body {% block angular_controller %}{% endblock angular_controller %}>
         <nav class="navbar navbar-default" role="navigation">
             <div class="navbar-header">
                 <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
@@ -70,17 +70,10 @@
         <script src="/static/js/jquery.min.js"></script>
         <script src="/static/js/bootstrap.min.js"></script>
         <script>
-            function is_mobile() {
-                var ua = window.navigator.userAgent;
-                return (window.screen.width <= 720) || (window.screen.height <= 720) || /Android/i.test(ua) || /iPhone/i.test(ua) || /iPad/i.test(ua);
-            };
+            $(".item_popover").popover({ trigger: "hover" });
 
+            /*
             $(function() {
-                //handle item popovers
-                $(".item_popover").popover({
-                    trigger: is_mobile() ? "click" : "hover"
-                });
-
                 //handle marking items as deleted
                 $(".mark_delete").on("click", function(e) {
                     var $elem = $(e.currentTarget);
@@ -88,8 +81,10 @@
                     $.post(url, {"checked": $elem.is(":checked") ? 1 : 0});
                 });
 
-                {% block extrajs %}{% endblock extrajs %}
+                {# {% block extrajs %}{% endblock extrajs %} #}
             });
+            */
         </script>
+        <script src="/static/js/app.js"></script>
     </body>
 </html>

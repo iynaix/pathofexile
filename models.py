@@ -60,7 +60,8 @@ class Item(db.Model):
     y = db.Column(db.SmallInteger())
     w = db.Column(db.SmallInteger(), nullable=False, default=1)
     h = db.Column(db.SmallInteger(), nullable=False, default=1)
-    rarity = db.Column(db.Enum('normal', 'magic', 'rare', 'unique',
+    rarity = db.Column(db.Enum("normal", "magic", "rare", "unique", "gem",
+                               "currency", "quest", "divination_card",
                                 name='rarities'))
     icon = db.Column(db.String(500))
     num_sockets = db.Column(db.SmallInteger(), nullable=False, default=0)
@@ -95,7 +96,7 @@ class Item(db.Model):
     def image_url(self):
         _, _, query = self.icon.rpartition("?")
         sha = hashlib.sha1(self.icon).hexdigest()
-        return "images/full/%s.png?%s" % (sha, query)
+        return "/images/full/%s.png?%s" % (sha, query)
 
     @property
     def implicit_mods(self):

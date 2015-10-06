@@ -1,0 +1,55 @@
+
+{% extends 'base.html' %}
+{% from 'macros.html' import item_list, item_table %}
+
+{% block title %}{{ title }}{% endblock title %}
+
+{% block angular_controller %}ng-controller="BrowseCtrl as vm"{% endblock angular_controller %}
+
+{% block body %}
+    <h3>{{ title }}</h3><br>
+
+    <ul class="list-group item_listing">
+        <li class="list-group-item" ng-repeat="item in vm.items">
+            <h4 x-poe-item-title item="item"></h4>
+            <img ng-src="[[ item.image_url ]]" alt="[[ item.type ]]">
+
+            <h4>
+                <a href="/browse/[[ item.location.name|lowercase ]]/">[[ item.location.location_str ]]</a>
+            </h4>
+
+            {# TODO: socketed items
+            {% if item.socketed_items %}
+                <h5>Socketed Items:</h5>
+                <p>
+                    {% for socketed_item in item.socketed_items %}
+                        <span class="gem">{{ socketed_item.type }}</span></br>
+                    {% endfor %}
+                </p>
+            {% endif %}
+            #}
+
+            <span ng-if="!item.is_identified" class="unidentified">Unidentified</span>
+            <div ng-if="item.is_identified">
+                <span ng-repeat="req in item.requirements" ng-class="req.name.substr(0, 3)|lowercase" style="margin-right: 0.25em">
+                    [[ req.name ]]: [[ req.value ]]
+                </span>
+                <hr ng-if="item.requirements.length"/>
+
+                <span ng-repeat-start="prop in item.properties">
+                    [[ prop.name ]]<span ng-if="prop.value">: [[ prop.value ]]</span>
+                </span><br ng-repeat-end/>
+                <hr ng-if="item.properties.length"/>
+
+                <span class="magic" ng-repeat-start="mod in item.implicit_mods">
+                    [[ mod.original ]]
+                </span><br ng-repeat-end/>
+                <hr ng-if="item.implicit_mods.length"/>
+
+                <span class="magic" ng-repeat-start="mod in item.explicit_mods">
+                    [[ mod.original ]]
+                </span><br ng-repeat-end/>
+            </div>
+        </li>
+
+{% endblock body %}

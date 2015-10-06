@@ -46,7 +46,25 @@
 	width: auto;
 }
 
-/* extra spacing between name and type for list view */
-ul.item_listing li h4 span:nth-child(2) {
-    background-color:red
+/* fix socket labels alignment */
+.label {
+    vertical-align: top;
 }
+
+hr {
+    display: block;
+    height: 1px;
+    border: 0;
+    margin: 0.3em 0;
+    border-top-width: 1px;
+    border-top-style: inset;
+    border-top-color: rgba(255, 255, 255, 0.2);
+    padding: 0;
+    max-width: 300px;
+}
+
+
+/* extra spacing between name and type for list view */
+/* ul.item_listing li h4 span:nth-child(2) { */
+/*     background-color:red */
+/* } */

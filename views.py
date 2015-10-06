@@ -1,8 +1,7 @@
 from collections import defaultdict, Counter
 import itertools
-import simplejson as json
 
-from flask import request, render_template
+from flask import request, render_template, send_from_directory
 from flask.views import View, MethodView
 from jinja2 import contextfilter
 from jinja2.filters import do_mark_safe
@@ -300,7 +299,8 @@ def browse(slug):
     ).all()
 
     return render_template(
-        'list.html',
+        # 'list.html',
+        'list_ng.html',
         items=items,
         title=str(loc),
         item_renderer="item_list",
@@ -401,7 +401,7 @@ class StatsView(View):
     def get_currency_stats(self):
         currency_stats = defaultdict(int)
         items = Item.query.join(Property).filter(
-            Property.name.startswith("Stack"),
+            Item.rarity == "currency",
             Item.is_identified,
         ).all()
         for item in items:
@@ -474,17 +474,13 @@ class StatsView(View):
     def get_gem_stats(self):
         # get the gems into a dict for easier searching
 
-        gems = Item.query.filter(
-            Item.properties.any(name="Experience")
-        ).all()
+        gems = Item.query.filter(Item.rarity == "gem").all()
         return {
             "all_gems": Counter(g.type for g in gems).most_common()
         }
 
     def dispatch_request(self):
-        context = {
-            "currencies": self.get_currency_stats()
-        }
+        context = {"currencies": self.get_currency_stats()}
         context.update(self.get_item_rarity_stats())
         context.update(self.get_item_socket_stats())
         context.update(self.get_item_socket_links_stats())
@@ -492,6 +488,12 @@ class StatsView(View):
 
         return render_template('stats.html', **context)
 app.add_url_rule('/', view_func=StatsView.as_view('stats'))
+
+
+@app.route('/images/<path:filename>')
+def base_static(filename):
+    return send_from_directory(app.root_path + '/images/',
+                               "%s?%s" % (filename, request.query_string))
 
 
 if __name__ == '__main__':
