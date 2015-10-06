@@ -75,7 +75,7 @@ angular.module('poe_app').controller('BrowseCtrl', ['$http', function ($http) {
     let slug = segments[segments.length-2];
     this.items = [];
 
-    $http.get(`/api/location/${slug}`).success((resp) => {
+    $http.get(`/api/locations/${slug}`).success((resp) => {
         this.items = resp;
     });
 }]);

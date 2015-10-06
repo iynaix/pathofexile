@@ -8,7 +8,7 @@ from jinja2.filters import do_mark_safe
 from sqlalchemy import false, not_, and_
 
 from app import app, db, api
-from resources import ItemResource, ItemListResource, LocationResource
+import resources
 import constants
 from models import (Item, Location, Property, Requirement, Modifier,
                     in_page_group)
@@ -497,20 +497,10 @@ def base_static(filename):
 
 
 if __name__ == '__main__':
-    # def postprocessor(result, **kwargs):
-    #     json.dumps(result, use_decimal=True)
-
-    # # create API endpoints, which will be available at /api/<tablename> by
-    # api.create_api(Item, methods=['GET'], postprocessors={
-    #     'GET_MANY': [postprocessor],
-    # })
-    # api.create_api(Item, methods=['GET'], postprocessors={
-    #     'GET_MANY': [postprocessor],
-    # })
-
-    # set up the API
-    api.add_resource(ItemResource, '/api/item/<item_id>')
-    api.add_resource(ItemListResource, '/api/item')
-    api.add_resource(LocationResource, '/api/location/<slug>')
+    # set up the api
+    api.add_resource(resources.ItemResource, '/api/items/<item_id>')
+    api.add_resource(resources.ItemListResource, '/api/items')
+    api.add_resource(resources.LocationListResource, '/api/locations')
+    api.add_resource(resources.LocationResource, '/api/locations/<slug>')
 
     app.run(debug=True, port=8000)

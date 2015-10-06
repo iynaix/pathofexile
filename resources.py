@@ -82,3 +82,12 @@ class LocationResource(Resource):
         return Item.query.filter(Item.location == loc).order_by(
             Item.x, Item.y
         ).all()
+
+
+class LocationListResource(Resource):
+    @marshal_with(location_fields)
+    def get(self, **kwargs):
+        return Location.query.order_by(
+            Location.is_character,
+            Location.page_no,
+        ).all()
