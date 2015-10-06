@@ -23,6 +23,7 @@ location_fields = dict(
     page_no=fields.Integer,
     is_premium=fields.Boolean,
     is_character=fields.Boolean,
+    location_str=fields.String(attribute=lambda x: str(x)),
 )
 
 item_fields = dict(

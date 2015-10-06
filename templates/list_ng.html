@@ -9,88 +9,47 @@
 {% block body %}
     <h3>{{ title }}</h3><br>
 
-    {# crazy indirection for calling the required macro dynamdataically #}
-    {# {{ item_renderer|macro(items) }} #}
     <ul class="list-group item_listing">
         <li class="list-group-item" ng-repeat="item in vm.items">
-            {# outer_tag="h4", excludes=[] #}
-            {# if "title" not in excludes #}
-            {# [[ item_title(item, outer_tag="h4", sockets=True) ]] #}
-            {# endif #}
-            <h4 ng-class="{item_popover: item.item_popover, unindentified: !item.is_identified}"> {# {% if popover %}{{ item_popover(item) }} {% endif %}> #}
-                {# output the name #}
-                <span ng-if="item.name" ng-class="item|item_name_class">
-                    [[ item.name ]]
-                </span>
-                {# {% if sockets and #}
-                <span ng-if="item.socket_str" style="margin-left: 1em;" ng-bind-html="item.socket_str|sockets">
-                    {# style="{% if in_popover %}float:right;{% endif %}" #}
-                </span>
-                {# {% if multiline %}<br/>{% endif %} #}
-
-                {# output item type #}
-                {#
-                <span style="{% if not in_popover and multiline %}line-height:2;{% endif %}" class="{% if item.rarity=="magic" %}magic{% endif %}">{{ item.type }}</span>
-                {% if sockets and item.socket_str and not item.name %}
-                &nbsp;&nbsp;<span style="{% if in_popover %}float:right;{% else %}{% endif %}">{{ item.socket_str|socket }}</span>
-                {% endif %}
-                #}
-            </h4>
-
+            <h4 x-poe-item-title item="item"></h4>
             <img ng-src="[[ item.image_url ]]" alt="[[ item.type ]]">
 
-    {#
-    {% if "location" not in excludes %}
-        <{{ outer_tag }}>
-            <a href="/browse/{{ item.location.name|lower }}/">{{ item.location_str() }}</a>
-        </{{ outer_tag }}>
-    {% endif %}
+            <h4>
+                <a href="/browse/[[ item.location.name|lowercase ]]/">[[ item.location.location_str ]]</a>
+            </h4>
 
-    {% if item.is_identified %}
-        {% if item.socketed_items %}
-            <h5>Socketed Items:</h5>
-            <p>
-                {% for socketed_item in item.socketed_items %}
-                    <span class="gem">{{ socketed_item.type }}</span></br>
-                {% endfor %}
-            </p>
-        {% endif %}
+            {# TODO: socketed items
+            {% if item.socketed_items %}
+                <h5>Socketed Items:</h5>
+                <p>
+                    {% for socketed_item in item.socketed_items %}
+                        <span class="gem">{{ socketed_item.type }}</span></br>
+                    {% endfor %}
+                </p>
+            {% endif %}
+            #}
 
-        {% if item.requirements %}
-            <p>
-                {% for req in item.requirements %}
-                    <span class="{{ req.name[:3]|lower }}">{{ req.name }}: {{ req.value }}</span>&nbsp;
-                {% endfor %}
-            </p>
-        {% endif %}
+            <span ng-if="!item.is_identified" class="unidentified">Unidentified</span>
+            <div ng-if="item.is_identified">
+                <span ng-repeat="req in item.requirements" ng-class="req.name.substr(0, 3)|lowercase" style="margin-right: 0.25em">
+                    [[ req.name ]]: [[ req.value ]]
+                </span>
+                <hr ng-if="item.requirements.length"/>
 
-        {% if item.properties %}
-            <h5>Properties:</h5>
-            <p>
-                {% for prop in item.properties %}
-                    <span class="magic">
-                        {{ prop.name }}{% if prop.value %}: {{ prop.value }}{% endif %}
-                    </span></br>
-                {% endfor %}
-            </p>
-        {% endif %}
+                <span ng-repeat-start="prop in item.properties">
+                    [[ prop.name ]]<span ng-if="prop.value">: [[ prop.value ]]</span>
+                </span><br ng-repeat-end/>
+                <hr ng-if="item.properties.length"/>
 
-        {% for mod in item.implicit_mods %}
-            <span class="magic">
-                {{ mod }}
-            </span></br>
-        {% endfor %}
-        {% if item.implicit_mods %}<br>{% endif %}
-        {% for mod in item.explicit_mods %}
-            <span class="magic">
-                {{ mod }}
-            </span></br>
-        {% endfor %}
-    {% else %}
-        <span class="unidentified">Unidentified</span>
-    {% endif %}
-{%- endmacro %}
-#}
+                <span class="magic" ng-repeat-start="mod in item.implicit_mods">
+                    [[ mod.original ]]
+                </span><br ng-repeat-end/>
+                <hr ng-if="item.implicit_mods.length"/>
+
+                <span class="magic" ng-repeat-start="mod in item.explicit_mods">
+                    [[ mod.original ]]
+                </span><br ng-repeat-end/>
+            </div>
         </li>
-    </ul>
+
 {% endblock body %}

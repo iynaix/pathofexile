@@ -1,3 +1,5 @@
+'use strict';
+
 // ANGULAR CONFIGURATION AND SETUP
 angular.module("poe_app", []).config(['$interpolateProvider', function($interpolateProvider) {
     // prevent templating clashes
@@ -8,12 +10,21 @@ angular.module("poe_app", []).config(['$interpolateProvider', function($interpol
 // CUSTOM FILTERS
 angular.module("poe_app").filter('item_name_class', () => {
     return (item) => {
-        // if item.is_gem()
-        //     <span class="gem">
-        // elif item.is_quest_item()
-        //     <span class="quest">
+        switch (item.rarity) {
+            case "gem":
+                return "gem";
+            case "quest":
+                return "quest";
+            case "magic":
+                return "magic";
+            case "rare":
+                return "rare";
+            case "unique":
+                return "unique";
+            default:
+                return "normal";
+        }
         if (item.rarity !== "normal") { return item.rarity; }
-        return "";
     }
 }).filter('sockets', ['$sce', ($sce) => {
     return (socket_str) => {
@@ -31,6 +42,32 @@ angular.module("poe_app").filter('item_name_class', () => {
         });
         return $sce.trustAsHtml(ret.join("&#8202;"));
     }
+}]);
+
+// CUSTOM DIRECTIVES
+angular.module('poe_app').directive('poeItemTitle', ['socketsFilter', function(sockets) {
+    return {
+        restrict: 'A',
+        scope: {
+            item: '='
+        },
+        replace: true,
+        link: (scope, elem, attrs) => {
+            // default to showing sockets
+            scope.sockets = true;
+            if ((attrs.sockets===false)||(attrs.sockets==="false")) {
+                scope.sockets = false;
+            }
+        },
+        template: `
+            <h4 ng-class="{item_popover: item.item_popover, unindentified: !item.is_identified}">
+                <span ng-if="item.name" ng-class="item|item_name_class">[[ item.name ]]</span>
+                <span ng-if="sockets && item.socket_str" style="margin-left: 1em;" ng-bind-html="item.socket_str|sockets"></span>
+                <br/>
+                <span ng-class="{magic: item.rarity==='magic'}">[[ item.type ]]</span>
+                <span ng-if="sockets && item.socket_str && !item.name" style="margin-left: 1em;" ng-bind-html="item.socket_str|sockets"></span>
+            </h4>`
+    };
 }]);
 
 angular.module('poe_app').controller('BrowseCtrl', ['$http', function ($http) {

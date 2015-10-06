@@ -1,6 +1,7 @@
 env/*
 data/*
 constants/*
+node_modules/*
 images/*
 .scrapy/*
 __pycache__/*
