@@ -170,6 +170,12 @@ title, location, sockets
                 </label>
             </td>
         </tr>
+        {% else %}
+        <tr>
+            <td class="text-center" colspan="6">
+                <strong>No results found.</strong>
+            </td>
+        </tr>
         {% endfor %}
     </tbody>
 </table>

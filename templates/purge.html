@@ -4,13 +4,12 @@
 {% block title %}Items to Purge{% endblock title %}
 
 {% block body %}
-    {% if non_rares %}
-        <h3>Non Rares ({{ non_rares|length }})</h3>
-        {{ macros.item_table(non_rares) }}
-    {% endif %}
+    <h3>Non Rares ({{ non_rares|length }})</h3>
+    {{ macros.item_table(non_rares) }}
 
-    {% if unidentifieds %}
-        <h3>Unidentified ({{ unidentifieds|length }})</h3>
-        {{ macros.item_table(unidentifieds) }}
-    {% endif %}
+    <h3>Non Uniques ({{ non_uniques|length }})</h3>
+    {{ macros.item_table(non_uniques) }}
+
+    <h3>Unidentified ({{ unidentifieds|length }})</h3>
+    {{ macros.item_table(unidentifieds) }}
 {% endblock body %}

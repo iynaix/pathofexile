@@ -373,6 +373,14 @@ class PurgeView(View):
             *in_page_group("rare")
         )
 
+    def get_non_uniques(self):
+        # non-unique items in unique pages
+        return Item.query.join(Location).filter(
+            Item.rarity != "unique",
+            Item.is_identified,
+            *in_page_group("unique")
+        )
+
     def get_unidentified(self):
         # non-rare items in rare pages
         return Item.query.join(Location).filter(

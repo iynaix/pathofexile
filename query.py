@@ -1,5 +1,5 @@
 import json
-from collections import namedtuple
+from collections import namedtuple, Counter
 
 from app import db
 from models import Item, Modifier, Location, in_page_group
@@ -25,6 +25,31 @@ def find_gaps(loc):
             if not page[y][x]:
                 gaps.append((x, y))
     return gaps
+
+
+jewel_rewards = (
+    "Assassin's Haste",
+    "Conqueror's Efficiency",
+    "Conqueror's Longevity",
+    "Conqueror's Potency",
+    "Poacher's Aim",
+    "Survival Instincts",
+    "Survival Secrets",
+    "Survival Skills",
+    "Warlord's Reach",
+)
+
+for item, cnt in Counter(item.name for item in Item.query.filter(
+    Item.rarity == "unique",
+    *in_page_group("uniques")
+)).most_common():
+    if cnt <= 1:
+        break
+    if item in jewel_rewards:
+        continue
+    print item, cnt
+
+exit()
 
 
 data = {}
