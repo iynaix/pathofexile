@@ -437,39 +437,6 @@ class StatsView(View):
             })
         return currencies
 
-    def get_item_rarity_stats(self):
-        stats = db.session.query(
-            db.func.count(Item.id),
-            Item.rarity,
-        ).filter(Item.is_identified).group_by(Item.rarity).all()
-        return {
-            "rarities": sorted(stats, reverse=True),
-            "rarities_total": sum(s[0] for s in stats),
-        }
-
-    def get_item_socket_stats(self):
-        stats = db.session.query(
-            Item.num_sockets,
-            db.func.count(Item.id),
-        ).filter(Item.is_identified).group_by(Item.num_sockets).all()
-        return {
-            "item_sockets": sorted(stats, reverse=True),
-            "item_sockets_total": sum(s[1] for s in stats),
-        }
-
-    def get_item_socket_links_stats(self):
-        stats = db.session.query(
-            # first instance of space, since the strings are sorted in order
-            # of length
-            db.func.strpos(Item.socket_str, " ").label("link_length"),
-            db.func.count(Item.id),
-        ).filter(Item.is_identified).group_by("link_length").all()
-
-        return {
-            "item_sockets_links": sorted(stats, reverse=True),
-            "item_sockets_links_total": sum(s[1] for s in stats),
-        }
-
     def get_gem_stats(self):
         # get the gems into a dict for easier searching
 
@@ -484,9 +451,6 @@ class StatsView(View):
         context = {
             "currencies": self.get_currency_stats()
         }
-        context.update(self.get_item_rarity_stats())
-        context.update(self.get_item_socket_stats())
-        context.update(self.get_item_socket_links_stats())
         context.update(self.get_gem_stats())
 
         return render_template('stats.html', **context)
