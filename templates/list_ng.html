@@ -6,7 +6,7 @@
 
 {% block angular_controller %}ng-controller="BrowseCtrl as vm"{% endblock angular_controller %}
 
-{% block body %}
+{% block body1 %}
     <h3>{{ title }}</h3><br>
 
     <ul class="list-group item_listing">
@@ -51,5 +51,16 @@
                 </span><br ng-repeat-end/>
             </div>
         </li>
+{% endblock body1 %}
 
+{% block body %}
+    <div>
+    </div>
 {% endblock body %}
+
+{% block extrajs %}
+    <script type="text/javascript" src="/static/js/ItemList.js"></script>
+    <script type="text/javascript">
+        Elm.embed(Elm.ItemList, document.getElementById('main_content'));
+    </script>
+{% endblock extrajs %}
