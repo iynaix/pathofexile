@@ -1,10 +1,12 @@
 env/*
 data/*
+elm-stuff/*
 constants/*
 node_modules/*
 images/*
 .scrapy/*
 __pycache__/*
+
 *.ipynb*
 main.json
 *.pickle
