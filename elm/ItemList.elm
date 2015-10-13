@@ -52,23 +52,23 @@ type alias Location =
 
 
 type alias Item =
-    { -- name : String,
-      -- type_ : String,
-      -- x : Maybe Int,
-      -- y : Maybe Int,
-      -- w : Int
-      -- h : Int,
-      -- rarity : String,
-      image_url : String
-      -- num_sockets : Int,
-      -- socket_str : String,
-      -- is_identified : Bool,
-      -- char_location : String,
-      -- is_corrupted : Bool,
-      -- is_deleted : Bool,
-      -- league : String
+    { name : Maybe String,
+      type_ : String,
+      x : Maybe Int,
+      y : Maybe Int,
+      w : Int,
+      h : Int,
+      rarity : String,
+      image_url : String,
+      num_sockets : Int,
+      socket_str : String,
+      is_identified : Bool,
+      char_location : Maybe String,
+      is_corrupted : Bool,
+      is_deleted : Bool,
+      league : String
 
-      -- -- relationships
+      -- relationships
       -- implicit_mods: List Modifier,
       -- explicit_mods: List Modifier,
       -- requirements: List Requirement,
@@ -85,30 +85,35 @@ type alias Item =
 -- MODEL
 
 type alias Model =
-    { gifUrl : String
+    { items : List Item
     }
 
 
 init : (Model, Effects Action)
 init =
-  ( Model "http://placehold.it/350x150"
-  , getRandomGif
-  )
+    ( { items = [] }, fetchItems )
 
 
 -- UPDATE
 
 type Action
-    = NewGif (Maybe String)
+    = NewItems (Maybe Item)
 
 
 update : Action -> Model -> (Model, Effects Action)
 update action model =
-  case action of
-    NewGif maybeUrl ->
-      ( Model (Maybe.withDefault model.gifUrl maybeUrl)
-      , Effects.none
-      )
+    case action of
+        NewItems item ->
+            let
+                newItems = case item of
+                    Just xs ->
+                        [ xs ]
+                    Nothing ->
+                        []
+            in
+                ( { items = newItems }
+                , Effects.none
+                )
 
 
 -- VIEW
@@ -118,32 +123,39 @@ update action model =
 
 view : Signal.Address Action -> Model -> Html
 view address model =
-    img
-        [src model.gifUrl]
+    div
         []
+        [ text (toString model.items) ]
 
 
 -- EFFECTS
 
-getRandomGif : Effects Action
-getRandomGif =
-  Http.get decodeUrl (randomUrl)
+fetchItems : Effects Action
+fetchItems =
+  Http.get decodeItem "/api/items/3716"
     |> Task.toMaybe
-    |> Task.map NewGif
+    |> Task.map NewItems
     |> Effects.task
 
 
-randomUrl : String
-randomUrl =
-  Http.url "http://api.giphy.com/v1/gifs/random"
-    [ "api_key" => "dc6zaTOxFJmzC"
-    , "tag" => "funny cats"
-    ]
+decodeItem : Json.Decoder Item
+decodeItem =
+    Json.map Item ("name" := Json.maybe Json.string)
+        `apply` ("type_" := Json.string)
+        `apply` ("x" := Json.maybe Json.int)
+        `apply` ("y" := Json.maybe Json.int)
+        `apply` ("w" := Json.int)
+        `apply` ("h" := Json.int)
+        `apply` ("rarity" := Json.string)
+        `apply` ("image_url" := Json.string)
+        `apply` ("num_sockets" := Json.int)
+        `apply` ("socket_str" := Json.string)
+        `apply` ("is_identified" := Json.bool)
+        `apply` ("char_location" := Json.maybe Json.string)
+        `apply` ("is_corrupted" := Json.bool)
+        `apply` ("is_deleted" := Json.bool)
+        `apply` ("league" := Json.string)
 
-
-decodeUrl : Json.Decoder String
-decodeUrl =
-  Json.at ["data", "image_url"] Json.string
 
 app =
     StartApp.start
@@ -153,10 +165,12 @@ app =
         , inputs = []
         }
 
+
 main =
     app.html
 
 
+-- Kickstart the initial fetch
 port tasks : Signal (Task.Task Never ())
 port tasks =
     app.tasks
