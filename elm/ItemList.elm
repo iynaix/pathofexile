@@ -106,37 +106,58 @@ update : Action -> Model -> (Model, Effects Action)
 update action model =
     case action of
         NewItems items ->
-            let
-                newItems =
-                    Maybe.withDefault [] items
-                -- newItems = case items of
-                --     Just xs ->
-                --         xs
-                --     Nothing ->
-                --         []
-            in
-                ( { items = newItems }
-                , Effects.none
-                )
+            ( { items = Maybe.withDefault [] items }
+            , Effects.none
+            )
 
 
 -- VIEW
 
-(=>) = (,)
+type alias NodeFunc = List Attribute -> List Html -> Html
+
+itemLocation : NodeFunc -> Item -> Html
+itemLocation outertag item =
+    outertag
+        []
+        [ a
+            [ href "itemlocation" ]
+            [ text "item location" ]
+        ]
+
+
+
+itemImage : Item -> Html
+itemImage item =
+    img
+        [ src item.image_url,
+          alt item.type_
+        ]
+        []
+
+
+itemHtml : Item -> Html
+itemHtml item =
+    li
+        [ class "list-group-item" ]
+        [ itemLocation h4 item,
+          itemImage item
+          -- text (toString item)
+        ]
 
 
 view : Signal.Address Action -> Model -> Html
 view address model =
-    div
-        []
-        [ text (toString model.items) ]
+    ul
+        [ class "list-group item_listing" ]
+        (List.map itemHtml model.items)
 
 
 -- EFFECTS
 
+
 fetchItems : Effects Action
 fetchItems =
-  Http.get decodeItems "/api/locations/rare"
+  Http.get (Json.list decodeItem) "/api/locations/rare"
     |> Task.toMaybe
     |> Task.map NewItems
     |> Effects.task
@@ -159,11 +180,6 @@ decodeItem =
         `apply` ("is_corrupted" := Json.bool)
         `apply` ("is_deleted" := Json.bool)
         `apply` ("league" := Json.string)
-
-
-decodeItems : Json.Decoder Items
-decodeItems =
-    Json.list decodeItem
 
 
 app =
