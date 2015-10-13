@@ -84,8 +84,10 @@ type alias Item =
 
 -- MODEL
 
+type alias Items = List Item
+
 type alias Model =
-    { items : List Item
+    { items : Items
     }
 
 
@@ -97,19 +99,21 @@ init =
 -- UPDATE
 
 type Action
-    = NewItems (Maybe Item)
+    = NewItems (Maybe Items)
 
 
 update : Action -> Model -> (Model, Effects Action)
 update action model =
     case action of
-        NewItems item ->
+        NewItems items ->
             let
-                newItems = case item of
-                    Just xs ->
-                        [ xs ]
-                    Nothing ->
-                        []
+                newItems =
+                    Maybe.withDefault [] items
+                -- newItems = case items of
+                --     Just xs ->
+                --         xs
+                --     Nothing ->
+                --         []
             in
                 ( { items = newItems }
                 , Effects.none
@@ -132,7 +136,7 @@ view address model =
 
 fetchItems : Effects Action
 fetchItems =
-  Http.get decodeItem "/api/items/3716"
+  Http.get decodeItems "/api/locations/rare"
     |> Task.toMaybe
     |> Task.map NewItems
     |> Effects.task
@@ -155,6 +159,11 @@ decodeItem =
         `apply` ("is_corrupted" := Json.bool)
         `apply` ("is_deleted" := Json.bool)
         `apply` ("league" := Json.string)
+
+
+decodeItems : Json.Decoder Items
+decodeItems =
+    Json.list decodeItem
 
 
 app =
