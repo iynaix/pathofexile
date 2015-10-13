@@ -14,10 +14,6 @@
             <h4 x-poe-item-title item="item"></h4>
             <img ng-src="[[ item.image_url ]]" alt="[[ item.type_ ]]">
 
-            <h4>
-                <a href="/browse/[[ item.location.name|lowercase ]]/">[[ item.location.location_str ]]</a>
-            </h4>
-
             {# TODO: socketed items
             {% if item.socketed_items %}
                 <h5>Socketed Items:</h5>
