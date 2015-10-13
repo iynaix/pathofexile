@@ -12,7 +12,7 @@
     <ul class="list-group item_listing">
         <li class="list-group-item" ng-repeat="item in vm.items">
             <h4 x-poe-item-title item="item"></h4>
-            <img ng-src="[[ item.image_url ]]" alt="[[ item.type ]]">
+            <img ng-src="[[ item.image_url ]]" alt="[[ item.type_ ]]">
 
             <h4>
                 <a href="/browse/[[ item.location.name|lowercase ]]/">[[ item.location.location_str ]]</a>
@@ -23,7 +23,7 @@
                 <h5>Socketed Items:</h5>
                 <p>
                     {% for socketed_item in item.socketed_items %}
-                        <span class="gem">{{ socketed_item.type }}</span></br>
+                        <span class="gem">{{ socketed_item.type_ }}</span></br>
                     {% endfor %}
                 </p>
             {% endif %}

@@ -26,7 +26,7 @@
     {% endif %}
 
     {# output item type #}
-    <span style="{% if not in_popover and multiline %}line-height:2;{% endif %}" class="{% if item.rarity=="magic" %}magic{% endif %}">{{ item.type }}</span>
+    <span style="{% if not in_popover and multiline %}line-height:2;{% endif %}" class="{% if item.rarity=="magic" %}magic{% endif %}">{{ item.type_ }}</span>
     {% if sockets and item.socket_str and not item.name %}
     &nbsp;&nbsp;<span style="{% if in_popover %}float:right;{% else %}{% endif %}">{{ item.socket_str|socket }}</span>
     {% endif %}
@@ -57,7 +57,7 @@ title, location, sockets
             <h5>Socketed Items:</h5>
             <p>
                 {% for socketed_item in item.socketed_items %}
-                    <span class="gem">{{ socketed_item.type }}</span></br>
+                    <span class="gem">{{ socketed_item.type_ }}</span></br>
                 {% endfor %}
             </p>
         {% endif %}

@@ -34,7 +34,7 @@ class ItemTypeItem(BaseItem):
     {"title": "Leather Belt", "type": "Belt"}
     """
     title = Field()
-    type = Field()
+    type_ = Field()
 
 
 class ItemSubtypeItem(BaseItem):
@@ -43,7 +43,7 @@ class ItemSubtypeItem(BaseItem):
     {"title": "Leather Belt", "type": "Belt"}
     """
     title = Field()
-    type = Field()
+    type_ = Field()
     subtype = Field()
 
 
@@ -57,7 +57,7 @@ class ItemStatItem(BaseItem):
 
 class MainItem(BaseItem):
     name = Field()
-    type = Field()
+    type_ = Field()
     x = Field()
     y = Field()
     w = Field()

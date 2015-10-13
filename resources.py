@@ -29,7 +29,7 @@ location_fields = dict(
 
 item_fields = dict(
     name=fields.String,
-    type=fields.String,
+    type_=fields.String,
     x=fields.Integer(default=None),
     y=fields.Integer(default=None),
     w=fields.Integer,

@@ -45,8 +45,8 @@ def get_item_resists(item):
 t = Terminal()
 
 jewelry = Item.query.filter(
-    or_(Item.type.op('~')(r'\yRing\y'),
-        Item.type.op('~')(r'\yAmulet\y')),
+    or_(Item.type_.op('~')(r'\yRing\y'),
+        Item.type_.op('~')(r'\yAmulet\y')),
 )
 
 amulets, rings = [], []
@@ -56,7 +56,7 @@ for item in jewelry:
         continue
 
     # group them
-    if " Amulet" in item.type:
+    if " Amulet" in item.type_:
         amulets.append((item, resists))
     else:
         rings.append((item, resists))

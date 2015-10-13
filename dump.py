@@ -84,7 +84,7 @@ class ItemData(object):
         return re.sub(r"<.*>", "", self.data.get("name", ""))
 
     @property
-    def type(self):
+    def type_(self):
         # strip the strange metadata
         return re.sub(r"<.*>", "", self.data["typeLine"])
 
@@ -200,7 +200,7 @@ class ItemData(object):
         # handle title, type and sockets
         if self.name:
             out.append(self.name)
-        out.append(self.type)
+        out.append(self.type_)
         if self.socket_str:
             out.append(self.socket_str)
         if self.data["identified"]:
@@ -224,7 +224,7 @@ class ItemData(object):
         try:
             return Item(
                 name=self.name,
-                type=self.type,
+                type_=self.type_,
                 x=self.data.get("x", None),
                 y=self.data.get("y", None),
                 w=self.data["w"],

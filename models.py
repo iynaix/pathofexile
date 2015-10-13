@@ -54,7 +54,7 @@ class Item(db.Model):
     """
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255))
-    type = db.Column(db.String(255), nullable=False)
+    type_ = db.Column(db.String(255), nullable=False)
     # x, y can be null for equipped or socketed items
     x = db.Column(db.SmallInteger())
     y = db.Column(db.SmallInteger())
@@ -88,9 +88,9 @@ class Item(db.Model):
 
     def __repr__(self):
         if self.name:
-            return "%s %s" % (self.name, self.type)
+            return "%s %s" % (self.name, self.type_)
         else:
-            return self.type
+            return self.type_
 
     @property
     def image_url(self):
@@ -145,7 +145,7 @@ class Item(db.Model):
         return False
 
     def is_quest_item(self):
-        return norm(self.type).startswith(constants.QUEST_ITEMS)
+        return norm(self.type_).startswith(constants.QUEST_ITEMS)
 
     @property
     def identified(self):
@@ -172,11 +172,11 @@ class Item(db.Model):
                 break
         else:
             raise ValueError("Item is not a gem.")
-        return normfind(GEMS, self.type)["color"]
+        return normfind(GEMS, self.type_)["color"]
 
     def item_group(self):
         """returns the major item grouping for an item, e.g. mace, armor etc"""
-        own_type = self.type.lower()
+        own_type = self.type_.lower()
         for g in ("axes", "bows", "claws", "daggers", "maces", "staves",
                   "swords", "wands", "helms", "armors", "gloves", "boots",
                   "shields", "belts", "quivers"):
@@ -187,7 +187,7 @@ class Item(db.Model):
                         return g.title()
                     else:
                         return v.get("subtype", g.title())
-        raise ValueError("%s is not a recognized item type." % self.type)
+        raise ValueError("%s is not a recognized item type." % self.type_)
 
     @property
     def required_level(self):
