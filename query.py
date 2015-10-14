@@ -83,7 +83,7 @@ for k in ("Prefixes", "Suffixes"):
 # try the stats thing on a bow
 bow = Item.query.filter(
     Item.name.like("%Tempest Wing%"),
-    Item.type == "Citadel Bow",
+    Item.type_ == "Citadel Bow",
 ).one()
 
 print bow.numeric_mods

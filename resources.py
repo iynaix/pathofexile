@@ -5,7 +5,7 @@ from models import Item, Location
 
 requirement_fields = dict(
     name=fields.String,
-    value=fields.Integer(default=None),
+    value=fields.Integer,
 )
 
 property_fields = dict(
@@ -21,15 +21,12 @@ modifier_fields = dict(
 location_fields = dict(
     id=fields.Integer,
     name=fields.String,
-    page_no=fields.Integer,
-    is_premium=fields.Boolean,
     is_character=fields.Boolean,
-    location_str=fields.String(attribute=lambda x: str(x)),
 )
 
 item_fields = dict(
     name=fields.String,
-    type=fields.String,
+    type_=fields.String,
     x=fields.Integer(default=None),
     y=fields.Integer(default=None),
     w=fields.Integer,

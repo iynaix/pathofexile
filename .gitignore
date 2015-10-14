@@ -1,11 +1,14 @@
 env/*
 data/*
+elm-stuff/*
 constants/*
 node_modules/*
 images/*
 .scrapy/*
 __pycache__/*
+
 *.ipynb*
+static/js/ItemList.js
 main.json
 *.pickle
 *.pyc

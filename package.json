@@ -1,0 +1,25 @@
+{
+  "name": "pathofexile",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "gulp": "^3.9.0",
+    "gulp-elm": "^0.2.0",
+    "jspm": "^0.16.11"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/iynaix/pathofexile.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/iynaix/pathofexile/issues"
+  },
+  "homepage": "https://github.com/iynaix/pathofexile#readme"
+}

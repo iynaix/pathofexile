@@ -117,14 +117,6 @@ class LowModsView(View):
             Location.page_no,
         ).filter(
             Modifier.is_implicit == false(),
-            # keep the 6 socket items
-            # Item.num_sockets != 6,
-            # item types we are not interested in
-            # and_(
-            #     not_(Item.type.like('%Quiver%')),
-            #     not_(Item.type.like('%Belt%')),
-            #     not_(Item.type.like('%Sash%')),
-            # ),
             # modifiers that we aren't interested in
             and_(
                 not_(Modifier.normalized.like('%Light Radius%')),
@@ -135,7 +127,7 @@ class LowModsView(View):
             *in_page_group("rare")
         ).having(
             db.func.count(Modifier.id) <= 4
-        ).order_by(Location.page_no, Item.type)
+        ).order_by(Location.page_no, Item.type_)
 
         # items = []
         # for item, _ in low_attr_items:
@@ -219,7 +211,7 @@ class AdvancedSearchView(MethodView):
         return [Item.name.ilike('%%%s%%' % val)]
 
     def handle_item_type(self, val):
-        return [Item.type.ilike('%%%s%%' % val)]
+        return [Item.type_.ilike('%%%s%%' % val)]
 
     def handle_item_type_select(self, val):
         #  if slug is not None:
@@ -229,13 +221,13 @@ class AdvancedSearchView(MethodView):
         #      else:
         #          item_types = getattr(constants, slug.upper()).keys()
         #      items = items.filter(
-        #          Item.type.in_(item_types)
+        #          Item.type_.in_(item_types)
         #      )
         pass
 
     def handle_item_title(self, val):
         return [Item.name.ilike('%%%s%%' % val) |
-                Item.type.ilike('%%%s%%' % val)]
+                Item.type_.ilike('%%%s%%' % val)]
 
     def handle_is_chromatic(self, val):
         return [Item.socket_str.op('~')(CHROMATIC_RE)]
@@ -342,7 +334,7 @@ class LevelsView(View):
             else:
                 item_types = list(getattr(constants, slug.upper()).keys())
             items = items.filter(
-                Item.type.in_(item_types)
+                Item.type_.in_(item_types)
             )
 
         return render_template('levels.html',
@@ -417,7 +409,7 @@ class StatsView(View):
             for p in item.properties:
                 if p.name.startswith("Stack"):
                     # get the size of the stack
-                    currency_stats[item.type] += int(p.value.split("/")[0])
+                    currency_stats[item.type_] += int(p.value.split("/")[0])
                     break
 
         # handle shards and fragments
@@ -484,7 +476,7 @@ class StatsView(View):
 
         gems = Item.query.filter(Item.rarity == "gem").all()
         return {
-            "all_gems": Counter(g.type for g in gems).most_common()
+            "all_gems": Counter(g.type_ for g in gems).most_common()
         }
 
     def dispatch_request(self):

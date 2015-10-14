@@ -6,24 +6,20 @@
 
 {% block angular_controller %}ng-controller="BrowseCtrl as vm"{% endblock angular_controller %}
 
-{% block body %}
+{% block body1 %}
     <h3>{{ title }}</h3><br>
 
     <ul class="list-group item_listing">
         <li class="list-group-item" ng-repeat="item in vm.items">
             <h4 x-poe-item-title item="item"></h4>
-            <img ng-src="[[ item.image_url ]]" alt="[[ item.type ]]">
-
-            <h4>
-                <a href="/browse/[[ item.location.name|lowercase ]]/">[[ item.location.location_str ]]</a>
-            </h4>
+            <img ng-src="[[ item.image_url ]]" alt="[[ item.type_ ]]">
 
             {# TODO: socketed items
             {% if item.socketed_items %}
                 <h5>Socketed Items:</h5>
                 <p>
                     {% for socketed_item in item.socketed_items %}
-                        <span class="gem">{{ socketed_item.type }}</span></br>
+                        <span class="gem">{{ socketed_item.type_ }}</span></br>
                     {% endfor %}
                 </p>
             {% endif %}
@@ -51,5 +47,16 @@
                 </span><br ng-repeat-end/>
             </div>
         </li>
+{% endblock body1 %}
 
+{% block body %}
+    <div>
+    </div>
 {% endblock body %}
+
+{% block extrajs %}
+    <script type="text/javascript" src="/static/js/ItemList.js"></script>
+    <script type="text/javascript">
+        Elm.embed(Elm.ItemList, document.getElementById('main_content'));
+    </script>
+{% endblock extrajs %}

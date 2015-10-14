@@ -64,7 +64,7 @@ angular.module('poe_app').directive('poeItemTitle', ['socketsFilter', function(s
                 <span ng-if="item.name" ng-class="item|item_name_class">[[ item.name ]]</span>
                 <span ng-if="sockets && item.socket_str" style="margin-left: 1em;" ng-bind-html="item.socket_str|sockets"></span>
                 <br/>
-                <span ng-class="{magic: item.rarity==='magic'}">[[ item.type ]]</span>
+                <span ng-class="{magic: item.rarity==='magic'}">[[ item.type_ ]]</span>
                 <span ng-if="sockets && item.socket_str && !item.name" style="margin-left: 1em;" ng-bind-html="item.socket_str|sockets"></span>
             </h4>`
     };
