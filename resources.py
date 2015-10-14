@@ -21,8 +21,6 @@ modifier_fields = dict(
 location_fields = dict(
     id=fields.Integer,
     name=fields.String,
-    page_no=fields.Integer,
-    is_premium=fields.Boolean,
     is_character=fields.Boolean,
 )
 
