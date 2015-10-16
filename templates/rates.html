@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+
+{% block title %}Rate Converter{% endblock title %}
+
+{% block extrajs %}
+    <script type="text/javascript" src="/static/js/Rates.js"></script>
+    <script type="text/javascript">
+        Elm.embed(Elm.Rates, document.getElementById('main_content'));
+    </script>
+{% endblock extrajs %}

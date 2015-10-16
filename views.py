@@ -280,6 +280,14 @@ app.add_url_rule('/advanced_search/',
                  view_func=AdvancedSearchView.as_view('adv_search'))
 
 
+class RatesView(MethodView):
+    """allows for a more fine grained search of items"""
+    def get(self):
+        return render_template('rates.html')
+
+app.add_url_rule('/rates/', view_func=RatesView.as_view('rates'))
+
+
 @app.route('/browse/<slug>/')
 def browse(slug):
     """renders all the details of a location"""
@@ -291,8 +299,7 @@ def browse(slug):
     ).all()
 
     return render_template(
-        # 'list.html',
-        'list_ng.html',
+        'list.html',
         items=items,
         title=str(loc),
         item_renderer="item_list",
