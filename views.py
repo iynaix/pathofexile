@@ -285,6 +285,9 @@ class RatesView(MethodView):
     def get(self):
         return render_template('rates.html')
 
+    def post(self):
+        return render_template('rates.html')
+
 app.add_url_rule('/rates/', view_func=RatesView.as_view('rates'))
 
 

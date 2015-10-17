@@ -5,13 +5,13 @@ import Html exposing (..)
 import Html.Events exposing (..)
 import Html.Attributes exposing (..)
 import Html.Shorthand exposing (..)
-import Json.Decode as Json exposing ((:=))
 
 import Task exposing (..)
 
 import Char
 import String
 import Http
+import Json.Decode as Json exposing ((:=))
 
 
 -- GENERAL UTILS

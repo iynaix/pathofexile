@@ -6385,458 +6385,6 @@ Elm.Http.make = function (_elm) {
                       ,RawNetworkError: RawNetworkError};
    return _elm.Http.values;
 };
-Elm.Item = Elm.Item || {};
-Elm.Item.make = function (_elm) {
-   "use strict";
-   _elm.Item = _elm.Item || {};
-   if (_elm.Item.values)
-   return _elm.Item.values;
-   var _op = {},
-   _N = Elm.Native,
-   _U = _N.Utils.make(_elm),
-   _L = _N.List.make(_elm),
-   $moduleName = "Item",
-   $Basics = Elm.Basics.make(_elm),
-   $Char = Elm.Char.make(_elm),
-   $Html = Elm.Html.make(_elm),
-   $Html$Attributes = Elm.Html.Attributes.make(_elm),
-   $Html$Shorthand = Elm.Html.Shorthand.make(_elm),
-   $Http = Elm.Http.make(_elm),
-   $Json$Decode = Elm.Json.Decode.make(_elm),
-   $List = Elm.List.make(_elm),
-   $Maybe = Elm.Maybe.make(_elm),
-   $Result = Elm.Result.make(_elm),
-   $Signal = Elm.Signal.make(_elm),
-   $String = Elm.String.make(_elm),
-   $Task = Elm.Task.make(_elm);
-   var itemImage = function (item) {
-      return A2($Html.img,
-      _L.fromArray([$Html$Attributes.src(item.image_url)
-                   ,$Html$Attributes.alt(item.type_)]),
-      _L.fromArray([]));
-   };
-   var itemMods = function (mods) {
-      return function () {
-         var itemMod = function (mod) {
-            return _L.fromArray([A2($Html.span,
-                                _L.fromArray([$Html$Attributes.$class("magic")]),
-                                _L.fromArray([$Html.text(mod.original)]))
-                                ,$Html$Shorthand.br$]);
-         };
-         return A2($List.concatMap,
-         itemMod,
-         mods);
-      }();
-   };
-   var itemProps = function (props) {
-      return function () {
-         var propText = function (prop) {
-            return _U.eq(prop.value,
-            "") ? prop.name : A2($Basics._op["++"],
-            prop.name,
-            A2($Basics._op["++"],
-            ": ",
-            prop.value));
-         };
-         var itemProp = function (prop) {
-            return _L.fromArray([$Html$Shorthand.span_(_L.fromArray([$Html.text(propText(prop))]))
-                                ,$Html$Shorthand.br$]);
-         };
-         return A2($List.concatMap,
-         itemProp,
-         props);
-      }();
-   };
-   var itemReqs = function (reqs) {
-      return function () {
-         var reqClass = function (req) {
-            return $String.toLower($String.left(3)(req.name));
-         };
-         var itemReq = function (req) {
-            return A2($Html.span,
-            _L.fromArray([$Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
-                                                               ,_0: "margin-right"
-                                                               ,_1: "0.25em"}]))
-                         ,$Html$Attributes.$class(reqClass(req))]),
-            _L.fromArray([$Html.text(A2($Basics._op["++"],
-            req.name,
-            A2($Basics._op["++"],
-            ": ",
-            $Basics.toString(req.value))))]));
-         };
-         return A2($List.map,
-         itemReq,
-         reqs);
-      }();
-   };
-   var rarityClass = function (rarity) {
-      return function () {
-         switch (rarity)
-         {case "gem": return "gem";
-            case "magic": return "magic";
-            case "quest": return "quest";
-            case "rare": return "rare";
-            case "unique": return "unique";}
-         return "normal";
-      }();
-   };
-   var raritySpan = F2(function (rarity,
-   txt) {
-      return function () {
-         switch (txt)
-         {case "":
-            return _L.fromArray([]);}
-         return _L.fromArray([A2($Html.span,
-         _L.fromArray([$Html$Attributes.$class(rarityClass(rarity))]),
-         _L.fromArray([$Html.text(txt)]))]);
-      }();
-   });
-   var addHr = function (arr) {
-      return function () {
-         switch (arr.ctor)
-         {case "[]":
-            return _L.fromArray([]);}
-         return A2($List.append,
-         arr,
-         _L.fromArray([$Html$Shorthand.hr_]));
-      }();
-   };
-   var itemInfo = function (item) {
-      return function () {
-         var _v3 = item.is_identified;
-         switch (_v3)
-         {case false: return A2($Html.p,
-              _L.fromArray([$Html$Attributes.$class("unindentified")]),
-              _L.fromArray([$Html.text("Unidentified")]));
-            case true: return A2($Html.div,
-              _L.fromArray([$Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
-                                                                 ,_0: "margin-top"
-                                                                 ,_1: "0.5em"}]))]),
-              $List.concat(_L.fromArray([addHr(itemReqs(item.requirements))
-                                        ,addHr(itemProps(item.properties))
-                                        ,addHr(itemMods(item.implicit_mods))
-                                        ,itemMods(item.explicit_mods)])));}
-         _U.badCase($moduleName,
-         "between lines 228 and 241");
-      }();
-   };
-   var nbsp = $Html.text($String.fromChar($Char.fromCode(160)));
-   var sockets = function (socket_str) {
-      return function () {
-         var socket = function (c) {
-            return function () {
-               switch (c + "")
-               {case "B": return A2($Html.span,
-                    _L.fromArray([$Html$Attributes.$class("label label-primary")]),
-                    _L.fromArray([nbsp]));
-                  case "G": return A2($Html.span,
-                    _L.fromArray([$Html$Attributes.$class("label label-success")]),
-                    _L.fromArray([nbsp]));
-                  case "R": return A2($Html.span,
-                    _L.fromArray([$Html$Attributes.$class("label label-danger")]),
-                    _L.fromArray([nbsp]));}
-               return nbsp;
-            }();
-         };
-         return function () {
-            switch (socket_str)
-            {case "":
-               return _L.fromArray([]);}
-            return _L.fromArray([A2($Html.span,
-            _L.fromArray([$Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
-                                                               ,_0: "margin-left"
-                                                               ,_1: "2em"}]))]),
-            $List.map(socket)($String.toList(socket_str)))]);
-         }();
-      }();
-   };
-   var itemHeader = function (item) {
-      return A2($Basics._op["++"],
-      A2(raritySpan,
-      item.rarity,
-      item.name),
-      A2($Basics._op["++"],
-      _U.eq(item.name,
-      "") ? _L.fromArray([]) : _L.fromArray([$Html$Shorthand.br$]),
-      A2($Basics._op["++"],
-      A2(raritySpan,
-      item.rarity,
-      item.type_),
-      sockets(item.socket_str))));
-   };
-   var locStr = function (item) {
-      return function () {
-         var _v6 = item.location.is_character;
-         switch (_v6)
-         {case false:
-            return A2($Basics._op["++"],
-              "Stash: ",
-              A2($Basics._op["++"],
-              item.location.name,
-              $Basics.toString({ctor: "_Tuple2"
-                               ,_0: A2($Maybe.withDefault,
-                               0,
-                               item.x)
-                               ,_1: A2($Maybe.withDefault,
-                               0,
-                               item.y)})));
-            case true:
-            return _U.eq(item.char_location,
-              $Maybe.Nothing) ? item.location.name : A2($Basics._op["++"],
-              item.location.name,
-              A2($Basics._op["++"],
-              ": ",
-              A2($Maybe.withDefault,
-              "",
-              item.char_location)));}
-         _U.badCase($moduleName,
-         "between lines 95 and 102");
-      }();
-   };
-   var Item = function (a) {
-      return function (b) {
-         return function (c) {
-            return function (d) {
-               return function (e) {
-                  return function (f) {
-                     return function (g) {
-                        return function (h) {
-                           return function (i) {
-                              return function (j) {
-                                 return function (k) {
-                                    return function (l) {
-                                       return function (m) {
-                                          return function (n) {
-                                             return function (o) {
-                                                return function (p) {
-                                                   return function (q) {
-                                                      return function (r) {
-                                                         return function (s) {
-                                                            return function (t) {
-                                                               return {_: {}
-                                                                      ,char_location: l
-                                                                      ,explicit_mods: s
-                                                                      ,h: f
-                                                                      ,image_url: h
-                                                                      ,implicit_mods: r
-                                                                      ,is_corrupted: m
-                                                                      ,is_deleted: n
-                                                                      ,is_identified: k
-                                                                      ,league: o
-                                                                      ,location: t
-                                                                      ,name: a
-                                                                      ,num_sockets: i
-                                                                      ,properties: q
-                                                                      ,rarity: g
-                                                                      ,requirements: p
-                                                                      ,socket_str: j
-                                                                      ,type_: b
-                                                                      ,w: e
-                                                                      ,x: c
-                                                                      ,y: d};
-                                                            };
-                                                         };
-                                                      };
-                                                   };
-                                                };
-                                             };
-                                          };
-                                       };
-                                    };
-                                 };
-                              };
-                           };
-                        };
-                     };
-                  };
-               };
-            };
-         };
-      };
-   };
-   var Location = F3(function (a,
-   b,
-   c) {
-      return {_: {}
-             ,id: a
-             ,is_character: c
-             ,name: b};
-   });
-   var decodeLocation = A4($Json$Decode.object3,
-   Location,
-   A2($Json$Decode._op[":="],
-   "id",
-   $Json$Decode.$int),
-   A2($Json$Decode._op[":="],
-   "name",
-   $Json$Decode.string),
-   A2($Json$Decode._op[":="],
-   "is_character",
-   $Json$Decode.bool));
-   var Modifier = F2(function (a,
-   b) {
-      return {_: {}
-             ,is_implicit: b
-             ,original: a};
-   });
-   var decodeModifier = A3($Json$Decode.object2,
-   Modifier,
-   A2($Json$Decode._op[":="],
-   "original",
-   $Json$Decode.string),
-   A2($Json$Decode._op[":="],
-   "is_implicit",
-   $Json$Decode.bool));
-   var Property = F2(function (a,
-   b) {
-      return {_: {}
-             ,name: a
-             ,value: b};
-   });
-   var decodeProperty = A3($Json$Decode.object2,
-   Property,
-   A2($Json$Decode._op[":="],
-   "name",
-   $Json$Decode.string),
-   A2($Json$Decode._op[":="],
-   "value",
-   $Json$Decode.string));
-   var Requirement = F2(function (a,
-   b) {
-      return {_: {}
-             ,name: a
-             ,value: b};
-   });
-   var decodeRequirement = A3($Json$Decode.object2,
-   Requirement,
-   A2($Json$Decode._op[":="],
-   "name",
-   $Json$Decode.string),
-   A2($Json$Decode._op[":="],
-   "value",
-   $Json$Decode.$int));
-   var apply = F2(function (func,
-   value) {
-      return A3($Json$Decode.object2,
-      F2(function (x,y) {
-         return x(y);
-      }),
-      func,
-      value);
-   });
-   var decodeItem = A2(apply,
-   A2(apply,
-   A2(apply,
-   A2(apply,
-   A2(apply,
-   A2(apply,
-   A2(apply,
-   A2(apply,
-   A2(apply,
-   A2(apply,
-   A2(apply,
-   A2(apply,
-   A2(apply,
-   A2(apply,
-   A2(apply,
-   A2(apply,
-   A2(apply,
-   A2(apply,
-   A2(apply,
-   A2($Json$Decode.map,
-   Item,
-   A2($Json$Decode._op[":="],
-   "name",
-   $Json$Decode.string)),
-   A2($Json$Decode._op[":="],
-   "type_",
-   $Json$Decode.string)),
-   A2($Json$Decode._op[":="],
-   "x",
-   $Json$Decode.maybe($Json$Decode.$int))),
-   A2($Json$Decode._op[":="],
-   "y",
-   $Json$Decode.maybe($Json$Decode.$int))),
-   A2($Json$Decode._op[":="],
-   "w",
-   $Json$Decode.$int)),
-   A2($Json$Decode._op[":="],
-   "h",
-   $Json$Decode.$int)),
-   A2($Json$Decode._op[":="],
-   "rarity",
-   $Json$Decode.string)),
-   A2($Json$Decode._op[":="],
-   "image_url",
-   $Json$Decode.string)),
-   A2($Json$Decode._op[":="],
-   "num_sockets",
-   $Json$Decode.$int)),
-   A2($Json$Decode._op[":="],
-   "socket_str",
-   $Json$Decode.string)),
-   A2($Json$Decode._op[":="],
-   "is_identified",
-   $Json$Decode.bool)),
-   A2($Json$Decode._op[":="],
-   "char_location",
-   $Json$Decode.maybe($Json$Decode.string))),
-   A2($Json$Decode._op[":="],
-   "is_corrupted",
-   $Json$Decode.bool)),
-   A2($Json$Decode._op[":="],
-   "is_deleted",
-   $Json$Decode.bool)),
-   A2($Json$Decode._op[":="],
-   "league",
-   $Json$Decode.string)),
-   A2($Json$Decode._op[":="],
-   "requirements",
-   $Json$Decode.list(decodeRequirement))),
-   A2($Json$Decode._op[":="],
-   "properties",
-   $Json$Decode.list(decodeProperty))),
-   A2($Json$Decode._op[":="],
-   "implicit_mods",
-   $Json$Decode.list(decodeModifier))),
-   A2($Json$Decode._op[":="],
-   "explicit_mods",
-   $Json$Decode.list(decodeModifier))),
-   A2($Json$Decode._op[":="],
-   "location",
-   decodeLocation));
-   var fetchItems = function (url) {
-      return A2($Http.get,
-      $Json$Decode.list(decodeItem),
-      url);
-   };
-   _elm.Item.values = {_op: _op
-                      ,apply: apply
-                      ,Requirement: Requirement
-                      ,Property: Property
-                      ,Modifier: Modifier
-                      ,Location: Location
-                      ,Item: Item
-                      ,locStr: locStr
-                      ,nbsp: nbsp
-                      ,addHr: addHr
-                      ,rarityClass: rarityClass
-                      ,raritySpan: raritySpan
-                      ,sockets: sockets
-                      ,itemHeader: itemHeader
-                      ,itemReqs: itemReqs
-                      ,itemProps: itemProps
-                      ,itemMods: itemMods
-                      ,itemImage: itemImage
-                      ,itemInfo: itemInfo
-                      ,decodeRequirement: decodeRequirement
-                      ,decodeProperty: decodeProperty
-                      ,decodeModifier: decodeModifier
-                      ,decodeLocation: decodeLocation
-                      ,decodeItem: decodeItem
-                      ,fetchItems: fetchItems};
-   return _elm.Item.values;
-};
 Elm.Json = Elm.Json || {};
 Elm.Json.Decode = Elm.Json.Decode || {};
 Elm.Json.Decode.make = function (_elm) {
@@ -15562,54 +15110,104 @@ Elm.Rates.make = function (_elm) {
    $Effects = Elm.Effects.make(_elm),
    $Html = Elm.Html.make(_elm),
    $Html$Attributes = Elm.Html.Attributes.make(_elm),
-   $Item = Elm.Item.make(_elm),
+   $Html$Events = Elm.Html.Events.make(_elm),
+   $Http = Elm.Http.make(_elm),
+   $Json$Decode = Elm.Json.Decode.make(_elm),
    $List = Elm.List.make(_elm),
    $Maybe = Elm.Maybe.make(_elm),
    $Result = Elm.Result.make(_elm),
    $Signal = Elm.Signal.make(_elm),
    $StartApp = Elm.StartApp.make(_elm),
    $Task = Elm.Task.make(_elm);
-   var ratesHtml = A2($Html.form,
-   _L.fromArray([]),
-   _L.fromArray([A2($Html.div,
-   _L.fromArray([$Html$Attributes.$class("form-group")]),
-   _L.fromArray([A2($Html.input,
-   _L.fromArray([$Html$Attributes.type$("email")
-                ,$Html$Attributes.$class("form-control input-lg text-center")
-                ,$Html$Attributes.placeholder("e.g. wtb 500 alts 1 ex")]),
-   _L.fromArray([]))]))]));
+   var UpdateModel = function (a) {
+      return {ctor: "UpdateModel"
+             ,_0: a};
+   };
+   var FetchResult = function (a) {
+      return {ctor: "FetchResult"
+             ,_0: a};
+   };
+   var ratesHtml = F2(function (address,
+   model) {
+      return A2($Html.form,
+      _L.fromArray([]),
+      _L.fromArray([A2($Html.div,
+      _L.fromArray([$Html$Attributes.$class("form-group")]),
+      _L.fromArray([A2($Html.input,
+      _L.fromArray([$Html$Attributes.type$("text")
+                   ,$Html$Attributes.$class("form-control input-lg text-center")
+                   ,$Html$Attributes.placeholder("e.g. wtb 500 alts 1 ex")
+                   ,A3($Html$Events.on,
+                   "change",
+                   $Html$Events.targetValue,
+                   function (txt) {
+                      return A2($Signal.message,
+                      address,
+                      FetchResult(txt));
+                   })]),
+      _L.fromArray([]))]))]));
+   });
    var view = F2(function (address,
    model) {
-      return ratesHtml;
+      return A2(ratesHtml,
+      address,
+      model);
    });
+   var init = {ctor: "_Tuple2"
+              ,_0: {_: {}
+                   ,query: ""
+                   ,result: {_: {}
+                            ,poeex: 0
+                            ,poerates: 0}}
+              ,_1: $Effects.none};
+   var Model = F2(function (a,b) {
+      return {_: {}
+             ,query: b
+             ,result: a};
+   });
+   var Result = F2(function (a,b) {
+      return {_: {}
+             ,poeex: b
+             ,poerates: a};
+   });
+   var decodeResult = A3($Json$Decode.object2,
+   Result,
+   A2($Json$Decode._op[":="],
+   "poerates",
+   $Json$Decode.$float),
+   A2($Json$Decode._op[":="],
+   "poeex",
+   $Json$Decode.$float));
+   var fetchResp = function (query) {
+      return $Effects.task($Task.map(UpdateModel)($Task.toMaybe(A2($Http.get,
+      decodeResult,
+      "."))));
+   };
    var update = F2(function (action,
    model) {
       return function () {
          switch (action.ctor)
-         {case "NewItems":
+         {case "FetchResult":
             return {ctor: "_Tuple2"
-                   ,_0: {_: {}
-                        ,items: A2($Maybe.withDefault,
-                        _L.fromArray([]),
-                        action._0)}
-                   ,_1: $Effects.none};}
+                   ,_0: model
+                   ,_1: fetchResp(action._0)};
+            case "UpdateModel":
+            return function () {
+                 switch (action._0.ctor)
+                 {case "Just":
+                    return {ctor: "_Tuple2"
+                           ,_0: _U.replace([["result"
+                                            ,action._0._0]],
+                           model)
+                           ,_1: $Effects.none};
+                    case "Nothing": return init;}
+                 _U.badCase($moduleName,
+                 "between lines 51 and 55");
+              }();}
          _U.badCase($moduleName,
-         "between lines 44 and 48");
+         "between lines 47 and 55");
       }();
    });
-   var NewItems = function (a) {
-      return {ctor: "NewItems"
-             ,_0: a};
-   };
-   var init = function () {
-      var fetchPage = function (url) {
-         return $Effects.task($Task.map(NewItems)($Task.toMaybe($Item.fetchItems(url))));
-      };
-      return {ctor: "_Tuple2"
-             ,_0: {_: {}
-                  ,items: _L.fromArray([])}
-             ,_1: fetchPage("/api/locations/rare")};
-   }();
    var app = $StartApp.start({_: {}
                              ,init: init
                              ,inputs: _L.fromArray([])
@@ -15618,16 +15216,17 @@ Elm.Rates.make = function (_elm) {
    var main = app.html;
    var tasks = Elm.Native.Task.make(_elm).performSignal("tasks",
    app.tasks);
-   var Model = function (a) {
-      return {_: {},items: a};
-   };
    _elm.Rates.values = {_op: _op
+                       ,Result: Result
                        ,Model: Model
                        ,init: init
-                       ,NewItems: NewItems
+                       ,FetchResult: FetchResult
+                       ,UpdateModel: UpdateModel
                        ,update: update
                        ,ratesHtml: ratesHtml
                        ,view: view
+                       ,decodeResult: decodeResult
+                       ,fetchResp: fetchResp
                        ,app: app
                        ,main: main};
    return _elm.Rates.values;
