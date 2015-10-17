@@ -186,7 +186,7 @@ def test_items():
     ).all()
 
     return render_template(
-        'list.html',
+        'list_ng.html',
         title="Item Resists",
         items=[item for item, cnt in items],
         item_renderer="item_table",

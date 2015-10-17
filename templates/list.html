@@ -3,9 +3,9 @@
 
 {% block title %}{{ title }}{% endblock title %}
 
-{% block extrajs %}
-    <script type="text/javascript" src="/static/js/ItemList.js"></script>
-    <script type="text/javascript">
-        Elm.embed(Elm.ItemList, document.getElementById('main_content'));
-    </script>
-{% endblock extrajs %}
+{% block body %}
+    <h3>{{ title }}</h3><br>
+
+    {# crazy indirection for calling the required macro dynamically #}
+    {{ item_renderer|macro(items) }}
+{% endblock body %}

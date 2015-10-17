@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% from 'macros.html' import item_list, item_table %}
+
+{% block title %}{{ title }}{% endblock title %}
+
+{% block extrajs %}
+    <script type="text/javascript" src="/static/js/ItemList.js"></script>
+    <script type="text/javascript">
+        Elm.embed(Elm.ItemList, document.getElementById('main_content'));
+    </script>
+{% endblock extrajs %}
