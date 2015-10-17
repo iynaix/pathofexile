@@ -57,12 +57,46 @@ update action model =
 
 -- VIEW
 
+-- 2 decimal places
+toDec2 : Float -> String
+toDec2 f =
+    (f * 100 |> round |> toFloat) / 100 |> toString
+
+
+resultsHtml : Result -> List Html
+resultsHtml res =
+    let
+        profitLoss pct =
+            if pct < 0 then
+                [ span [class "label label-danger"] [ text "LOSS" ],
+                  span [class "text-danger", style [("margin-left", "0.5em")] ] [text <| toDec2 (abs pct) ++ "%"]
+                ]
+            else
+                [ span [class "label label-success"] [ text "PROFIT" ],
+                  span [class "text-success", style [("margin-left", "0.5em")] ] [text <| toDec2 (abs pct) ++ "%"]
+                ]
+    in
+        if (res.poerates == 0 && res.poeex == 0) then
+            []
+        else
+            [ div
+                [ class "text-center" ]
+                [ h3_ "PoE Rates",
+                  h3 [] (profitLoss res.poerates),
+                  h3_ "PoE Ex",
+                  h3 [] (profitLoss res.poeex)
+                ]
+            ]
+
+
 
 ratesHtml : Signal.Address Action -> Model -> Html
 ratesHtml address model =
     Html.form
-        []
-        [ div
+        [ class "text-center" ]
+        [ h1_ "PoE Exchange Rates",
+          br',
+          div
             [ class "form-group" ]
             [ input
                 [ type' "text",
@@ -71,7 +105,10 @@ ratesHtml address model =
                   on "change" targetValue (\txt -> Signal.message address (FetchResult txt))
                 ]
                 []
-            ]
+            ],
+          div
+            [ class "container" ]
+            ( resultsHtml model.result )
         ]
 
 
@@ -91,9 +128,14 @@ decodeResult =
         ("poeex" := Json.float)
 
 
+constructUrl : String -> String
+constructUrl query =
+    Http.url "." <| [("q", query)]
+
+
 fetchResp: String -> Effects Action
 fetchResp query =
-    Http.get decodeResult "."
+    Http.get decodeResult (constructUrl query)
         |> Task.toMaybe
         |> Task.map UpdateModel
         |> Effects.task

@@ -1,7 +1,7 @@
 from collections import defaultdict, Counter
 import itertools
 
-from flask import request, render_template, send_from_directory
+from flask import request, render_template, send_from_directory, jsonify
 from flask.views import View, MethodView
 from jinja2 import contextfilter
 from jinja2.filters import do_mark_safe
@@ -280,13 +280,35 @@ app.add_url_rule('/advanced_search/',
                  view_func=AdvancedSearchView.as_view('adv_search'))
 
 
-class RatesView(MethodView):
+class RatesView(View):
     """allows for a more fine grained search of items"""
-    def get(self):
-        return render_template('rates.html')
+    def dispatch_request(self):
+        rates_str = request.args.get("q", None)
+        if rates_str is None:
+            return render_template('rates.html')
+        else:
+            try:
+                return self.parse(rates_str)
+            except LookupError as e:
+                return e.message, 500
 
-    def post(self):
-        return render_template('rates.html')
+    def parse(self, rates_str):
+        from rates import parse_rate_str, PoeRatesProvider, PoeExProvider
+
+        d = parse_rate_str(rates_str)
+
+        given_rate = d["rate"]
+
+        ret = {}
+        providers = (PoeRatesProvider(), PoeExProvider())
+        for provider in providers:
+            actual_rate = provider.rate(d["from_orb"], d["to_orb"])
+
+            # get the percentage profit or loss
+            ret[str(provider).lower()] = (given_rate - actual_rate) / \
+                                            actual_rate * 100
+        return jsonify(**ret)
+
 
 app.add_url_rule('/rates/', view_func=RatesView.as_view('rates'))
 

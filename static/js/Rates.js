@@ -15111,6 +15111,7 @@ Elm.Rates.make = function (_elm) {
    $Html = Elm.Html.make(_elm),
    $Html$Attributes = Elm.Html.Attributes.make(_elm),
    $Html$Events = Elm.Html.Events.make(_elm),
+   $Html$Shorthand = Elm.Html.Shorthand.make(_elm),
    $Http = Elm.Http.make(_elm),
    $Json$Decode = Elm.Json.Decode.make(_elm),
    $List = Elm.List.make(_elm),
@@ -15119,6 +15120,54 @@ Elm.Rates.make = function (_elm) {
    $Signal = Elm.Signal.make(_elm),
    $StartApp = Elm.StartApp.make(_elm),
    $Task = Elm.Task.make(_elm);
+   var constructUrl = function (query) {
+      return $Http.url(".")(_L.fromArray([{ctor: "_Tuple2"
+                                          ,_0: "q"
+                                          ,_1: query}]));
+   };
+   var toDec2 = function (f) {
+      return $Basics.toString($Basics.toFloat($Basics.round(f * 100)) / 100);
+   };
+   var resultsHtml = function (res) {
+      return function () {
+         var profitLoss = function (pct) {
+            return _U.cmp(pct,
+            0) < 0 ? _L.fromArray([A2($Html.span,
+                                  _L.fromArray([$Html$Attributes.$class("label label-danger")]),
+                                  _L.fromArray([$Html.text("LOSS")]))
+                                  ,A2($Html.span,
+                                  _L.fromArray([$Html$Attributes.$class("text-danger")
+                                               ,$Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
+                                                                                     ,_0: "margin-left"
+                                                                                     ,_1: "0.5em"}]))]),
+                                  _L.fromArray([$Html.text(A2($Basics._op["++"],
+                                  toDec2($Basics.abs(pct)),
+                                  "%"))]))]) : _L.fromArray([A2($Html.span,
+                                                            _L.fromArray([$Html$Attributes.$class("label label-success")]),
+                                                            _L.fromArray([$Html.text("PROFIT")]))
+                                                            ,A2($Html.span,
+                                                            _L.fromArray([$Html$Attributes.$class("text-success")
+                                                                         ,$Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
+                                                                                                               ,_0: "margin-left"
+                                                                                                               ,_1: "0.5em"}]))]),
+                                                            _L.fromArray([$Html.text(A2($Basics._op["++"],
+                                                            toDec2($Basics.abs(pct)),
+                                                            "%"))]))]);
+         };
+         return _U.eq(res.poerates,
+         0) && _U.eq(res.poeex,
+         0) ? _L.fromArray([]) : _L.fromArray([A2($Html.div,
+         _L.fromArray([$Html$Attributes.$class("text-center")]),
+         _L.fromArray([$Html$Shorthand.h3_("PoE Rates")
+                      ,A2($Html.h3,
+                      _L.fromArray([]),
+                      profitLoss(res.poerates))
+                      ,$Html$Shorthand.h3_("PoE Ex")
+                      ,A2($Html.h3,
+                      _L.fromArray([]),
+                      profitLoss(res.poeex))]))]);
+      }();
+   };
    var UpdateModel = function (a) {
       return {ctor: "UpdateModel"
              ,_0: a};
@@ -15130,22 +15179,27 @@ Elm.Rates.make = function (_elm) {
    var ratesHtml = F2(function (address,
    model) {
       return A2($Html.form,
-      _L.fromArray([]),
-      _L.fromArray([A2($Html.div,
-      _L.fromArray([$Html$Attributes.$class("form-group")]),
-      _L.fromArray([A2($Html.input,
-      _L.fromArray([$Html$Attributes.type$("text")
-                   ,$Html$Attributes.$class("form-control input-lg text-center")
-                   ,$Html$Attributes.placeholder("e.g. wtb 500 alts 1 ex")
-                   ,A3($Html$Events.on,
-                   "change",
-                   $Html$Events.targetValue,
-                   function (txt) {
-                      return A2($Signal.message,
-                      address,
-                      FetchResult(txt));
-                   })]),
-      _L.fromArray([]))]))]));
+      _L.fromArray([$Html$Attributes.$class("text-center")]),
+      _L.fromArray([$Html$Shorthand.h1_("PoE Exchange Rates")
+                   ,$Html$Shorthand.br$
+                   ,A2($Html.div,
+                   _L.fromArray([$Html$Attributes.$class("form-group")]),
+                   _L.fromArray([A2($Html.input,
+                   _L.fromArray([$Html$Attributes.type$("text")
+                                ,$Html$Attributes.$class("form-control input-lg text-center")
+                                ,$Html$Attributes.placeholder("e.g. wtb 500 alts 1 ex")
+                                ,A3($Html$Events.on,
+                                "change",
+                                $Html$Events.targetValue,
+                                function (txt) {
+                                   return A2($Signal.message,
+                                   address,
+                                   FetchResult(txt));
+                                })]),
+                   _L.fromArray([]))]))
+                   ,A2($Html.div,
+                   _L.fromArray([$Html$Attributes.$class("container")]),
+                   resultsHtml(model.result))]));
    });
    var view = F2(function (address,
    model) {
@@ -15181,7 +15235,7 @@ Elm.Rates.make = function (_elm) {
    var fetchResp = function (query) {
       return $Effects.task($Task.map(UpdateModel)($Task.toMaybe(A2($Http.get,
       decodeResult,
-      "."))));
+      constructUrl(query)))));
    };
    var update = F2(function (action,
    model) {
@@ -15223,9 +15277,12 @@ Elm.Rates.make = function (_elm) {
                        ,FetchResult: FetchResult
                        ,UpdateModel: UpdateModel
                        ,update: update
+                       ,toDec2: toDec2
+                       ,resultsHtml: resultsHtml
                        ,ratesHtml: ratesHtml
                        ,view: view
                        ,decodeResult: decodeResult
+                       ,constructUrl: constructUrl
                        ,fetchResp: fetchResp
                        ,app: app
                        ,main: main};

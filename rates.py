@@ -18,6 +18,9 @@ class RateProvider(object):
 
     def norm_orb(self, s):
         """returns the orb given a fuzzy search string"""
+        # strip plurals
+        s = s.rstrip("s")
+
         # hangle common exceptional abbreviations
         if s == "c":
             return "chaos"
@@ -29,11 +32,11 @@ class RateProvider(object):
         # look for orbs that start with the given input
         res = [c for c in self.columns if c.startswith(s)]
         if not res:
-            raise LookupError("No matches found.")
+            raise LookupError("No matches found for '%s'." % s)
         elif len(res) == 1:
             return res[0]
         else:
-            raise LookupError(">1 orbs found!")
+            raise LookupError(">1 orbs found for '%s'" % s)
 
     def rate(self, from_orb, to_orb):
         """
@@ -147,7 +150,7 @@ if __name__ == "__main__":
     for provider in (PoeRatesProvider(), PoeExProvider()):
         actual_rate = provider.rate(d["from_orb"], d["to_orb"])
 
-        print str(provider).upper()
+        print str(provider).lower()
         print "Actual rate: %s" % actual_rate
         percent = (given_rate - actual_rate) / actual_rate * 100
         if percent < 0:
