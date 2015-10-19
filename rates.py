@@ -26,6 +26,8 @@ class RateProvider(object):
             return "chaos"
         if s == "gcp":
             return "gemcutters prism"
+        if s == "fuse":
+            return "fusing"
         if s.startswith("chis"):
             return "cartographers chisel"
 

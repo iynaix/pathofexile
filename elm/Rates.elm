@@ -124,8 +124,8 @@ view address model =
 decodeResult : Json.Decoder Result
 decodeResult =
     Json.object2 Result
-        ("poerates" := Json.float)
         ("poeex" := Json.float)
+        ("poerates" := Json.float)
 
 
 constructUrl : String -> String
