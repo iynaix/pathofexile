@@ -15227,10 +15227,10 @@ Elm.Rates.make = function (_elm) {
    var decodeResult = A3($Json$Decode.object2,
    Result,
    A2($Json$Decode._op[":="],
-   "poerates",
+   "poeex",
    $Json$Decode.$float),
    A2($Json$Decode._op[":="],
-   "poeex",
+   "poerates",
    $Json$Decode.$float));
    var fetchResp = function (query) {
       return $Effects.task($Task.map(UpdateModel)($Task.toMaybe(A2($Http.get,

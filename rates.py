@@ -26,9 +26,9 @@ class RateProvider(object):
             return "chaos"
         if s == "gcp":
             return "gemcutters prism"
-        if s == "fuse":
+        if s.startswith("fuse"):
             return "fusing"
-        if s.startswith("chis"):
+        if s.startswith("chi"):
             return "cartographers chisel"
 
         # look for orbs that start with the given input
@@ -56,6 +56,7 @@ class RateProvider(object):
         col_no = self.columns.index(to_orb) + 1
         ratio = self.rows[row_no][col_no].replace(" ", "").split(":")
         a, b = [Decimal(n.replace(",", ".")) for n in ratio]
+        print a / b
         return a / b
 
 
@@ -118,7 +119,7 @@ def parse_rate_str(s):
     s = re.sub(r"\s*:\s*", " ", s)
 
     CONV_RE = re.compile(r"""
-        (?P<txn>(wtb|wts))
+        (?P<txn>(wtb|wtt|wts))
         {1}
         (?P<from_rate>{0})
         {1}
@@ -135,7 +136,7 @@ def parse_rate_str(s):
     m["from_rate"] = Decimal(m["from_rate"])
     m["to_rate"] = Decimal(m["to_rate"])
     # wts is the other direction
-    if m["txn"] == "wts":
+    if m["txn"] == "wtb":
         m["from_orb"], m["to_orb"] = m["to_orb"], m["from_orb"]
         m["from_rate"], m["to_rate"] = m["to_rate"], m["from_rate"]
     m["rate"] = m["from_rate"] / m["to_rate"]
@@ -146,9 +147,6 @@ if __name__ == "__main__":
     d = parse_rate_str("wtb 540 alt 1 ex")
 
     given_rate = d["rate"]
-    print "Given rate: %s" % given_rate
-    print
-
     for provider in (PoeRatesProvider(), PoeExProvider()):
         actual_rate = provider.rate(d["from_orb"], d["to_orb"])
 
