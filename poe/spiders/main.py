@@ -3,8 +3,6 @@ import json
 from scrapy import Spider, Request, FormRequest
 from urllib2 import HTTPError
 
-# from poe.items import CurrencyItem
-
 LOGIN_URL = "https://www.pathofexile.com/login"
 CHAR_URL = "https://www.pathofexile.com/character-window/get-characters"
 ITEM_URL = "https://www.pathofexile.com/character-window/get-items"
@@ -23,7 +21,21 @@ class MainSpider(Spider):
     def __init__(self, *args, **kwargs):
         super(MainSpider, self).__init__(*args, **kwargs)
         leagues = kwargs.get("leagues", "All")
-        self.leagues = set([l.strip().title() for l in leagues.split(",")])
+        self.leagues = set(l.strip().title() for l in leagues.split(","))
+
+        # handle the page groups to fetch
+        self.page_groups = set()
+        page_groups = kwargs.get("page_groups", "")
+        if page_groups:
+            self.page_groups = set(g.strip().lower() for g in
+                                    page_groups.split(","))
+
+        # handle the pages
+        self.pages = set()
+        pages = kwargs.get("pages", "")
+        if pages:
+            self.pages = set(p.strip().lower() for p in
+                                pages.split(","))
 
     def valid_league(self, league):
         if "All" in self.leagues:
@@ -65,6 +77,9 @@ class MainSpider(Spider):
         if "error" in data:
             raise HTTPError("Request Throttled")
 
+        # do we need to parse any characters?
+        parse_chars = self.page_groups or self.pages
+
         stash_leagues = set()
         for char in data:
             # no need to scrape
@@ -82,7 +97,10 @@ class MainSpider(Spider):
                 }
             }
 
-            # get items for the user
+            # get items for the user if needed
+            if not parse_chars:
+                continue
+
             yield FormRequest(
                 ITEM_URL,
                 formdata={
@@ -127,7 +145,8 @@ class MainSpider(Spider):
         if "error" in data:
             raise HTTPError("Request Throttled")
 
-        for page_no, tab in enumerate(data["tabs"]):
+        pages = data["tabs"]
+        for page_no, tab in enumerate(pages):
             tab = data["tabs"][page_no]
             tab_name = tab["n"]
 

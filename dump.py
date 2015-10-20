@@ -294,19 +294,29 @@ def read_jsonlines(crawler_name):
 
 
 @click.command()
-@click.option('--leagues', default="all",
+@click.option('--leagues', default="all", type=str,
               help="Leagues(s) to fetch. Use 'all' to fetch all leagues")
 @click.option('--fetch/--no-fetch', default=True,
               help="Performs fetching of data from Path of Exile.")
+@click.option('--page-group', '--page-groups', default="", type=str,
+              help="comma separated list of page groups to fetch")
+@click.option('--page', '--pages', default="", type=str,
+              help="comma separated list of pages to fetch")
 @click.option('--debug/--no-debug', default=False,
               help="Enable scrapy's log for debugging")
-def run(leagues, fetch, debug):
+def run(leagues, fetch, page_groups, pages, debug):
     t = Terminal()
 
     # run the spider
     if fetch:
         click.echo(t.green("FETCHING ITEMS..."))
-        run_scraper("main", debug=debug, leagues=leagues)
+        run_scraper(
+            "main",
+            debug=debug,
+            page_groups=page_groups.strip(),
+            leagues=leagues.strip(),
+        )
+    return
 
     # drop and recreate the database
     click.echo(t.green("WRITING TO DATABASE..."))
