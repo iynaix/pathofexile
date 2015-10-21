@@ -15032,6 +15032,7 @@ Elm.Rates.make = function (_elm) {
    _L = _N.List.make(_elm),
    $moduleName = "Rates",
    $Basics = Elm.Basics.make(_elm),
+   $Dict = Elm.Dict.make(_elm),
    $Effects = Elm.Effects.make(_elm),
    $Html = Elm.Html.make(_elm),
    $Html$Attributes = Elm.Html.Attributes.make(_elm),
@@ -15050,52 +15051,66 @@ Elm.Rates.make = function (_elm) {
                                           ,_0: "q"
                                           ,_1: query}]));
    };
-   var toDec2 = function (f) {
-      return $Basics.toString($Basics.toFloat($Basics.round(f * 100)) / 100);
-   };
-   var resultsHtml = function (res) {
+   var decodeResult = $Json$Decode.dict($Json$Decode.$float);
+   var toFixed = F2(function (num_places,
+   f) {
       return function () {
-         var profitLoss = function (pct) {
-            return _U.cmp(pct,
-            0) < 0 ? _L.fromArray([A2($Html.span,
-                                  _L.fromArray([$Html$Attributes.$class("label label-danger")]),
-                                  _L.fromArray([$Html.text("LOSS")]))
-                                  ,A2($Html.span,
-                                  _L.fromArray([$Html$Attributes.$class("text-danger")
-                                               ,$Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
-                                                                                     ,_0: "margin-left"
-                                                                                     ,_1: "0.5em"}]))]),
-                                  _L.fromArray([$Html.text(A2($Basics._op["++"],
-                                  toDec2($Basics.abs(pct)),
-                                  "%"))]))]) : _L.fromArray([A2($Html.span,
-                                                            _L.fromArray([$Html$Attributes.$class("label label-success")]),
-                                                            _L.fromArray([$Html.text("PROFIT")]))
-                                                            ,A2($Html.span,
-                                                            _L.fromArray([$Html$Attributes.$class("text-success")
-                                                                         ,$Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
-                                                                                                               ,_0: "margin-left"
-                                                                                                               ,_1: "0.5em"}]))]),
-                                                            _L.fromArray([$Html.text(A2($Basics._op["++"],
-                                                            toDec2($Basics.abs(pct)),
-                                                            "%"))]))]);
-         };
-         return _U.eq(res.poerates,
-         0) && _U.eq(res.poeex,
-         0) ? _L.fromArray([]) : _L.fromArray([A2($Html.div,
-         _L.fromArray([$Html$Attributes.$class("text-center")]),
-         _L.fromArray([$Html$Shorthand.h3_("PoE Rates")
-                      ,A2($Html.h3,
-                      _L.fromArray([]),
-                      profitLoss(res.poerates))
-                      ,$Html$Shorthand.h3_("PoE Ex")
-                      ,A2($Html.h3,
-                      _L.fromArray([]),
-                      profitLoss(res.poeex))]))]);
+         var exp = Math.pow(10,
+         num_places);
+         return $Basics.toString($Basics.toFloat($Basics.round(f * exp)) / exp);
       }();
+   });
+   var rateHtml = function (_v0) {
+      return function () {
+         switch (_v0.ctor)
+         {case "_Tuple2":
+            return function () {
+                 var profitLoss = function (pct) {
+                    return _U.cmp(pct,
+                    0) < 0 ? _L.fromArray([A2($Html.span,
+                                          _L.fromArray([$Html$Attributes.$class("label label-danger")]),
+                                          _L.fromArray([$Html.text("LOSS")]))
+                                          ,A2($Html.span,
+                                          _L.fromArray([$Html$Attributes.$class("text-danger")
+                                                       ,$Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
+                                                                                             ,_0: "margin-left"
+                                                                                             ,_1: "0.5em"}]))]),
+                                          _L.fromArray([$Html.text(A2($Basics._op["++"],
+                                          A2(toFixed,2,$Basics.abs(pct)),
+                                          "%"))]))]) : _L.fromArray([A2($Html.span,
+                                                                    _L.fromArray([$Html$Attributes.$class("label label-success")]),
+                                                                    _L.fromArray([$Html.text("PROFIT")]))
+                                                                    ,A2($Html.span,
+                                                                    _L.fromArray([$Html$Attributes.$class("text-success")
+                                                                                 ,$Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
+                                                                                                                       ,_0: "margin-left"
+                                                                                                                       ,_1: "0.5em"}]))]),
+                                                                    _L.fromArray([$Html.text(A2($Basics._op["++"],
+                                                                    A2(toFixed,
+                                                                    2,
+                                                                    $Basics.abs(pct)),
+                                                                    "%"))]))]);
+                 };
+                 return _L.fromArray([$Html$Shorthand.h3_(_v0._0)
+                                     ,A2($Html.h3,
+                                     _L.fromArray([]),
+                                     profitLoss(_v0._1))]);
+              }();}
+         _U.badCase($moduleName,
+         "between lines 69 and 82");
+      }();
+   };
+   var resultsHtml = function (rates) {
+      return $Dict.isEmpty(rates) ? _L.fromArray([]) : $List.concatMap(rateHtml)($Dict.toList(rates));
    };
    var UpdateModel = function (a) {
       return {ctor: "UpdateModel"
              ,_0: a};
+   };
+   var fetchResp = function (query) {
+      return $Effects.task($Task.map(UpdateModel)($Task.toMaybe(A2($Http.get,
+      decodeResult,
+      constructUrl(query)))));
    };
    var FetchResult = function (a) {
       return {ctor: "FetchResult"
@@ -15135,33 +15150,8 @@ Elm.Rates.make = function (_elm) {
    var init = {ctor: "_Tuple2"
               ,_0: {_: {}
                    ,query: ""
-                   ,result: {_: {}
-                            ,poeex: 0
-                            ,poerates: 0}}
+                   ,result: $Dict.empty}
               ,_1: $Effects.none};
-   var Model = F2(function (a,b) {
-      return {_: {}
-             ,query: b
-             ,result: a};
-   });
-   var Result = F2(function (a,b) {
-      return {_: {}
-             ,poeex: b
-             ,poerates: a};
-   });
-   var decodeResult = A3($Json$Decode.object2,
-   Result,
-   A2($Json$Decode._op[":="],
-   "poeex",
-   $Json$Decode.$float),
-   A2($Json$Decode._op[":="],
-   "poerates",
-   $Json$Decode.$float));
-   var fetchResp = function (query) {
-      return $Effects.task($Task.map(UpdateModel)($Task.toMaybe(A2($Http.get,
-      decodeResult,
-      constructUrl(query)))));
-   };
    var update = F2(function (action,
    model) {
       return function () {
@@ -15181,10 +15171,10 @@ Elm.Rates.make = function (_elm) {
                            ,_1: $Effects.none};
                     case "Nothing": return init;}
                  _U.badCase($moduleName,
-                 "between lines 51 and 55");
+                 "between lines 49 and 53");
               }();}
          _U.badCase($moduleName,
-         "between lines 47 and 55");
+         "between lines 45 and 53");
       }();
    });
    var app = $StartApp.start({_: {}
@@ -15195,14 +15185,19 @@ Elm.Rates.make = function (_elm) {
    var main = app.html;
    var tasks = Elm.Native.Task.make(_elm).performSignal("tasks",
    app.tasks);
+   var Model = F2(function (a,b) {
+      return {_: {}
+             ,query: b
+             ,result: a};
+   });
    _elm.Rates.values = {_op: _op
-                       ,Result: Result
                        ,Model: Model
                        ,init: init
                        ,FetchResult: FetchResult
                        ,UpdateModel: UpdateModel
                        ,update: update
-                       ,toDec2: toDec2
+                       ,toFixed: toFixed
+                       ,rateHtml: rateHtml
                        ,resultsHtml: resultsHtml
                        ,ratesHtml: ratesHtml
                        ,view: view

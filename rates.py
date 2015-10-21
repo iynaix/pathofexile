@@ -13,9 +13,6 @@ class RateProvider(object):
         self.rows = list(csv.reader(fp))
         self.columns = [c.lower().replace("'", "") for c in self.column_names]
 
-    def __str__(self):
-        return self.__class__.__name__[:-len("Provider")]
-
     def norm_orb(self, s):
         """returns the orb given a fuzzy search string"""
         # strip plurals
@@ -56,7 +53,6 @@ class RateProvider(object):
         col_no = self.columns.index(to_orb) + 1
         ratio = self.rows[row_no][col_no].replace(" ", "").split(":")
         a, b = [Decimal(n.replace(",", ".")) for n in ratio]
-        print a / b
         return a / b
 
 
@@ -82,6 +78,9 @@ class PoeRatesProvider(RateProvider):
         "Exalted",
     )
 
+    def __str__(self):
+        return "PoE Rates"
+
 
 class PoeExProvider(RateProvider):
     """Rates provider for http://www.poeex.info/"""
@@ -105,6 +104,9 @@ class PoeExProvider(RateProvider):
         "Eternal",
         "Vaal",
     )
+
+    def __str__(self):
+        return "PoE Ex"
 
 
 def parse_rate_str(s):

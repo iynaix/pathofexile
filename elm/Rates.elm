@@ -6,6 +6,7 @@ import Html.Events exposing (..)
 import Html.Attributes exposing (..)
 import Html.Shorthand exposing (..)
 import Task exposing (..)
+import Dict exposing (Dict)
 
 import StartApp
 import Http
@@ -14,20 +15,17 @@ import Json.Decode as Json exposing ((:=))
 
 -- MODEL
 
-type alias Result =
-    { poerates: Float,
-      poeex: Float
-    }
+type alias Rates = Dict String Float
 
 type alias Model =
-    { result: Result,
+    { result: Rates,
       query: String
     }
 
 
 init : (Model, Effects Action)
 init =
-    ( { result = { poerates = 0, poeex = 0 },
+    ( { result = Dict.empty,
         query = ""
         },
         Effects.none
@@ -39,7 +37,7 @@ init =
 
 type Action
     = FetchResult String
-    | UpdateModel (Maybe Result)
+    | UpdateModel (Maybe Rates)
 
 
 update : Action -> Model -> (Model, Effects Action)
@@ -57,37 +55,40 @@ update action model =
 
 -- VIEW
 
--- 2 decimal places
-toDec2 : Float -> String
-toDec2 f =
-    (f * 100 |> round |> toFloat) / 100 |> toString
+
+-- js equivalent
+toFixed : Int -> Float -> String
+toFixed num_places f =
+    let
+        exp = 10 ^ num_places
+    in
+        (f * exp |> round |> toFloat) / exp |> toString
 
 
-resultsHtml : Result -> List Html
-resultsHtml res =
+rateHtml : (String, Float) -> List Html
+rateHtml (name, rate) =
     let
         profitLoss pct =
             if pct < 0 then
                 [ span [class "label label-danger"] [ text "LOSS" ],
-                  span [class "text-danger", style [("margin-left", "0.5em")] ] [text <| toDec2 (abs pct) ++ "%"]
+                  span [class "text-danger", style [("margin-left", "0.5em")] ] [text <| toFixed 2 (abs pct) ++ "%"]
                 ]
             else
                 [ span [class "label label-success"] [ text "PROFIT" ],
-                  span [class "text-success", style [("margin-left", "0.5em")] ] [text <| toDec2 (abs pct) ++ "%"]
+                  span [class "text-success", style [("margin-left", "0.5em")] ] [text <| toFixed 2 (abs pct) ++ "%"]
                 ]
     in
-        if (res.poerates == 0 && res.poeex == 0) then
-            []
-        else
-            [ div
-                [ class "text-center" ]
-                [ h3_ "PoE Rates",
-                  h3 [] (profitLoss res.poerates),
-                  h3_ "PoE Ex",
-                  h3 [] (profitLoss res.poeex)
-                ]
-            ]
+        [ h3_ name,
+          h3 [] (profitLoss rate)
+        ]
 
+
+resultsHtml : Rates -> List Html
+resultsHtml rates =
+    if Dict.isEmpty rates then
+        []
+    else
+        Dict.toList rates |> List.concatMap rateHtml
 
 
 ratesHtml : Signal.Address Action -> Model -> Html
@@ -121,11 +122,12 @@ view address model =
 -- EFFECTS
 
 
-decodeResult : Json.Decoder Result
+decodeResult : Json.Decoder Rates
 decodeResult =
-    Json.object2 Result
-        ("poeex" := Json.float)
-        ("poerates" := Json.float)
+    Json.dict Json.float
+    -- Json.map Rates
+    --     ("poeex" := Json.float)
+    --     ("poerates" := Json.float)
 
 
 constructUrl : String -> String

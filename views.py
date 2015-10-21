@@ -290,7 +290,7 @@ class RatesView(View):
             try:
                 return self.parse(rates_str)
             except LookupError as e:
-                return e.message, 500
+                return jsonify(error=e.message), 500
 
     def parse(self, rates_str):
         from rates import parse_rate_str, PoeRatesProvider, PoeExProvider
@@ -305,8 +305,7 @@ class RatesView(View):
             actual_rate = provider.rate(d["from_orb"], d["to_orb"])
 
             # get the percentage profit or loss
-            ret[str(provider).lower()] = (given_rate - actual_rate) / \
-                                            actual_rate * 100
+            ret[str(provider)] = (given_rate - actual_rate) / actual_rate * 100
         return jsonify(**ret)
 
 
