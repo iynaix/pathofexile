@@ -117,6 +117,30 @@ class PoeExProvider(RateProvider):
         return "PoE Ex"
 
 
+def norm_low_orbs(match):
+    """
+    handles the lower orbs (transmutations and augmentations) which are not in
+    the rates tables, but the vendor rates can be used
+
+    takes a match object from the parsed rate string
+    """
+    if match["from_orb"].startswith("aug"):
+        match["from_orb"] = "alt"
+        match["from_rate"] = match["from_rate"] / 4
+    elif match["from_orb"].startswith("tran"):
+        match["from_orb"] = "alt"
+        match["from_rate"] = match["from_rate"] / 16
+
+    if match["to_orb"].startswith("aug"):
+        match["to_orb"] = "alt"
+        match["to_rate"] = match["to_rate"] / 4
+    elif match["to_orb"].startswith("tran"):
+        match["to_orb"] = "alt"
+        match["to_rate"] = match["to_rate"] / 16
+
+    return match
+
+
 def parse_rate_str(s):
     """
     returns a dict with the following keys: txn, to_orb, from_rate, from_orb,
@@ -143,14 +167,19 @@ def parse_rate_str(s):
     if m is None:
         raise LookupError("Invalid rate string.")
     m = m.groupdict()
-    print "FROM RATE", m["from_rate"]
+
     # the qtys are optional, defaults to 1
     m["from_rate"] = Decimal(m["from_rate"] or 1)
     m["to_rate"] = Decimal(m["to_rate"] or 1)
+
     # wts is the other direction
     if m["txn"] == "wtb":
         m["from_orb"], m["to_orb"] = m["to_orb"], m["from_orb"]
         m["from_rate"], m["to_rate"] = m["to_rate"], m["from_rate"]
+
+    # handle low orbs augmentation and transmutations
+    m = norm_low_orbs(m)
+
     m["rate"] = m["from_rate"] / m["to_rate"]
     return m
 
