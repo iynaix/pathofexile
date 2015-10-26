@@ -6,12 +6,19 @@ from decimal import Decimal
 class RateProvider(object):
     """Base class for a provider of poe exchange rates"""
     csv_filename = ""
-    column_names = []
+    headers = ""
 
     def __init__(self):
         fp = open(self.csv_filename)
         self.rows = list(csv.reader(fp))
-        self.columns = [c.lower().replace("'", "") for c in self.column_names]
+        self.columns = []
+        # normalize the headets
+        for h in self.headers.strip().lower().splitlines():
+            h = h.replace("orb", "").replace("of", "").replace("'", "").strip()
+            self.columns.append(h)
+
+    def __str__(self):
+        raise NotImplementedError
 
     def norm_orb(self, s):
         """returns the orb given a fuzzy search string"""
@@ -25,6 +32,8 @@ class RateProvider(object):
             return "gemcutters prism"
         if s.startswith("fuse"):
             return "fusing"
+        if s.startswith("chrome"):
+            return "chromatic"
         if s.startswith("chi"):
             return "cartographers chisel"
 
@@ -59,24 +68,23 @@ class RateProvider(object):
 class PoeRatesProvider(RateProvider):
     """Rates provider for http://tinyurl.com/poerates/"""
     csv_filename = "poerates.csv"
-    column_names = (
-        "Chromatic",
-        "Alteration",
-        "Jeweller's",
-        "Chance",
-        "Cartographer's Chisel",
-        "Fusing",
-        "Alchemy",
-        "Scouring",
-        "Blessed",
-        "Chaos",
-        "Regret",
-        "Vaal",
-        "Regal",
-        "Gemcutter's Prism",
-        "Divine",
-        "Exalted",
-    )
+    headers = """
+        Chromatic Orb
+        Orb of Alteration
+        Jeweller's Orb
+        Orb of Chance
+        Cartographer's Chisel
+        Orb of Fusing
+        Alchemy Orb
+        Orb of Scouring
+        Blessed Orb
+        Chaos Orb
+        Orb of Regret
+        Vaal Orb
+        Regal Orb
+        Gemcutter's Prism
+        Divine Orb
+    """
 
     def __str__(self):
         return "PoE Rates"
@@ -85,25 +93,25 @@ class PoeRatesProvider(RateProvider):
 class PoeExProvider(RateProvider):
     """Rates provider for http://www.poeex.info/"""
     csv_filename = "poeex.csv"
-    column_names = (
-        "Chromatic",
-        "Alteration",
-        "Jeweller's",
-        "Chance",
-        "Cartographer's Chisel",
-        "Fusing",
-        "Alchemy",
-        "Scouring",
-        "Blessed",
-        "Chaos",
-        "Regret",
-        "Regal",
-        "Gemcutter's Prism",
-        "Divine",
-        "Exalted",
-        "Eternal",
-        "Vaal",
-    )
+    headers = """
+        Chromatic Orb
+        Orb of Alteration
+        Jeweller's Orb
+        Orb of Chance
+        Cartographer's Chisel
+        Orb of Fusing
+        Orb of Alchemy
+        Orb of Scouring
+        Blessed Orb
+        Chaos Orb
+        Orb of Regret
+        Regal Orb
+        Gemcutter's Prism
+        Divine Orb
+        Exalted Orb
+        Eternal Orb
+        Vaal Orb
+    """
 
     def __str__(self):
         return "PoE Ex"
@@ -114,14 +122,14 @@ def parse_rate_str(s):
     returns a dict with the following keys: txn, to_orb, from_rate, from_orb,
     to_rate, rate raises a NotFound exception otherwise
     """
-    DEC_RE = r"\d+(.\d+)?"
+    DEC_RE = r"(\d+(.\d+)?)?"  # qty is optional, defaults to 1
     SPACE_RE = r"[\s:=]*"
     s = s.lower()
     s = s.replace("for", "")
     s = re.sub(r"\s*:\s*", " ", s)
 
     CONV_RE = re.compile(r"""
-        (?P<txn>(wtb|wtt|wts))
+        (?P<txn>(wtb|wtt|wte|wts))
         {1}
         (?P<from_rate>{0})
         {1}
@@ -135,8 +143,10 @@ def parse_rate_str(s):
     if m is None:
         raise LookupError("Invalid rate string.")
     m = m.groupdict()
-    m["from_rate"] = Decimal(m["from_rate"])
-    m["to_rate"] = Decimal(m["to_rate"])
+    print "FROM RATE", m["from_rate"]
+    # the qtys are optional, defaults to 1
+    m["from_rate"] = Decimal(m["from_rate"] or 1)
+    m["to_rate"] = Decimal(m["to_rate"] or 1)
     # wts is the other direction
     if m["txn"] == "wtb":
         m["from_orb"], m["to_orb"] = m["to_orb"], m["from_orb"]

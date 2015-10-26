@@ -1,3 +1,4 @@
+import itertools
 import json
 
 from scrapy import Spider, Request, FormRequest
@@ -8,6 +9,45 @@ CHAR_URL = "https://www.pathofexile.com/character-window/get-characters"
 ITEM_URL = "https://www.pathofexile.com/character-window/get-items"
 STASH_URL = "https://www.pathofexile.com/character-window/get-stash-items"
 PASSIVE_URL = "https://www.pathofexile.com/character-window/get-passive-skills"
+
+STANDARD_TAB = {'b': 54, 'g': 84, 'r': 124}
+
+
+def page_group_delims(tabs):
+    """returns indexes of the tabs that are page group delimiters"""
+    for idx, tab in enumerate(tabs):
+        if tab['colour'] == {'b': 54, 'g': 84, 'r': 124}:
+            continue
+
+        if tab['hidden']:
+            continue
+
+        try:
+            int(tab['n'])  # valid ints are not numbers
+        except ValueError:
+            yield idx
+
+
+def get_pages(tabs, page_groups=None):
+    # no page groups, specified, return everything
+    if page_groups is None:
+        for tab in tabs:
+            if tab["hidden"]:
+                continue
+            yield tab
+
+    group_idxs = list(page_group_delims(tabs))
+    group_idxs.append(None)
+
+    for page_group in page_groups:
+        for start, end in zip(group_idxs, group_idxs[1:]):
+            if tabs[start]["n"].lower() in page_groups:
+                for tab in itertools.islice(tabs, start, end):
+                    if tab["hidden"]:
+                        continue
+                    yield tab
+        else:
+            raise LookupError("Page group '%s' not found." % page_group)
 
 
 class MainSpider(Spider):
@@ -148,6 +188,9 @@ class MainSpider(Spider):
         pages = data["tabs"]
         for page_no, tab in enumerate(pages):
             tab = data["tabs"][page_no]
+            if tab["hidden"]:
+                continue
+
             tab_name = tab["n"]
 
             # see if the name is numeric to determine if premium
@@ -157,7 +200,7 @@ class MainSpider(Spider):
             except ValueError:
                 is_premium = True
             # different color means premium
-            if tab['colour'] != {'b': 54, 'g': 84, 'r': 124}:
+            if tab['colour'] != STANDARD_TAB:
                 is_premium = True
 
             # create the location to be passed on for the individual stash page
