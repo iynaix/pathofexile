@@ -84,6 +84,7 @@ class PoeRatesProvider(RateProvider):
         Regal Orb
         Gemcutter's Prism
         Divine Orb
+        Exalted Orb
     """
 
     def __str__(self):
