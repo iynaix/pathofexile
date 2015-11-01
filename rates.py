@@ -11,6 +11,8 @@ class RateProvider(object):
     def __init__(self):
         fp = open(self.csv_filename)
         self.rows = list(csv.reader(fp))
+        # last row is the iso date the rates were updated
+        self.updated = self.rows.pop()[0]
         self.columns = []
         # normalize the headets
         for h in self.headers.strip().lower().splitlines():
