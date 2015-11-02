@@ -127,20 +127,19 @@ def norm_low_orbs(match):
 
     takes a match object from the parsed rate string
     """
-    if match["from_orb"].startswith("aug"):
-        match["from_orb"] = "alt"
-        match["from_rate"] = match["from_rate"] / 4
-    elif match["from_orb"].startswith("tran"):
-        match["from_orb"] = "alt"
-        match["from_rate"] = match["from_rate"] / 16
+    def _trans_orb(m, prefix, divisor):
+        if m["from_orb"].startswith(prefix):
+            m["from_orb"] = "alt"
+            m["from_rate"] = m["from_rate"] / divisor
+        if m["to_orb"].startswith(prefix):
+            m["to_orb"] = "alt"
+            m["to_rate"] = m["to_rate"] / divisor
+        return m
 
-    if match["to_orb"].startswith("aug"):
-        match["to_orb"] = "alt"
-        match["to_rate"] = match["to_rate"] / 4
-    elif match["to_orb"].startswith("tran"):
-        match["to_orb"] = "alt"
-        match["to_rate"] = match["to_rate"] / 16
-
+    match = _trans_orb(match, "au", 4)  # augmentations
+    match = _trans_orb(match, "t", 4 * 4)  # transmutations
+    match = _trans_orb(match, "p", 4 * 4 * 7)  # portals
+    match = _trans_orb(match, "w", 4 * 4 * 7 * 3)  # wisdoms
     return match
 
 
@@ -185,20 +184,3 @@ def parse_rate_str(s):
 
     m["rate"] = m["from_rate"] / m["to_rate"]
     return m
-
-
-if __name__ == "__main__":
-    d = parse_rate_str("wtb 540 alt 1 ex")
-
-    given_rate = d["rate"]
-    for provider in (PoeRatesProvider(), PoeExProvider()):
-        actual_rate = provider.rate(d["from_orb"], d["to_orb"])
-
-        print str(provider).lower()
-        print "Actual rate: %s" % actual_rate
-        percent = (given_rate - actual_rate) / actual_rate * 100
-        if percent < 0:
-            print "Loss: %.2f%%" % (-percent)
-        else:
-            print "Profit: %.2f%%" % percent
-        print
