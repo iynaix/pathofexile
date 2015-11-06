@@ -316,7 +316,6 @@ def run(leagues, fetch, page_groups, pages, debug):
             page_groups=page_groups.strip(),
             leagues=leagues.strip(),
         )
-    return
 
     # drop and recreate the database
     click.echo(t.green("WRITING TO DATABASE..."))

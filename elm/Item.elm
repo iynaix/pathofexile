@@ -306,4 +306,4 @@ fetchItems url =
 
 fetchLocations : String -> Task Http.Error (List Location)
 fetchLocations url =
-    Http.get (Json.list decodeLocation) "/api/locations/rare"
+    Http.get (Json.list decodeLocation) "/api/locations/"

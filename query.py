@@ -1,9 +1,9 @@
 import json
-from collections import namedtuple, Counter
+from collections import namedtuple, Counter, defaultdict
 
 from app import db
-from models import Item, Modifier, Location, in_page_group
-# from sqlalchemy import false
+from models import Item, Modifier, Location, in_page_group, Property
+from sqlalchemy import cast, Integer
 
 
 def find_gaps(loc):
@@ -27,63 +27,27 @@ def find_gaps(loc):
     return gaps
 
 
-jewel_rewards = (
-    "Assassin's Haste",
-    "Conqueror's Efficiency",
-    "Conqueror's Longevity",
-    "Conqueror's Potency",
-    "Poacher's Aim",
-    "Survival Instincts",
-    "Survival Secrets",
-    "Survival Skills",
-    "Warlord's Reach",
-)
-
-for item, cnt in Counter(item.name for item in Item.query.filter(
-    Item.rarity == "unique",
-    *in_page_group("uniques")
-)).most_common():
-    if cnt <= 1:
-        break
-    if item in jewel_rewards:
-        continue
-    print item, cnt
-
-exit()
+def find_dup_uniques():
+    for item, cnt in Counter(item.name for item in Item.query.filter(
+        Item.rarity == "unique",
+        *in_page_group("uniques")
+    )).most_common():
+        if cnt <= 1:
+            break
+        print item, cnt
 
 
-data = {}
-for l in open("item_data.json"):
-    data.update(json.loads(l))
+currencies = db.session.query(
+    Item.type_,
+    cast(db.func.split_part(Property.value, "/", 1), Integer)
+).join(Property).filter(
+    Item.rarity == "currency",
+    Property.name.startswith("Stack"),
+    *in_page_group("$")
+).distinct().all()
 
-from pprint import pprint
+counts = defaultdict(int)
+for currency, stack in currencies:
+    counts[currency] += stack
 
-# namedtuples are easier to work with
-Affix = namedtuple('Affix', ('name', 'lvl', 'stat', 'value'))
-
-AFFIXES = []
-for k in ("Prefixes", "Suffixes"):
-    for affixes in data[k].values():
-        for a in affixes:
-            a[1] = int(a[1])
-            if len(a) == 4:
-                AFFIXES.append(
-                    Affix(*a)
-                )
-            # has min and max stats
-            elif len(a) == 6:
-                AFFIXES.append(
-                    Affix(a[0], a[1], a[2:4], a[4:])
-                )
-            elif len(a) == 8:
-                AFFIXES.append(
-                    Affix(a[0], a[1], a[2:5], a[5:])
-                )
-
-# try the stats thing on a bow
-bow = Item.query.filter(
-    Item.name.like("%Tempest Wing%"),
-    Item.type_ == "Citadel Bow",
-).one()
-
-print bow.numeric_mods
+print counts
