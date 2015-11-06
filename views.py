@@ -166,6 +166,67 @@ class LowModsView(View):
 app.add_url_rule('/low_mods/', view_func=LowModsView.as_view('low_mods'))
 
 
+class LowRAJView(View):
+    """For displaying rare items with too few mods"""
+    def get_items(self):
+        low_attr_items = db.session.query(
+            Item,
+            db.func.count(Modifier.id),
+        ).join(Modifier, Location).group_by(
+            Item,
+            Location.page_no,
+        ).filter(
+            Modifier.is_implicit == false(),
+            not_(Item.type_.like('%Jewel%')),
+            # modifiers that we aren't interested in
+            and_(
+                not_(Modifier.normalized.like('%Light Radius%')),
+                not_(Modifier.normalized.like('%Accuracy Rating%')),
+                not_(Modifier.normalized.like('%Stun Recovery%')),
+                not_(Modifier.normalized.like('%Reduced Attribute%')),
+            ),
+            *in_page_group("raj")
+        ).having(
+            db.func.count(Modifier.id) <= 3
+        ).order_by(Location.page_no, Item.type_)
+
+        # items = []
+        # for item, _ in low_attr_items:
+        #     # keep items with double resist mods
+        #     if sum(1 for m in item.mods if "Resist" in m.normalized) >= 2:
+        #         continue
+        #     items.append(item)
+        # return items
+        return [item for item, _ in low_attr_items]
+
+    def insufficient_resists(self, item):
+        """only interested in items with higher amounts of resists"""
+        resist_mods = [m for m in item.explicit_mods
+                       if "Resist" in m.normalized]
+
+        # triple / quad resists, good to go
+        if len(resist_mods) > 2:
+            return False
+
+        # check for min resist values
+        return sum(
+            1 for m in resist_mods
+            if "All" not in m.normalized and m.values[0] > 20
+        ) < 2
+
+    def dispatch_request(self):
+        items = self.get_items()
+        items = [item for item in items if self.insufficient_resists(item)]
+
+        return render_template(
+            'list.html',
+            title="Low RAJ",
+            items=items,
+            item_renderer="item_table",
+        )
+app.add_url_rule('/low_raj/', view_func=LowRAJView.as_view('low_raj'))
+
+
 @app.route('/test/')
 def test_items():
     """For displaying tests on a subset of items"""
