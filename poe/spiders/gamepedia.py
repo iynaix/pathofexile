@@ -6,10 +6,7 @@ class GamepediaSpider(Spider):
     allowed_domains = ["pathofexile.gamepedia.com"]
 
     start_urls = [
-        "http://pathofexile.gamepedia.com/List_of_belts",
         "http://pathofexile.gamepedia.com/List_of_quivers",
-        "http://pathofexile.gamepedia.com/Flask",
-        "http://pathofexile.gamepedia.com/Divination_card",
     ]
 
     def table_extractor(self, table):

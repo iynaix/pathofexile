@@ -188,8 +188,8 @@ class ItemData(object):
             "unique",
             "gem",
             "currency",
-            "quest",
             "divination_card",
+            "quest",
         )[self.data["frameType"]]
 
     def full_text(self):
