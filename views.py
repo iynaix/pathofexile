@@ -211,7 +211,7 @@ class LowRAJView(View):
         # check for min resist values
         return sum(
             1 for m in resist_mods
-            if "All" not in m.normalized and m.values[0] > 20
+            if "All" not in m.normalized and m.values[0] > 15
         ) < 2
 
     def dispatch_request(self):
