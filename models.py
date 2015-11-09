@@ -48,6 +48,56 @@ def in_page_group(group_name):
     raise IndexError("'%s' group not found." % group_name)
 
 
+def _get_item_types(t):
+    import constants
+    if t in dir(constants):
+        return getattr(constants, t)
+    # handle pluralization
+    if not t.endswith("S"):
+        t = "%sS" % t
+    return getattr(constants, t)
+
+
+def filter_item_type(t):
+    t = t.strip().replace(" ", "_").replace("-", "_").upper()
+
+    # handle handed-ness
+    t = t.replace("HANDED", "HAND")
+    t = t.replace("1H", "ONE_HAND")
+    t = t.replace("2H", "TWO_HAND")
+    t = t.replace("1", "ONE")
+    t = t.replace("2", "TWO")
+
+    if t == "ONE_HAND":
+        t = "ONE_HAND_WEAPONS"
+    elif t == "TWO_HAND":
+        t = "TWO_HAND_WEAPONS"
+
+    # special case pluralization
+    if "STAFF" in t:
+        t = "STAVES"
+    if "CURRENCY" in t:
+        t = "CURRENCIES"
+
+    # alternative names
+    if t.startswith("HELMET"):
+        t = "HELMS"
+    if t.startswith("AMU"):
+        t = "AMULETS"
+    if t.startswith("JEW"):
+        t = "JEWELS"
+
+    # very special cases, different query performed
+    if t == "MAP" or t == "MAPS":
+        return Item.type_.like("%Map")
+    if "CARD" in t:
+        return Item.rarity == "divination_card"
+    if "FLASK" in t:
+        return Item.type_.like("%Flask")
+
+    return Item.type_.in_(_get_item_types(t))
+
+
 class Item(db.Model):
     """
     Model representing an item

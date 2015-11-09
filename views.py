@@ -11,7 +11,7 @@ from app import app, db, api
 import resources
 import constants
 from models import (Item, Location, Property, Requirement, Modifier,
-                    in_page_group)
+                    in_page_group, filter_item_type)
 from utils import get_constant
 
 #  init constants
@@ -230,26 +230,40 @@ app.add_url_rule('/low_raj/', view_func=LowRAJView.as_view('low_raj'))
 @app.route('/test/')
 def test_items():
     """For displaying tests on a subset of items"""
+
+    def dual_resists():
+        return db.session.query(
+            Item,
+            db.func.count(Modifier.id),
+        ).join(Location, Modifier).group_by(
+            Item,
+            Location.page_no,
+        ).filter(
+            Modifier.is_implicit == false(),
+            Modifier.normalized.like("%Resist%"),
+            *in_page_group("rare")
+        ).having(
+            db.func.count(Modifier.normalized.like("%Resist%")) == 2,
+        # ).order_by(
+        #     gem_cnt.desc()
+        ).all()
+
+    """
+    Divination Card
+    Flask
+    """
+
     items = db.session.query(
-        Item,
-        db.func.count(Modifier.id),
-    ).join(Location, Modifier).group_by(
-        Item,
-        Location.page_no,
+        Item
     ).filter(
-        Modifier.is_implicit == false(),
-        Modifier.normalized.like("%Resist%"),
-        *in_page_group("rare")
-    ).having(
-        db.func.count(Modifier.normalized.like("%Resist%")) == 2,
-    # ).order_by(
-    #     gem_cnt.desc()
-    ).all()
+        filter_item_type("card")
+    ).all()[:20]
 
     return render_template(
-        'list_ng.html',
-        title="Item Resists",
-        items=[item for item, cnt in items],
+        'list.html',
+        title="Filter by Item Type",
+        # items=[item for item, cnt in items],
+        items=items,
         item_renderer="item_table",
     )
 
