@@ -7356,6 +7356,116 @@ Elm.List.make = function (_elm) {
                       ,sortWith: sortWith};
    return _elm.List.values;
 };
+Elm.LocList = Elm.LocList || {};
+Elm.LocList.make = function (_elm) {
+   "use strict";
+   _elm.LocList = _elm.LocList || {};
+   if (_elm.LocList.values)
+   return _elm.LocList.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   $moduleName = "LocList",
+   $Basics = Elm.Basics.make(_elm),
+   $Effects = Elm.Effects.make(_elm),
+   $Html = Elm.Html.make(_elm),
+   $Html$Attributes = Elm.Html.Attributes.make(_elm),
+   $Item = Elm.Item.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm),
+   $StartApp = Elm.StartApp.make(_elm),
+   $String = Elm.String.make(_elm),
+   $Task = Elm.Task.make(_elm);
+   var locLink = function (loc) {
+      return A2($Html.li,
+      _L.fromArray([]),
+      _L.fromArray([A2($Html.a,
+      _L.fromArray([$Html$Attributes.href(A2($Basics._op["++"],
+      "/browse/",
+      $String.toLower(loc.name)))]),
+      _L.fromArray([$Html.text(loc.name)]))]));
+   };
+   var view = F2(function (address,
+   model) {
+      return A2($Html.li,
+      _L.fromArray([$Html$Attributes.$class("dropdown")]),
+      _L.fromArray([A2($Html.a,
+                   _L.fromArray([$Html$Attributes.href("#")
+                                ,$Html$Attributes.$class("dropdown-toggle")
+                                ,A2($Html$Attributes.attribute,
+                                "data-toggle",
+                                "dropdown")]),
+                   _L.fromArray([$Html.text("Jump To...")
+                                ,A2($Html.b,
+                                _L.fromArray([$Html$Attributes.$class("caret")]),
+                                _L.fromArray([]))]))
+                   ,A2($Html.ul,
+                   _L.fromArray([$Html$Attributes.$class("dropdown-menu")]),
+                   A2($List.map,
+                   locLink,
+                   model.locations))]));
+   });
+   var orderLocations = function (locs) {
+      return A2($List.sortBy,
+      function (_) {
+         return _.is_character;
+      },
+      locs);
+   };
+   var update = F2(function (action,
+   model) {
+      return function () {
+         switch (action.ctor)
+         {case "NewLocations":
+            return {ctor: "_Tuple2"
+                   ,_0: {_: {}
+                        ,locations: A2($Maybe.withDefault,
+                        _L.fromArray([]),
+                        action._0)}
+                   ,_1: $Effects.none};}
+         _U.badCase($moduleName,
+         "between lines 46 and 50");
+      }();
+   });
+   var NewLocations = function (a) {
+      return {ctor: "NewLocations"
+             ,_0: a};
+   };
+   var init = function () {
+      var fetchPage = function (url) {
+         return $Effects.task($Task.map(NewLocations)($Task.toMaybe($Item.fetchLocations(url))));
+      };
+      return {ctor: "_Tuple2"
+             ,_0: {_: {}
+                  ,locations: _L.fromArray([])}
+             ,_1: fetchPage("/api/locations")};
+   }();
+   var app = $StartApp.start({_: {}
+                             ,init: init
+                             ,inputs: _L.fromArray([])
+                             ,update: update
+                             ,view: view});
+   var main = app.html;
+   var tasks = Elm.Native.Task.make(_elm).performSignal("tasks",
+   app.tasks);
+   var Model = function (a) {
+      return {_: {},locations: a};
+   };
+   _elm.LocList.values = {_op: _op
+                         ,Model: Model
+                         ,init: init
+                         ,NewLocations: NewLocations
+                         ,update: update
+                         ,orderLocations: orderLocations
+                         ,locLink: locLink
+                         ,view: view
+                         ,app: app
+                         ,main: main};
+   return _elm.LocList.values;
+};
 Elm.Maybe = Elm.Maybe || {};
 Elm.Maybe.make = function (_elm) {
    "use strict";
@@ -15875,6 +15985,115 @@ Elm.Signal.make = function (_elm) {
                         ,forwardTo: forwardTo
                         ,Mailbox: Mailbox};
    return _elm.Signal.values;
+};
+Elm.StartApp = Elm.StartApp || {};
+Elm.StartApp.make = function (_elm) {
+   "use strict";
+   _elm.StartApp = _elm.StartApp || {};
+   if (_elm.StartApp.values)
+   return _elm.StartApp.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   $moduleName = "StartApp",
+   $Basics = Elm.Basics.make(_elm),
+   $Effects = Elm.Effects.make(_elm),
+   $Html = Elm.Html.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm),
+   $Task = Elm.Task.make(_elm);
+   var start = function (config) {
+      return function () {
+         var updateStep = F2(function (action,
+         _v0) {
+            return function () {
+               switch (_v0.ctor)
+               {case "_Tuple2":
+                  return function () {
+                       var $ = A2(config.update,
+                       action,
+                       _v0._0),
+                       newModel = $._0,
+                       additionalEffects = $._1;
+                       return {ctor: "_Tuple2"
+                              ,_0: newModel
+                              ,_1: $Effects.batch(_L.fromArray([_v0._1
+                                                               ,additionalEffects]))};
+                    }();}
+               _U.badCase($moduleName,
+               "between lines 94 and 97");
+            }();
+         });
+         var update = F2(function (actions,
+         _v4) {
+            return function () {
+               switch (_v4.ctor)
+               {case "_Tuple2":
+                  return A3($List.foldl,
+                    updateStep,
+                    {ctor: "_Tuple2"
+                    ,_0: _v4._0
+                    ,_1: $Effects.none},
+                    actions);}
+               _U.badCase($moduleName,
+               "on line 101, column 13 to 64");
+            }();
+         });
+         var messages = $Signal.mailbox(_L.fromArray([]));
+         var singleton = function (action) {
+            return _L.fromArray([action]);
+         };
+         var address = A2($Signal.forwardTo,
+         messages.address,
+         singleton);
+         var inputs = $Signal.mergeMany(A2($List._op["::"],
+         messages.signal,
+         A2($List.map,
+         $Signal.map(singleton),
+         config.inputs)));
+         var effectsAndModel = A3($Signal.foldp,
+         update,
+         config.init,
+         inputs);
+         var model = A2($Signal.map,
+         $Basics.fst,
+         effectsAndModel);
+         return {_: {}
+                ,html: A2($Signal.map,
+                config.view(address),
+                model)
+                ,model: model
+                ,tasks: A2($Signal.map,
+                function ($) {
+                   return $Effects.toTask(messages.address)($Basics.snd($));
+                },
+                effectsAndModel)};
+      }();
+   };
+   var App = F3(function (a,b,c) {
+      return {_: {}
+             ,html: a
+             ,model: b
+             ,tasks: c};
+   });
+   var Config = F4(function (a,
+   b,
+   c,
+   d) {
+      return {_: {}
+             ,init: a
+             ,inputs: d
+             ,update: b
+             ,view: c};
+   });
+   _elm.StartApp.values = {_op: _op
+                          ,start: start
+                          ,Config: Config
+                          ,App: App};
+   return _elm.StartApp.values;
 };
 Elm.String = Elm.String || {};
 Elm.String.make = function (_elm) {

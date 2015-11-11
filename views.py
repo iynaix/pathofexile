@@ -569,9 +569,9 @@ def base_static(filename):
 
 if __name__ == '__main__':
     # set up the api
-    api.add_resource(resources.ItemResource, '/api/items/<item_id>')
-    api.add_resource(resources.ItemListResource, '/api/items')
-    api.add_resource(resources.LocationListResource, '/api/locations')
-    api.add_resource(resources.LocationResource, '/api/locations/<slug>')
+    api.add_resource(resources.ItemResource, '/api/items/<item_id>/')
+    api.add_resource(resources.ItemListResource, '/api/items/')
+    api.add_resource(resources.LocationResource, '/api/locations/<slug>/')
+    api.add_resource(resources.LocationListResource, '/api/locations/')
 
     app.run(debug=True, port=8000)

@@ -48,7 +48,9 @@ type alias Modifier =
 type alias Location =
     { id : Int,
       name : String,
-      is_character : Bool
+      page_no : Int,
+      is_character : Bool,
+      is_premium : Bool
     }
 
 
@@ -86,6 +88,7 @@ type alias Item =
 type alias Properties = List Property
 type alias Modifiers = List Modifier
 type alias Requirements = List Requirement
+type alias Locations = List Location
 type alias Items = List Item
 
 
@@ -268,10 +271,12 @@ decodeModifier =
 
 decodeLocation : Json.Decoder Location
 decodeLocation =
-    Json.object3 Location
+    Json.object5 Location
         ("id" := Json.int)
         ("name" := Json.string)
+        ("page_no" := Json.int)
         ("is_character" := Json.bool)
+        ("is_premium" := Json.bool)
 
 
 decodeItem : Json.Decoder Item
