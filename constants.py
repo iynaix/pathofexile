@@ -46,11 +46,23 @@ def groupby_stat_type(items):
 
 def get_weapon_constants(data):
     """returns all the weapon constants"""
-    BOWS = [x[0] for x in data["Weapons"]["Bow"] if stat_type(x)]
-    WANDS = [x[0] for x in data["Weapons"]["Wand"] if stat_type(x)]
-    CLAWS = [x[0] for x in data["Weapons"]["Claw"] if stat_type(x)]
-    DAGGERS = [x[0] for x in data["Weapons"]["Dagger"] if stat_type(x)]
-    STAVES = [x[0] for x in data["Weapons"]["Staff"] if stat_type(x)]
+    def _extract(type_):
+        """simple extraction for stat types"""
+        return [x[0] for x in data["Weapons"][type_] if stat_type(x)]
+
+    BOWS = _extract("Bow")
+    WANDS = _extract("Wand")
+    CLAWS = _extract("Claw")
+    DAGGERS = _extract("Dagger")
+    STAVES = _extract("Staff")
+    SCEPTRES = _extract("Sceptre")
+    ONE_HAND_AXES = _extract("One Hand Axe")
+    TWO_HAND_AXES = _extract("Two Hand Axe")
+    ONE_HAND_MACES = _extract("One Hand Mace")
+    TWO_HAND_MACES = _extract("Two Hand Mace")
+    ONE_HAND_SWORD = _extract("One Hand Sword") + \
+                        _extract("Thrusting One Hand Sword")
+    TWO_HAND_SWORD = _extract("Two Hand Sword")
 
     SWORDS = {}
     for sword_type in ("One Hand Sword", "Two Hand Sword",
@@ -72,15 +84,15 @@ def get_weapon_constants(data):
                 AXES[x[0]] = axe_type
 
     # get all the one handed weapons
-    ONE_HANDED_WEAPONS = CLAWS + DAGGERS + WANDS
-    TWO_HANDED_WEAPONS = BOWS + STAVES
+    ONE_HAND_WEAPONS = CLAWS + DAGGERS + WANDS
+    TWO_HAND_WEAPONS = BOWS + STAVES
 
     for w in [AXES, MACES, SWORDS]:
         for k, v in w.items():
             if "TWO" in v:
-                TWO_HANDED_WEAPONS.append(k)
+                TWO_HAND_WEAPONS.append(k)
             else:
-                ONE_HANDED_WEAPONS.append(k)
+                ONE_HAND_WEAPONS.append(k)
 
     # merge all the weapons into a giant central dict
     WEAPONS = BOWS + CLAWS + DAGGERS + STAVES + WANDS
@@ -104,12 +116,27 @@ def get_armor_constants(data):
             continue
         ret[k] = v
         ret["ARMORS_ALL"].extend(v.keys())
+
+    # allow both UK and US spelling
+    ret["ARMOURS"] = ret["ARMORS"]
+    ret["ARMOURS_ALL"] = ret["ARMORS_ALL"]
     return ret
+
+
+def get_misc_constants(data):
+    """returns all the misc constants from PoE item-data"""
+    def _extract(type_):
+        return [x[0] for x in data["Jewellery"][type_]]
+
+    return {
+        "AMULETS": _extract("Amulet"),
+        "RINGS": _extract("Ring"),
+        "BELTS": _extract("Belt"),
+    }
 
 
 def get_gamepedia_constants(data):
     DIVINATION_CARDS = [x[0] for x in data["List of divination cards"]]
-    BELTS = [x[0] for x in data["Belts"]]
     QUIVERS = [x[0] for x in data["Quivers"]]
     QUIVERS.extend([x[0] for x in data["Old quivers"]])
 
@@ -137,9 +164,13 @@ for key in ("Strength", "Dexterity", "Intelligence", "Support Gems"):
     for k, v in data[key]:
         GEMS[k] = v
 
+# hardcoded for now
+JEWELS = ["Cobalt Jewel", "Crimson Jewel", "Viridian Jewel"]
+
 # dynamically add the variables to the module namespace
 vars().update(get_weapon_constants(data))
 vars().update(get_armor_constants(data))
+vars().update(get_misc_constants(data))
 
 # process item data from gamepedia
 data = {}
@@ -148,3 +179,6 @@ with open("gamepedia.json") as fp:
         data.update(json.loads(line))
 
 vars().update(get_gamepedia_constants(data))
+
+# clean up the exports
+__all__ = [k for k in vars() if k.upper() == k]

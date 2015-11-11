@@ -35,19 +35,3 @@ def find_dup_uniques():
         if cnt <= 1:
             break
         print item, cnt
-
-
-currencies = db.session.query(
-    Item.type_,
-    cast(db.func.split_part(Property.value, "/", 1), Integer)
-).join(Property).filter(
-    Item.rarity == "currency",
-    Property.name.startswith("Stack"),
-    *in_page_group("$")
-).distinct().all()
-
-counts = defaultdict(int)
-for currency, stack in currencies:
-    counts[currency] += stack
-
-print counts

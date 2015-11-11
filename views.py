@@ -11,7 +11,7 @@ from app import app, db, api
 import resources
 import constants
 from models import (Item, Location, Property, Requirement, Modifier,
-                    in_page_group)
+                    in_page_group, filter_item_type)
 from utils import get_constant
 
 #  init constants
@@ -211,7 +211,7 @@ class LowRAJView(View):
         # check for min resist values
         return sum(
             1 for m in resist_mods
-            if "All" not in m.normalized and m.values[0] > 20
+            if "All" not in m.normalized and m.values[0] > 15
         ) < 2
 
     def dispatch_request(self):
@@ -230,26 +230,40 @@ app.add_url_rule('/low_raj/', view_func=LowRAJView.as_view('low_raj'))
 @app.route('/test/')
 def test_items():
     """For displaying tests on a subset of items"""
+
+    def dual_resists():
+        return db.session.query(
+            Item,
+            db.func.count(Modifier.id),
+        ).join(Location, Modifier).group_by(
+            Item,
+            Location.page_no,
+        ).filter(
+            Modifier.is_implicit == false(),
+            Modifier.normalized.like("%Resist%"),
+            *in_page_group("rare")
+        ).having(
+            db.func.count(Modifier.normalized.like("%Resist%")) == 2,
+        # ).order_by(
+        #     gem_cnt.desc()
+        ).all()
+
+    """
+    Divination Card
+    Flask
+    """
+
     items = db.session.query(
-        Item,
-        db.func.count(Modifier.id),
-    ).join(Location, Modifier).group_by(
-        Item,
-        Location.page_no,
+        Item
     ).filter(
-        Modifier.is_implicit == false(),
-        Modifier.normalized.like("%Resist%"),
-        *in_page_group("rare")
-    ).having(
-        db.func.count(Modifier.normalized.like("%Resist%")) == 2,
-    # ).order_by(
-    #     gem_cnt.desc()
-    ).all()
+        filter_item_type("card")
+    ).all()[:20]
 
     return render_template(
-        'list_ng.html',
-        title="Item Resists",
-        items=[item for item, cnt in items],
+        'list.html',
+        title="Filter by Item Type",
+        # items=[item for item, cnt in items],
+        items=items,
         item_renderer="item_table",
     )
 
@@ -529,39 +543,6 @@ class StatsView(View):
             })
         return currencies
 
-    def get_item_rarity_stats(self):
-        stats = db.session.query(
-            db.func.count(Item.id),
-            Item.rarity,
-        ).filter(Item.is_identified).group_by(Item.rarity).all()
-        return {
-            "rarities": sorted(stats, reverse=True),
-            "rarities_total": sum(s[0] for s in stats),
-        }
-
-    def get_item_socket_stats(self):
-        stats = db.session.query(
-            Item.num_sockets,
-            db.func.count(Item.id),
-        ).filter(Item.is_identified).group_by(Item.num_sockets).all()
-        return {
-            "item_sockets": sorted(stats, reverse=True),
-            "item_sockets_total": sum(s[1] for s in stats),
-        }
-
-    def get_item_socket_links_stats(self):
-        stats = db.session.query(
-            # first instance of space, since the strings are sorted in order
-            # of length
-            db.func.strpos(Item.socket_str, " ").label("link_length"),
-            db.func.count(Item.id),
-        ).filter(Item.is_identified).group_by("link_length").all()
-
-        return {
-            "item_sockets_links": sorted(stats, reverse=True),
-            "item_sockets_links_total": sum(s[1] for s in stats),
-        }
-
     def get_gem_stats(self):
         # get the gems into a dict for easier searching
 
@@ -571,10 +552,9 @@ class StatsView(View):
         }
 
     def dispatch_request(self):
-        context = {"currencies": self.get_currency_stats()}
-        context.update(self.get_item_rarity_stats())
-        context.update(self.get_item_socket_stats())
-        context.update(self.get_item_socket_links_stats())
+        context = {
+            "currencies": self.get_currency_stats()
+        }
         context.update(self.get_gem_stats())
 
         return render_template('stats.html', **context)
