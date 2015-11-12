@@ -5,7 +5,7 @@ from flask import request, render_template, send_from_directory, jsonify
 from flask.views import View, MethodView
 from jinja2 import contextfilter
 from jinja2.filters import do_mark_safe
-from sqlalchemy import false, not_, and_
+from sqlalchemy import false, not_, and_, or_
 
 from app import app, db, api
 import resources
@@ -231,33 +231,16 @@ app.add_url_rule('/low_raj/', view_func=LowRAJView.as_view('low_raj'))
 def test_items():
     """For displaying tests on a subset of items"""
 
-    def dual_resists():
-        return db.session.query(
-            Item,
-            db.func.count(Modifier.id),
-        ).join(Location, Modifier).group_by(
-            Item,
-            Location.page_no,
-        ).filter(
-            Modifier.is_implicit == false(),
-            Modifier.normalized.like("%Resist%"),
-            *in_page_group("rare")
-        ).having(
-            db.func.count(Modifier.normalized.like("%Resist%")) == 2,
-        # ).order_by(
-        #     gem_cnt.desc()
-        ).all()
-
-    """
-    Divination Card
-    Flask
-    """
-
     items = db.session.query(
         Item
-    ).filter(
-        filter_item_type("card")
-    ).all()[:20]
+    ).join(Modifier, Location).filter(
+        Location.is_character == false(),
+        or_(
+            Modifier.normalized.ilike("%increased quantity of items found%"),
+            Modifier.normalized.ilike("%increased rarity of items found%"),
+        ),
+        filter_item_type("helm"),
+    ).all()
 
     return render_template(
         'list.html',
