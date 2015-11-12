@@ -42,22 +42,8 @@
                 <ul class="nav navbar-nav">
                     <li><a href="/test/">Test</a></li>
                 </ul>
-                <div id="loc_dropdown" class="nav navbar-nav navbar-right">
-                    <li class="dropdown">
-                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Jump To... <b class="caret"></b></a>
-                        <ul class="dropdown-menu">
-                            {#
-                            {% for loc in locations["stash"] %}
-                                <li><a href="/browse/{{ loc.name|lower }}">{{ loc.name }}</a></li>
-                            {% endfor %}
-                            <li class="divider"></li>
-                            {% for loc in locations["characters"] %}
-                                <li><a href="/browse/{{ loc.name|lower }}">{{ loc.name }}</a></li>
-                            {% endfor %}
-                            #}
-                        </ul>
-                    </li>
-                </div>
+                {# div as elm.embed only works with divs #}
+                <div id="loc_dropdown" class="nav navbar-nav navbar-right"></div>
                 <form class="navbar-form navbar-right" role="search" action="/search/" method="post">
                     <div class="form-group">
                         <input type="search" class="form-control" name="simple_search" placeholder="Search">

@@ -387,12 +387,10 @@ class RatesView(View):
 app.add_url_rule('/rates/', view_func=RatesView.as_view('rates'))
 
 
-@app.route('/browse/<slug>/')
-def browse(slug):
+@app.route('/browse/<page_no>/')
+def browse(page_no):
     """renders all the details of a location"""
-    loc = Location.query.filter(
-        db.func.lower(Location.name) == slug.lower()
-    ).one()
+    loc = Location.query.filter(Location.page_no == page_no).one()
     items = Item.query.filter(Item.location == loc).order_by(
         Item.x, Item.y
     ).all()

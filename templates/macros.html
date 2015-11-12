@@ -48,7 +48,7 @@ title, location, sockets
     {# item location #}
     {% if "location" not in excludes %}
         <{{ outer_tag }}>
-            <a href="/browse/{{ item.location.name|lower }}/">{{ item.location_str() }}</a>
+            <a href="/browse/{{ item.page_no }}/">{{ item.location_str() }}</a>
         </{{ outer_tag }}>
     {% endif %}
 
@@ -148,7 +148,7 @@ title, location, sockets
         <tr>
             <td>{{ item_title(item, outer_tag="p", popover=True, multiline=False) }}</td>
             <td>
-                <a href="/browse/{{ item.location.name|lower }}/">
+                <a href="/browse/{{ item.page_no }}/">
                     {{ item.location_str() }}
                 </a>
             </td>

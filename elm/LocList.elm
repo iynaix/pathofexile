@@ -61,7 +61,7 @@ locLink loc =
     li
         []
         [ a
-            [ href ("/browse/" ++ String.toLower loc.name ) ]
+            [ href ("/browse/" ++ toString loc.page_no ) ]
             [ text loc.name ]
         ]
 

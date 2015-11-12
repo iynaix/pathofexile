@@ -7377,7 +7377,6 @@ Elm.LocList.make = function (_elm) {
    $Result = Elm.Result.make(_elm),
    $Signal = Elm.Signal.make(_elm),
    $StartApp = Elm.StartApp.make(_elm),
-   $String = Elm.String.make(_elm),
    $Task = Elm.Task.make(_elm);
    var locLink = function (loc) {
       return A2($Html.li,
@@ -7385,7 +7384,7 @@ Elm.LocList.make = function (_elm) {
       _L.fromArray([A2($Html.a,
       _L.fromArray([$Html$Attributes.href(A2($Basics._op["++"],
       "/browse/",
-      $String.toLower(loc.name)))]),
+      $Basics.toString(loc.page_no)))]),
       _L.fromArray([$Html.text(loc.name)]))]));
    };
    var view = F2(function (address,
