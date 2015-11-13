@@ -27,6 +27,7 @@ location_fields = dict(
 )
 
 item_fields = dict(
+    id=fields.Integer,
     name=fields.String,
     type_=fields.String,
     x=fields.Integer(default=None),

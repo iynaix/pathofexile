@@ -52,25 +52,9 @@ update action model =
 -- VIEW
 
 
-itemHtml : Item -> Html
-itemHtml item =
-    li
-        [ class "list-group-item" ]
-        ( [ h4
-                [ classList [ ("unidentified", not item.is_identified) ] ]
-                (itemHeader item),
-            itemImage item,
-            itemInfo item
-          -- text (toString item)
-          ]
-        )
-
-
 view : Signal.Address Action -> Model -> Html
 view address model =
-    ul
-        [ class "list-group item_listing" ]
-        (List.map itemHtml model.items)
+    itemTable model.items
 
 
 app =

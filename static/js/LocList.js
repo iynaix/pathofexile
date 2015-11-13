@@ -6517,52 +6517,70 @@ Elm.Item.make = function (_elm) {
                                         ,addHr(itemMods(item.implicit_mods))
                                         ,itemMods(item.explicit_mods)])));}
          _U.badCase($moduleName,
-         "between lines 231 and 244");
+         "between lines 233 and 244");
       }();
    };
    var nbsp = $Html.text($String.fromChar($Char.fromCode(160)));
-   var sockets = function (socket_str) {
+   var socketSpan = function (c) {
       return function () {
-         var socket = function (c) {
-            return function () {
-               switch (c + "")
-               {case "B": return A2($Html.span,
-                    _L.fromArray([$Html$Attributes.$class("label label-primary")]),
-                    _L.fromArray([nbsp]));
-                  case "G": return A2($Html.span,
-                    _L.fromArray([$Html$Attributes.$class("label label-success")]),
-                    _L.fromArray([nbsp]));
-                  case "R": return A2($Html.span,
-                    _L.fromArray([$Html$Attributes.$class("label label-danger")]),
-                    _L.fromArray([nbsp]));}
-               return nbsp;
-            }();
-         };
-         return function () {
-            switch (socket_str)
-            {case "":
-               return _L.fromArray([]);}
-            return _L.fromArray([A2($Html.span,
-            _L.fromArray([$Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
-                                                               ,_0: "margin-left"
-                                                               ,_1: "2em"}]))]),
-            $List.map(socket)($String.toList(socket_str)))]);
-         }();
+         switch (c + "")
+         {case "B": return A2($Html.span,
+              _L.fromArray([$Html$Attributes.$class("label label-primary")]),
+              _L.fromArray([nbsp]));
+            case "G": return A2($Html.span,
+              _L.fromArray([$Html$Attributes.$class("label label-success")]),
+              _L.fromArray([nbsp]));
+            case "R": return A2($Html.span,
+              _L.fromArray([$Html$Attributes.$class("label label-danger")]),
+              _L.fromArray([nbsp]));}
+         return nbsp;
       }();
    };
    var itemHeader = function (item) {
-      return A2($Basics._op["++"],
-      A2(raritySpan,
-      item.rarity,
-      item.name),
-      A2($Basics._op["++"],
-      _U.eq(item.name,
-      "") ? _L.fromArray([]) : _L.fromArray([$Html$Shorthand.br$]),
-      A2($Basics._op["++"],
-      A2(raritySpan,
-      item.rarity,
-      item.type_),
-      sockets(item.socket_str))));
+      return function () {
+         var sockets = function (socket_str) {
+            return function () {
+               switch (socket_str)
+               {case "":
+                  return _L.fromArray([]);}
+               return _L.fromArray([A2($Html.span,
+               _L.fromArray([$Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
+                                                                  ,_0: "margin-left"
+                                                                  ,_1: "2em"}]))]),
+               $List.map(socketSpan)($String.toList(socket_str)))]);
+            }();
+         };
+         return A2($Basics._op["++"],
+         A2(raritySpan,
+         item.rarity,
+         item.name),
+         A2($Basics._op["++"],
+         _U.eq(item.name,
+         "") ? _L.fromArray([]) : _L.fromArray([$Html$Shorthand.br$]),
+         A2($Basics._op["++"],
+         A2(raritySpan,
+         item.rarity,
+         item.type_),
+         sockets(item.socket_str))));
+      }();
+   };
+   var itemListItem = function (item) {
+      return A2($Html.li,
+      _L.fromArray([$Html$Attributes.$class("list-group-item")]),
+      _L.fromArray([A2($Html.h4,
+                   _L.fromArray([$Html$Attributes.classList(_L.fromArray([{ctor: "_Tuple2"
+                                                                          ,_0: "unidentified"
+                                                                          ,_1: $Basics.not(item.is_identified)}]))]),
+                   itemHeader(item))
+                   ,itemImage(item)
+                   ,itemInfo(item)]));
+   };
+   var itemList = function (items) {
+      return A2($Html.ul,
+      _L.fromArray([$Html$Attributes.$class("list-group item_listing")]),
+      A2($List.map,
+      itemListItem,
+      items));
    };
    var locStr = function (item) {
       return function () {
@@ -6590,8 +6608,50 @@ Elm.Item.make = function (_elm) {
               "",
               item.char_location)));}
          _U.badCase($moduleName,
-         "between lines 98 and 105");
+         "between lines 99 and 106");
       }();
+   };
+   var itemLocLink = function (item) {
+      return A2($Html.a,
+      _L.fromArray([$Html$Attributes.href(A2($Basics._op["++"],
+      "/browse/",
+      A2($Basics._op["++"],
+      $Basics.toString(item.location.page_no),
+      "/")))]),
+      _L.fromArray([$Html.text(locStr(item))]));
+   };
+   var itemRow = function (item) {
+      return $Html$Shorthand.tr_(_L.fromArray([$Html$Shorthand.td_(A2($Basics._op["++"],
+                                              A2(raritySpan,
+                                              item.rarity,
+                                              item.name),
+                                              _L.fromArray([$Html$Shorthand.span_(_L.fromArray([$Html.text(item.type_)]))])))
+                                              ,$Html$Shorthand.td_(_L.fromArray([itemLocLink(item)]))
+                                              ,$Html$Shorthand.td_(_L.fromArray([$Html.text($Basics.toString(item.num_sockets))]))
+                                              ,$Html$Shorthand.td_($List.map(socketSpan)($String.toList(item.socket_str)))
+                                              ,$Html$Shorthand.td_(itemReqs(item.requirements))
+                                              ,A2($Html.td,
+                                              _L.fromArray([$Html$Attributes.$class("text-center")]),
+                                              _L.fromArray([A2($Html.label,
+                                              _L.fromArray([$Html$Attributes.$class("checkbox-inline")]),
+                                              _L.fromArray([A2($Html.input,
+                                              _L.fromArray([$Html$Attributes.type$("checkbox")
+                                                           ,$Html$Attributes.$class("mark_delete")
+                                                           ,$Html$Attributes.value($Basics.toString(item.id))]),
+                                              _L.fromArray([]))]))]))]));
+   };
+   var itemTable = function (items) {
+      return A2($Html.table,
+      _L.fromArray([$Html$Attributes.$class("table table-striped table-hover table-bordered table-condensed")]),
+      _L.fromArray([$Html$Shorthand.thead_(_L.fromArray([$Html$Shorthand.tr_(_L.fromArray([$Html$Shorthand.th_(_L.fromArray([$Html.text("Name")]))
+                                                                                          ,$Html$Shorthand.th_(_L.fromArray([$Html.text("Location")]))
+                                                                                          ,$Html$Shorthand.th_(_L.fromArray([$Html.text("Num Sockets")]))
+                                                                                          ,$Html$Shorthand.th_(_L.fromArray([$Html.text("Sockets")]))
+                                                                                          ,$Html$Shorthand.th_(_L.fromArray([$Html.text("Requirements")]))
+                                                                                          ,$Html$Shorthand.th_(_L.fromArray([$Html.text("Deleted")]))]))]))
+                   ,$Html$Shorthand.tbody_(A2($List.map,
+                   itemRow,
+                   items))]));
    };
    var Item = function (a) {
       return function (b) {
@@ -6613,27 +6673,30 @@ Elm.Item.make = function (_elm) {
                                                       return function (r) {
                                                          return function (s) {
                                                             return function (t) {
-                                                               return {_: {}
-                                                                      ,char_location: l
-                                                                      ,explicit_mods: s
-                                                                      ,h: f
-                                                                      ,image_url: h
-                                                                      ,implicit_mods: r
-                                                                      ,is_corrupted: m
-                                                                      ,is_deleted: n
-                                                                      ,is_identified: k
-                                                                      ,league: o
-                                                                      ,location: t
-                                                                      ,name: a
-                                                                      ,num_sockets: i
-                                                                      ,properties: q
-                                                                      ,rarity: g
-                                                                      ,requirements: p
-                                                                      ,socket_str: j
-                                                                      ,type_: b
-                                                                      ,w: e
-                                                                      ,x: c
-                                                                      ,y: d};
+                                                               return function (u) {
+                                                                  return {_: {}
+                                                                         ,char_location: m
+                                                                         ,explicit_mods: t
+                                                                         ,h: g
+                                                                         ,id: a
+                                                                         ,image_url: i
+                                                                         ,implicit_mods: s
+                                                                         ,is_corrupted: n
+                                                                         ,is_deleted: o
+                                                                         ,is_identified: l
+                                                                         ,league: p
+                                                                         ,location: u
+                                                                         ,name: b
+                                                                         ,num_sockets: j
+                                                                         ,properties: r
+                                                                         ,rarity: h
+                                                                         ,requirements: q
+                                                                         ,socket_str: k
+                                                                         ,type_: c
+                                                                         ,w: f
+                                                                         ,x: d
+                                                                         ,y: e};
+                                                               };
                                                             };
                                                          };
                                                       };
@@ -6758,8 +6821,12 @@ Elm.Item.make = function (_elm) {
    A2(apply,
    A2(apply,
    A2(apply,
+   A2(apply,
    A2($Json$Decode.map,
    Item,
+   A2($Json$Decode._op[":="],
+   "id",
+   $Json$Decode.$int)),
    A2($Json$Decode._op[":="],
    "name",
    $Json$Decode.string)),
@@ -6837,13 +6904,18 @@ Elm.Item.make = function (_elm) {
                       ,addHr: addHr
                       ,rarityClass: rarityClass
                       ,raritySpan: raritySpan
-                      ,sockets: sockets
+                      ,socketSpan: socketSpan
                       ,itemHeader: itemHeader
                       ,itemReqs: itemReqs
                       ,itemProps: itemProps
                       ,itemMods: itemMods
                       ,itemImage: itemImage
                       ,itemInfo: itemInfo
+                      ,itemListItem: itemListItem
+                      ,itemList: itemList
+                      ,itemLocLink: itemLocLink
+                      ,itemRow: itemRow
+                      ,itemTable: itemTable
                       ,decodeRequirement: decodeRequirement
                       ,decodeProperty: decodeProperty
                       ,decodeModifier: decodeModifier
@@ -14077,12 +14149,9 @@ Elm.Native.Utils.make = function(localRuntime) {
 	};
 };
 
-(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-var createElement = require("./vdom/create-element.js")
+(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 
-module.exports = createElement
-
-},{"./vdom/create-element.js":6}],2:[function(require,module,exports){
+},{}],2:[function(require,module,exports){
 (function (global){
 var topLevel = typeof global !== 'undefined' ? global :
     typeof window !== 'undefined' ? window : {}
@@ -14100,8 +14169,8 @@ if (typeof document !== 'undefined') {
     module.exports = doccy;
 }
 
-}).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"min-document":24}],3:[function(require,module,exports){
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"min-document":1}],3:[function(require,module,exports){
 "use strict";
 
 module.exports = function isObject(x) {
@@ -15291,7 +15360,7 @@ var VNode = require('virtual-dom/vnode/vnode');
 var VText = require('virtual-dom/vnode/vtext');
 var diff = require('virtual-dom/vtree/diff');
 var patch = require('virtual-dom/vdom/patch');
-var createElement = require('virtual-dom/create-element');
+var createElement = require('virtual-dom/vdom/create-element');
 var isHook = require("virtual-dom/vnode/is-vhook");
 
 
@@ -15313,24 +15382,14 @@ Elm.Native.VirtualDom.make = function(elm)
 
 	var ATTRIBUTE_KEY = 'UniqueNameThatOthersAreVeryUnlikelyToUse';
 
-	function listToProperties(list)
+
+
+	// VIRTUAL DOM NODES
+
+
+	function text(string)
 	{
-		var object = {};
-		while (list.ctor !== '[]')
-		{
-			var entry = list._0;
-			if (entry.key === ATTRIBUTE_KEY)
-			{
-				object.attributes = object.attributes || {};
-				object.attributes[entry.value.attrKey] = entry.value.attrValue;
-			}
-			else
-			{
-				object[entry.key] = entry.value;
-			}
-			list = list._1;
-		}
-		return object;
+		return new VText(string);
 	}
 
 	function node(name)
@@ -15339,6 +15398,10 @@ Elm.Native.VirtualDom.make = function(elm)
 			return makeNode(name, propertyList, contents);
 		});
 	}
+
+
+	// BUILD VIRTUAL DOME NODES
+
 
 	function makeNode(name, propertyList, contents)
 	{
@@ -15361,7 +15424,7 @@ Elm.Native.VirtualDom.make = function(elm)
 
 		// ensure that setting text of an input does not move the cursor
 		var useSoftSet =
-			name === 'input'
+			(name === 'input' || name === 'textarea')
 			&& props.value !== undefined
 			&& !isHook(props.value);
 
@@ -15372,6 +15435,31 @@ Elm.Native.VirtualDom.make = function(elm)
 
 		return new VNode(name, props, List.toArray(contents), key, namespace);
 	}
+
+	function listToProperties(list)
+	{
+		var object = {};
+		while (list.ctor !== '[]')
+		{
+			var entry = list._0;
+			if (entry.key === ATTRIBUTE_KEY)
+			{
+				object.attributes = object.attributes || {};
+				object.attributes[entry.value.attrKey] = entry.value.attrValue;
+			}
+			else
+			{
+				object[entry.key] = entry.value;
+			}
+			list = list._1;
+		}
+		return object;
+	}
+
+
+
+	// PROPERTIES AND ATTRIBUTES
+
 
 	function property(key, value)
 	{
@@ -15391,6 +15479,63 @@ Elm.Native.VirtualDom.make = function(elm)
 			}
 		};
 	}
+
+
+
+	// NAMESPACED ATTRIBUTES
+
+
+	function attributeNS(namespace, key, value)
+	{
+		return {
+			key: key,
+			value: new AttributeHook(namespace, key, value)
+		};
+	}
+
+	function AttributeHook(namespace, key, value)
+	{
+		if (!(this instanceof AttributeHook))
+		{
+			return new AttributeHook(namespace, key, value);
+		}
+
+		this.namespace = namespace;
+		this.key = key;
+		this.value = value;
+	}
+
+	AttributeHook.prototype.hook = function (node, prop, prev)
+	{
+		if (prev
+			&& prev.type === 'AttributeHook'
+			&& prev.value === this.value
+			&& prev.namespace === this.namespace)
+		{
+			return;
+		}
+
+		node.setAttributeNS(this.namespace, prop, this.value);
+	};
+
+	AttributeHook.prototype.unhook = function (node, prop, next)
+	{
+		if (next
+			&& next.type === 'AttributeHook'
+			&& next.namespace === this.namespace)
+		{
+			return;
+		}
+
+		node.removeAttributeNS(this.namespace, this.key);
+	};
+
+	AttributeHook.prototype.type = 'AttributeHook';
+
+
+
+	// EVENTS
+
 
 	function on(name, options, decoder, createMessage)
 	{
@@ -15431,10 +15576,10 @@ Elm.Native.VirtualDom.make = function(elm)
 		}
 	};
 
-	function text(string)
-	{
-		return new VText(string);
-	}
+
+
+	// INTEGRATION WITH ELEMENTS
+
 
 	function ElementWidget(element)
 	{
@@ -15469,6 +15614,11 @@ Elm.Native.VirtualDom.make = function(elm)
 		});
 	}
 
+
+
+	// RENDER AND UPDATE
+
+
 	function render(model)
 	{
 		var element = Element.createNode('div');
@@ -15488,6 +15638,11 @@ Elm.Native.VirtualDom.make = function(elm)
 		var newNode = patch(node, patches);
 		return newNode;
 	}
+
+
+
+	// LAZINESS
+
 
 	function lazyRef(fn, a)
 	{
@@ -15518,15 +15673,17 @@ Elm.Native.VirtualDom.make = function(elm)
 
 	function Thunk(fn, args, thunk)
 	{
-		this.fn = fn;
-		this.args = args;
+		/* public (used by VirtualDom.js) */
 		this.vnode = null;
 		this.key = undefined;
+
+		/* private */
+		this.fn = fn;
+		this.args = args;
 		this.thunk = thunk;
 	}
 
 	Thunk.prototype.type = "Thunk";
-	Thunk.prototype.update = updateThunk;
 	Thunk.prototype.render = renderThunk;
 
 	function shouldUpdate(current, previous)
@@ -15551,35 +15708,27 @@ Elm.Native.VirtualDom.make = function(elm)
 		return false;
 	}
 
-	function updateThunk(previous, domNode)
+	function renderThunk(previous)
 	{
-		if (!shouldUpdate(this, previous))
+		if (previous == null || shouldUpdate(this, previous))
 		{
-			this.vnode = previous.vnode;
-			return;
+			return this.thunk();
 		}
-
-		if (!this.vnode)
+		else
 		{
-			this.vnode = this.thunk();
+			return previous.vnode;
 		}
-
-		var patches = diff(previous.vnode, this.vnode);
-		patch(domNode, patches);
 	}
 
-	function renderThunk()
-	{
-		return this.thunk();
-	}
 
-	return Elm.Native.VirtualDom.values = {
+	return elm.Native.VirtualDom.values = Elm.Native.VirtualDom.values = {
 		node: node,
 		text: text,
 		on: F4(on),
 
 		property: F2(property),
 		attribute: F2(attribute),
+		attributeNS: F3(attributeNS),
 
 		lazy: F2(lazyRef),
 		lazy2: F3(lazyRef2),
@@ -15593,9 +15742,7 @@ Elm.Native.VirtualDom.make = function(elm)
 	};
 };
 
-},{"virtual-dom/create-element":1,"virtual-dom/vdom/patch":9,"virtual-dom/vnode/is-vhook":13,"virtual-dom/vnode/vnode":18,"virtual-dom/vnode/vtext":20,"virtual-dom/vtree/diff":22}],24:[function(require,module,exports){
-
-},{}]},{},[23]);
+},{"virtual-dom/vdom/create-element":6,"virtual-dom/vdom/patch":9,"virtual-dom/vnode/is-vhook":13,"virtual-dom/vnode/vnode":18,"virtual-dom/vnode/vtext":20,"virtual-dom/vtree/diff":22}]},{},[23]);
 
 Elm.Result = Elm.Result || {};
 Elm.Result.make = function (_elm) {
@@ -16691,6 +16838,7 @@ Elm.VirtualDom.make = function (_elm) {
       decoder,
       toMessage);
    });
+   var attributeNS = $Native$VirtualDom.attributeNS;
    var attribute = $Native$VirtualDom.attribute;
    var property = $Native$VirtualDom.property;
    var Property = {ctor: "Property"};
@@ -16706,6 +16854,7 @@ Elm.VirtualDom.make = function (_elm) {
                             ,fromElement: fromElement
                             ,property: property
                             ,attribute: attribute
+                            ,attributeNS: attributeNS
                             ,on: on
                             ,onWithOptions: onWithOptions
                             ,defaultOptions: defaultOptions

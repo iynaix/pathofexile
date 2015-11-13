@@ -55,7 +55,8 @@ type alias Location =
 
 
 type alias Item =
-    { name : String,
+    { id : Int,
+      name : String,
       type_ : String,
       x : Maybe Int,
       y : Maybe Int,
@@ -145,35 +146,36 @@ raritySpan rarity txt =
             ]
 
 
-sockets : String -> List Html
-sockets socket_str =
-    let
-        socket c =
-            case c of
-                'B' ->
-                    span [ class "label label-primary" ] [ nbsp ]
-                'G' ->
-                    span [ class "label label-success" ] [ nbsp ]
-                'R' ->
-                    span [ class "label label-danger" ] [ nbsp ]
-                _ ->
-                    nbsp
-    in
-        case socket_str of
-            "" ->
-                []
-            s ->
-                [ span
-                     [ style [ ("margin-left", "2em") ] ]
-                     ( s |> String.toList |> List.map socket ) ]
+-- renders a single socket rectangle
+socketSpan: Char -> Html
+socketSpan c =
+    case c of
+        'B' ->
+            span [ class "label label-primary" ] [ nbsp ]
+        'G' ->
+            span [ class "label label-success" ] [ nbsp ]
+        'R' ->
+            span [ class "label label-danger" ] [ nbsp ]
+        _ ->
+            nbsp
 
 
 itemHeader : Item -> List Html
 itemHeader item =
-    (raritySpan item.rarity item.name) ++
-    (if item.name == "" then [] else [ br' ]) ++
-    (raritySpan item.rarity item.type_) ++
-    (sockets item.socket_str)
+    let
+        sockets socket_str =
+            case socket_str of
+                "" ->
+                    []
+                s ->
+                    [ span
+                            [ style [ ("margin-left", "2em") ] ]
+                            ( s |> String.toList |> List.map socketSpan ) ]
+    in
+        (raritySpan item.rarity item.name) ++
+        (if item.name == "" then [] else [ br' ]) ++
+        (raritySpan item.rarity item.type_) ++
+        (sockets item.socket_str)
 
 
 itemReqs : Requirements -> List Html
@@ -230,9 +232,7 @@ itemInfo: Item -> Html
 itemInfo item =
     case item.is_identified of
         False ->
-            p
-                [ class "unindentified" ]
-                [ text "Unidentified" ]
+            p [ class "unindentified" ] [ text "Unidentified" ]
         True ->
             div
                 [ style [ ("margin-top", "0.5em") ] ]
@@ -243,6 +243,74 @@ itemInfo item =
                     ((itemMods item.explicit_mods))
                   ] )
 
+
+-- single longer item display
+itemListItem : Item -> Html
+itemListItem item =
+    li
+        [ class "list-group-item" ]
+        ( [ h4
+                [ classList [ ("unidentified", not item.is_identified) ] ]
+                (itemHeader item),
+            itemImage item,
+            itemInfo item
+          ]
+        )
+
+
+-- longer item display
+itemList : List Item -> Html
+itemList items =
+    ul
+        [ class "list-group item_listing" ]
+        (List.map itemListItem items)
+
+
+itemLocLink : Item -> Html
+itemLocLink item =
+    a
+        [ href ("/browse/" ++ toString item.location.page_no ++ "/") ]
+        [ text (locStr item) ]
+
+
+-- single item row for the item table display
+itemRow : Item -> Html
+itemRow item =
+    tr_
+        [ td_ ((raritySpan item.rarity item.name) ++ [span_ [ text item.type_ ]]),
+          td_ [ itemLocLink item ],
+          td_ [ text (toString item.num_sockets) ],
+          td_ (item.socket_str |> String.toList |> List.map socketSpan ),
+          td_ (itemReqs item.requirements),
+          td
+            [ class "text-center" ]
+            [ label
+                [ class "checkbox-inline" ]
+                [ input
+                    -- {% if item.is_deleted %}checked{% endif %}
+                    [ type' "checkbox", class "mark_delete", value (toString item.id) ]
+                    []
+                ]
+            ]
+        ]
+
+
+-- table display for the item
+itemTable : List Item -> Html
+itemTable items =
+    table
+        [ class "table table-striped table-hover table-bordered table-condensed" ]
+        [ thead_
+            [ tr_ [
+                th_ [ text "Name" ],
+                th_ [ text "Location" ],
+                th_ [ text "Num Sockets" ],
+                th_ [ text "Sockets" ],
+                th_ [ text "Requirements" ],
+                th_ [ text "Deleted" ]
+            ]],
+          tbody_ (List.map itemRow items)
+        ]
 
 
 -- EFFECTS
@@ -281,7 +349,8 @@ decodeLocation =
 
 decodeItem : Json.Decoder Item
 decodeItem =
-    Json.map Item ("name" := Json.string)
+    Json.map Item ("id" := Json.int)
+        `apply` ("name" := Json.string)
         `apply` ("type_" := Json.string)
         `apply` ("x" := Json.maybe Json.int)
         `apply` ("y" := Json.maybe Json.int)

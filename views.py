@@ -5,7 +5,7 @@ from flask import request, render_template, send_from_directory, jsonify
 from flask.views import View, MethodView
 from jinja2 import contextfilter
 from jinja2.filters import do_mark_safe
-from sqlalchemy import false, not_, and_, or_
+from sqlalchemy import false, not_, and_
 
 from app import app, db, api
 import resources
@@ -223,17 +223,13 @@ def test_items():
         Item
     ).join(Modifier, Location).filter(
         Location.is_character == false(),
-        or_(
-            Modifier.normalized.ilike("%increased quantity of items found%"),
-            Modifier.normalized.ilike("%increased rarity of items found%"),
-        ),
+        Modifier.normalized.ilike("%increased rarity of items found%"),
         filter_item_type("helm"),
     ).all()
 
     return render_template(
-        'list.html',
+        'list_ng.html',
         title="Filter by Item Type",
-        # items=[item for item, cnt in items],
         items=items,
         item_renderer="item_table",
     )
