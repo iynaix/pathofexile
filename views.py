@@ -64,6 +64,24 @@ def main_context_processor():
     return dict(locations=locations)
 
 
+def sufficient_resists(item, threshold):
+    """
+    determines if the given item has enough resists
+    threshold is the absolute min value of each resist
+    """
+    resist_mods = [m for m in item.explicit_mods if "Resist" in m.normalized]
+
+    # triple / quad resists, good to go
+    if len(resist_mods) > 2:
+        return True
+
+    # check for min resist values
+    return sum(
+        1 for m in resist_mods
+        if "All" not in m.normalized and m.values[0] > threshold
+    ) >= 2
+
+
 @app.route('/search/', methods=["POST"])
 def simple_search():
     """
@@ -138,24 +156,9 @@ class LowModsView(View):
         # return items
         return [item for item, _ in low_attr_items]
 
-    def insufficient_resists(self, item):
-        """only interested in items with higher amounts of resists"""
-        resist_mods = [m for m in item.explicit_mods
-                       if "Resist" in m.normalized]
-
-        # triple / quad resists, good to go
-        if len(resist_mods) > 2:
-            return False
-
-        # check for min resist values
-        return sum(
-            1 for m in resist_mods
-            if "All" not in m.normalized and m.values[0] > 20
-        ) < 2
-
     def dispatch_request(self):
         items = self.get_items()
-        items = [item for item in items if self.insufficient_resists(item)]
+        items = [item for item in items if not sufficient_resists(item, 20)]
 
         return render_template(
             'list.html',
@@ -199,24 +202,9 @@ class LowRAJView(View):
         # return items
         return [item for item, _ in low_attr_items]
 
-    def insufficient_resists(self, item):
-        """only interested in items with higher amounts of resists"""
-        resist_mods = [m for m in item.explicit_mods
-                       if "Resist" in m.normalized]
-
-        # triple / quad resists, good to go
-        if len(resist_mods) > 2:
-            return False
-
-        # check for min resist values
-        return sum(
-            1 for m in resist_mods
-            if "All" not in m.normalized and m.values[0] > 15
-        ) < 2
-
     def dispatch_request(self):
         items = self.get_items()
-        items = [item for item in items if self.insufficient_resists(item)]
+        items = [item for item in items if not sufficient_resists(item, 15)]
 
         return render_template(
             'list.html',
