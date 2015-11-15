@@ -2,21 +2,6 @@
 import json
 from utils import norm
 
-# """
-# #normalize to lower case
-# #cast to tuple for easy application for startswith and endswith
-# # UNIQUES = tuple([norm(x) for x in UNIQUES])
-
-# """force a fetch of all the constants"""
-# CONSTANTS = [
-#     "UNIQUES",
-
-#     "FLASK_SIZES",
-#     "MISC_FLASKS",
-# ]
-# for c in CONSTANTS:
-#     get_constant(c)
-
 
 def stat_type(item):
     ret = []

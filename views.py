@@ -235,6 +235,31 @@ def test_items():
     )
 
 
+@app.route('/dup_uniques/')
+def duplicate_uniques():
+    """Displays sellable uniques"""
+
+    item_grps = defaultdict(list)
+    for item in Item.query.filter(
+        Item.rarity == "unique",
+        *in_page_group("uniques")
+    ).join(Location).all():
+        item_grps[item.name].append(item)
+
+    items = []
+    for name, matches in item_grps.iteritems():
+        if len(matches) <= 1:
+            continue
+        items.extend(matches)
+
+    return render_template(
+        'list.html',
+        title="Duplicate Uniques",
+        items=items,
+        item_renderer="item_table",
+    )
+
+
 class AdvancedSearchView(MethodView):
     """allows for a more fine grained search of items"""
     def get(self):

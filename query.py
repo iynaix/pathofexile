@@ -27,16 +27,6 @@ def find_gaps(loc):
     return gaps
 
 
-def find_dup_uniques():
-    for item, cnt in Counter(item.name for item in Item.query.filter(
-        Item.rarity == "unique",
-        *in_page_group("uniques")
-    )).most_common():
-        if cnt <= 1:
-            break
-        print item, cnt
-
-
 def print_sql(q):
     print str(q.statement.compile(dialect=postgresql.dialect()))
 

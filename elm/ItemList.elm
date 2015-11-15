@@ -54,7 +54,8 @@ update action model =
 
 view : Signal.Address Action -> Model -> Html
 view address model =
-    itemTable model.items
+    -- itemTable model.items
+    itemList model.items
 
 
 app =
