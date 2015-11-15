@@ -1,4 +1,5 @@
 from collections import defaultdict, Counter
+from decimal import Decimal
 import itertools
 
 from flask import request, render_template, send_from_directory, jsonify
@@ -62,6 +63,30 @@ def main_context_processor():
         else:
             locations["stash"].append(loc)
     return dict(locations=locations)
+
+
+def currency_stats():
+    currencies = defaultdict(int)
+    for item in Item.query.join(Property).filter(
+        Item.rarity == "currency",
+    ).all():
+        # look for the stack property
+        for p in item.properties:
+            if p.name.startswith("Stack"):
+                # get the size of the stack
+                currencies[item.type_] += int(p.value.split("/")[0])
+                break
+
+    # handle shards and fragments
+    currencies["Scroll of Wisdom"] += \
+            Decimal(currencies.pop("Scroll Fragment", 0)) / 20
+    currencies["Orb of Transmutation"] += \
+            Decimal(currencies.pop("Transmutation Shard", 0)) / 20
+    currencies["Orb of Alteration"] += \
+            Decimal(currencies.pop("Alteration Shard", 0)) / 20
+    currencies["Orb of Alchemy"] += \
+            Decimal(currencies.pop("Alchemy Shard", 0)) / 20
+    return currencies
 
 
 def sufficient_resists(item, threshold):
@@ -494,44 +519,23 @@ class StatsView(View):
     """
     Displays a summary of all currency and crafting items
     """
-    def get_currency_stats(self):
-        currency_stats = defaultdict(int)
-        items = Item.query.join(Property).filter(
-            Item.rarity == "currency",
-        ).all()
-        for item in items:
-            # look for the stack property
-            for p in item.properties:
-                if p.name.startswith("Stack"):
-                    # get the size of the stack
-                    currency_stats[item.type_] += int(p.value.split("/")[0])
-                    break
 
-        # handle shards and fragments
-        currency_stats["Scroll of Wisdom"] += \
-                currency_stats.pop("Scroll Fragment", 0) / 20.0
-        currency_stats["Orb of Transmutation"] += \
-                currency_stats.pop("Transmutation Shard", 0) / 20.0
-        currency_stats["Orb of Alteration"] += \
-                currency_stats.pop("Alteration Shard", 0) / 20.0
-        currency_stats["Orb of Alchemy"] += \
-                currency_stats.pop("Alchemy Shard", 0) / 20.0
+    def in_orb(self, currencies, target_orb):
+        from rates import PoeRatesProvider
 
-        currencies = []
-        for name, effect in list(constants.CURRENCIES.items()):
-            if name not in currency_stats:
-                continue
-            # format the total string
-            total = str(currency_stats[name])
-            if int(currency_stats[name]) != currency_stats[name]:
-                total = "%.2f" % currency_stats[name]
+        poe_rates = PoeRatesProvider()
+        total = 0
+        for orb, cnt in currencies.iteritems():
+            orb = orb.lower()
+            orb = orb.replace("orb", "").replace(" of", "").replace("'", "")
+            orb = orb.split()[0].strip()  # just need the first word
 
-            currencies.append({
-                "name": name,
-                "effect": effect,
-                "total": total,
-            })
-        return currencies
+            try:
+                total += (1 / poe_rates.rate(orb, target_orb) * cnt)
+            # ignore, items like whetstones have no rates
+            except LookupError:
+                pass
+        return total
 
     def get_gem_stats(self):
         # get the gems into a dict for easier searching
@@ -542,8 +546,11 @@ class StatsView(View):
         }
 
     def dispatch_request(self):
+        currencies = currency_stats()
         context = {
-            "currencies": self.get_currency_stats()
+            "currencies": currencies,
+            "currencies_chaos": self.in_orb(currencies, "chaos"),
+            "currencies_exalts": self.in_orb(currencies, "ex"),
         }
         context.update(self.get_gem_stats())
 
