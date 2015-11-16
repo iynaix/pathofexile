@@ -6,9 +6,6 @@ from sqlalchemy.databases import postgres
 
 from app import db
 import constants
-from utils import norm, normfind, get_constant
-
-GEMS = get_constant("GEMS", as_dict=True)
 
 
 class tsvector(types.TypeDecorator):
@@ -188,15 +185,6 @@ class Item(db.Model):
         return h
 
     # various helpers for the model
-    def is_gem(self):
-        for p in self.properties:
-            if p.name == "Experience":
-                return True
-        return False
-
-    def is_quest_item(self):
-        return norm(self.type_).startswith(constants.QUEST_ITEMS)
-
     @property
     def identified(self):
         return self.query.filter(self.is_identified)
@@ -211,33 +199,6 @@ class Item(db.Model):
         if self.parent_item:
             ret += " [Socketed]"
         return ret
-
-    def gem_color(self):
-        """
-        returns the letter for the color of the gem, if the item is not a gem,
-        raises ValueError
-        """
-        for p in self.properties:
-            if p.name == "Experience":
-                break
-        else:
-            raise ValueError("Item is not a gem.")
-        return normfind(GEMS, self.type_)["color"]
-
-    def item_group(self):
-        """returns the major item grouping for an item, e.g. mace, armor etc"""
-        own_type = self.type_.lower()
-        for g in ("axes", "bows", "claws", "daggers", "maces", "staves",
-                  "swords", "wands", "helms", "armors", "gloves", "boots",
-                  "shields", "belts", "quivers"):
-            for k, v in get_constant(g.upper(), as_dict=True).items():
-                if k.lower() in own_type:
-                    # see if there is a subtype
-                    if isinstance(v, str):
-                        return g.title()
-                    else:
-                        return v.get("subtype", g.title())
-        raise ValueError("%s is not a recognized item type." % self.type_)
 
     @property
     def required_level(self):

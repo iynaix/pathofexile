@@ -10,15 +10,11 @@ from sqlalchemy import false, not_, and_
 
 from app import app, db, api
 import resources
-import constants
 from models import (Item, Location, Property, Requirement, Modifier,
                     in_page_group, filter_item_type)
-from utils import get_constant
 
 #  init constants
 CHROMATIC_RE = r"B+G+R+"
-GEMS = get_constant("GEMS", as_dict=True)
-QUIVERS = get_constant("QUIVERS", as_dict=True)
 
 
 @app.template_filter('percent')
@@ -448,15 +444,15 @@ class LevelsView(View):
 
     def dispatch_request(self, slug):
         items = self.get_items()
-        if slug is not None:
-            if slug.lower() == "misc":
-                item_types = constants.BELTS
-                item_types.update(QUIVERS)
-            else:
-                item_types = list(getattr(constants, slug.upper()).keys())
-            items = items.filter(
-                Item.type_.in_(item_types)
-            )
+        # if slug is not None:
+        #     if slug.lower() == "misc":
+        #         item_types = constants.BELTS
+        #         item_types.update(QUIVERS)
+        #     else:
+        #         item_types = list(getattr(constants, slug.upper()).keys())
+        #     items = items.filter(
+        #         Item.type_.in_(item_types)
+        #     )
 
         return render_template('levels.html',
             levels_url=self.levels_url,

@@ -3,7 +3,7 @@
 <{{ outer_tag }} class="{% if popover %} item_popover{% endif%}{% if not item.is_identified %} unidentified{% endif %}"
 {% if popover %}{{ item_popover(item) }} {% endif %}>
     {% if item.name %}
-        {% if item.is_gem() %}
+        {% if item.rarity == "gem" %}
             <span class="gem">
         {% elif item.rarity == "unique" %}
             <span class="unique">

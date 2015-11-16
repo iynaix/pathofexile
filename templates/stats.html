@@ -14,7 +14,7 @@
         </tr>
     </thead>
     <tbody>
-        {% for name, cnt in currencies.iteritems() %}
+        {% for name, cnt in currencies|dictsort %}
         <tr>
             <td>{{ name }}</td>
             <td class="text-center">{{ cnt }}</td>

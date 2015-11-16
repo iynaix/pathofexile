@@ -1,6 +1,3 @@
-import json
-from collections import namedtuple, Counter, defaultdict
-
 from app import db
 from models import Item, Modifier, Location, in_page_group, Property
 from sqlalchemy import case, CHAR
@@ -69,18 +66,35 @@ def resist_cases(include_all=True, include_chaos=True):
 # ).distinct(Modifier.normalized):
 #     print mod.normalized
 
-res = db.session.query(
-    Item,
-    db.func.array_agg(resist_cases()),
-).join(
-    Modifier,
-).group_by(
-    Item,
-).filter(
-    Modifier.normalized.like("%Resistance%")
-)
+def filter_resist_counts():
+    res = db.session.query(
+        Item,
+        db.func.array_agg(resist_cases()),
+    ).join(
+        Modifier,
+    ).group_by(
+        Item,
+    ).filter(
+        Modifier.normalized.like("%Resistance%")
+    )
 
-print_sql(res)
+    print_sql(res)
+
+
+def locs_by_item_count():
+    item_count = db.func.count(Location.items)
+
+    locs = db.session.query(
+        Location,
+        item_count,
+    ).join(Item).group_by(Location).filter(
+        Location.name.like("% (Remove-only)"),
+    ).order_by(
+        item_count,
+    ).all()
+
+    for loc in locs:
+        print loc
 
 
 """

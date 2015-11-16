@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import json
-from utils import norm
 
 
 def stat_type(item):
@@ -45,9 +44,9 @@ def get_weapon_constants(data):
     TWO_HAND_AXES = _extract("Two Hand Axe")
     ONE_HAND_MACES = _extract("One Hand Mace")
     TWO_HAND_MACES = _extract("Two Hand Mace")
-    ONE_HAND_SWORD = _extract("One Hand Sword") + \
+    ONE_HAND_SWORDS = _extract("One Hand Sword") + \
                         _extract("Thrusting One Hand Sword")
-    TWO_HAND_SWORD = _extract("Two Hand Sword")
+    TWO_HAND_SWORDS = _extract("Two Hand Sword")
 
     SWORDS = {}
     for sword_type in ("One Hand Sword", "Two Hand Sword",
